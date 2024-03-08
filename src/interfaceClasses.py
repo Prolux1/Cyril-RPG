@@ -41,9 +41,20 @@ class BasicInterfaceTextElement(BasicInterfaceElement):
         self.text_color = new_text_color
 
 
-class Image(BasicInterfaceElement):
+class StaticImage(BasicInterfaceElement):
     def __init__(self, x, y, img, center=False):
         super().__init__(x, y, img, center)
+
+
+class BackgroundImage(StaticImage):
+    def __init__(self, surf):
+        super().__init__(0, 0, surf)
+
+
+class BackgroundColor(BackgroundImage):
+    def __init__(self, size, color):
+        super().__init__(pygame.surface.Surface(size))
+        self.surface.fill(color)
 
 
 class Button(BasicInterfaceTextElement):

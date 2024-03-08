@@ -179,10 +179,10 @@ class CyrilRpg:
 
     def main_menu(self):
         self.components = [
-            interface.BackgroundImage(Image.BACKGROUND_MENU),
-            interface.Image(WINDOW_WIDTH / 2, 110, Image.FOND_MARBRE_TITRE, center=True),
-            interface.Image(WINDOW_WIDTH / 2 + 135, 110, Image.OEIL_BLEU),
-            interface.BasicInterfaceTextElement(WINDOW_WIDTH / 2, 110, "Cyril RPG", Font.TITLE, Color.BLACK, center=True),
+            interfaceClasses.BackgroundImage(Image.BACKGROUND_MENU),
+            interfaceClasses.StaticImage(WINDOW_WIDTH / 2, 110, Image.FOND_MARBRE_TITRE, center=True),
+            interfaceClasses.StaticImage(WINDOW_WIDTH / 2 + 135, 110, Image.OEIL_BLEU),
+            interfaceClasses.BasicInterfaceTextElement(WINDOW_WIDTH / 2, 110, "Cyril RPG", Font.TITLE, Color.BLACK, center=True),
             interface.PlayButton(Image.SILVER_WOOD_BUTTON_3, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 3, "Play", Font.ARIAL_40, Color.GREY),
             interface.SettingsButton(Image.SILVER_WOOD_BUTTON_2, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2.25, "Settings", Font.ARIAL_40, Color.GREY, center=True),
             interface.QuitButton(Image.SILVER_WOOD_BUTTON_1, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 1.8, "Quit", Font.ARIAL_40, Color.GREY, center=True)
@@ -197,7 +197,7 @@ class CyrilRpg:
 
     def character_creation_menu(self):
         self.components = [
-            interface.BackgroundColor((WINDOW_WIDTH, WINDOW_HEIGHT), Color.DARK_GREY),
+            interfaceClasses.BackgroundColor((WINDOW_WIDTH, WINDOW_HEIGHT), Color.DARK_GREY),
             interface.CharacterNameInput(WINDOW_WIDTH / 2, WINDOW_HEIGHT - 100, Font.ARIAL_23, Color.WHITE)
         ]
 
@@ -209,7 +209,7 @@ class CyrilRpg:
 
     def character_selection_menu(self):
         self.components = [
-            interface.BackgroundColor((WINDOW_WIDTH, WINDOW_HEIGHT), Color.DARK_GREY)
+            interfaceClasses.BackgroundColor((WINDOW_WIDTH, WINDOW_HEIGHT), Color.DARK_GREY)
         ]
 
         # Adding all the characters to a list to select one of them
@@ -227,7 +227,7 @@ class CyrilRpg:
 
     def settings_menu(self):
         self.components = [
-            interface.BackgroundColor((WINDOW_WIDTH, WINDOW_HEIGHT), Color.DARK_GREY)
+            interfaceClasses.BackgroundColor((WINDOW_WIDTH, WINDOW_HEIGHT), Color.DARK_GREY)
         ]
 
         if SHOW_FPS:

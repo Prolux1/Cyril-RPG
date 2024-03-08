@@ -12,17 +12,6 @@ class FpsViewer(interfaceClasses.BasicInterfaceTextElement):
         self.update_text(str(round(game.clock.get_fps())))
 
 
-class BackgroundImage(Image):
-    def __init__(self, surf):
-        super().__init__(0, 0, surf)
-
-
-class BackgroundColor(BackgroundImage):
-    def __init__(self, size, color):
-        super().__init__(pygame.surface.Surface(size))
-        self.surface.fill(color)
-
-
 class PlayButton(interfaceClasses.ButtonImage):
     def __init__(self, img, x, y, text, text_font, text_color, center=True):
         super().__init__(img, x, y, text, text_font, text_color, center)
@@ -112,11 +101,20 @@ class CharacterSpells(interfaceClasses.BasicInterfaceElement):
 
 class CharacterMenus(interfaceClasses.BasicInterfaceElement):
     def __init__(self, character, x, y, text_font, text_color, center=False):
-        self.empty_surface = pygame.Surface((300, 50))
+        self.empty_surface = pygame.Surface((300, 70))
         super().__init__(x, y, self.empty_surface.copy(), center)
         self.character = character
 
-        self.bag_icon = interfaceClasses.ButtonImage(Image.BAG_SPRITE_SHEET)
+        self.bag_icon = interfaceClasses.ButtonImage(
+            Image.BAG_ICON,
+            self.surface.get_width() - Image.BAG_ICON.get_width(),
+            0,
+            "",
+            Font.ARIAL_23,
+            Color.WHITE
+        )
+
+        self.bag_icon.draw(self.surface)
 
 
 

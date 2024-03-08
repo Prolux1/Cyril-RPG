@@ -21,9 +21,26 @@ def bonus_increment(nombre, lvl):
     return nombre
 
 
-def conversion_nombre(nombre):
-    table = ["K", "M", "B", "T"]
-    nombre_str = str(nombre)
+def convert_number(number):
+    units = ["K", "M", "B", "T"]
+
+    # if number < 100_000:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    nombre_str = str(number)
     nombre_str_reverse = nombre_str[::-1]
     nombre_convertis = ""
     nb_chiffres = 0
@@ -43,10 +60,10 @@ def conversion_nombre(nombre):
                 nb_milliers += 1
 
         if nb_milliers >= 6:
-            nombre_convertis += table[3] + " "
+            nombre_convertis += units[3] + " "
             nombre_convertis += nombre_str_reverse[(3 * 5) - len(nombre_str) - 3:]
         else:
-            nombre_convertis += table[nb_milliers - 2] + " "
+            nombre_convertis += units[nb_milliers - 2] + " "
             nombre_convertis += nombre_str_reverse[(3 * nb_milliers) - len(nombre_str) - 3:]
 
             table_nombre = [str(i) for i in range(10)]

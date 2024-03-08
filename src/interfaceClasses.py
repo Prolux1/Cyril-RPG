@@ -5,19 +5,19 @@ from data import Color
 class BasicInterfaceElement:
     def __init__(self, x, y, surf, center=False):
         self.surface = surf
-        self.rect = pygame.Rect(x, y, self.surface.get_width(), self.surface.get_height())
-        self.center = center
+        self.rect = self.surface.get_rect()
+
+        if center:
+            self.rect.center = (x, y)
+        else:
+            self.rect.topleft = (x, y)
 
     def draw(self, surface):
-        if self.center:
-            surface.blit(self.surface, (self.rect.x - self.rect.width / 2, self.rect.y - self.rect.height / 2))
-        else:
-            surface.blit(self.surface, self.rect.topleft)
+        surface.blit(self.surface, self.rect.topleft)
 
     def update_surf(self, new_surf):
         self.surface = new_surf
-        self.rect.width = self.surface.get_width()
-        self.rect.height = self.surface.get_height()
+        self.rect.size = self.surface.get_size()
 
     def update(self, game):
         pass
@@ -60,7 +60,7 @@ class Button(BasicInterfaceTextElement):
 
         self.rect = pygame.Rect(0, 0, self.surface.get_width(), self.surface.get_height())
 
-        if self.center:
+        if center:
             self.rect.center = (x, y)
         else:
             self.rect.topleft = (x, y)
@@ -127,7 +127,7 @@ class ButtonImage(Button):
         self.surface = surf_temp
 
         self.rect = self.surface.get_rect()
-        if self.center:
+        if center:
             self.rect.center = (x, y)
         else:
             self.rect.topleft = (x, y)

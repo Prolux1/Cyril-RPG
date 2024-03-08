@@ -236,10 +236,9 @@ class CyrilRpg:
     def enter_world(self, character):
         self.zones[character.zone].add_character(character)
         self.components = [
-            self.zones[character.zone]
+            self.zones[character.zone],
+            GameUserInterfaceClass.GameUserInterface(character)
         ]
-
-
 
 
         if SHOW_FPS:
@@ -748,7 +747,7 @@ class CyrilRpg:
                 self.window.blit(affiche_bonus_force_equipement, [self.mouse_pos[0] + 10, self.mouse_pos[1] + 110])
                 self.window.blit(affiche_equipee_equipement, [self.mouse_pos[0] + 220, self.mouse_pos[1] + 125])
 
-            # Si il faut afficher le menu info armure on l'affiche tout à la fin pour superposer le menu sur tout
+            # S'il faut afficher le menu info armure, on l'affiche tout à la fin pour superposer le menu sur tout
             if info_armure:
                 self.window.blit(self.tableau_description_item, [self.mouse_pos[0], self.mouse_pos[1]])
                 self.window.blit(affiche_info_armure1, [self.mouse_pos[0] + 10, self.mouse_pos[1] + 10])

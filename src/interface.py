@@ -1,5 +1,8 @@
+import pygame
+
 from data import Font, Color
 from src.interfaceClasses import *
+from src import utils
 
 
 class FpsViewer(BasicInterfaceTextElement):
@@ -68,6 +71,51 @@ class CharacterNameInput(InputField):
     def __init__(self, x, y, text_font, text_color, border_color=Color.BLACK, border_radius=2, center=True):
         super().__init__(x, y, text_font, text_color, border_color, border_radius, center)
 
+
+class CharacterXpBar(BasicInterfaceElement):
+    def __init__(self, character, x, y, text_font, text_color, center=True):
+        self.empty_surface = pygame.Surface((400, 35), pygame.SRCALPHA)
+        super().__init__(x, y, self.empty_surface.copy(), center)
+        self.character = character
+
+        self.char_xp_text = BasicInterfaceTextElement(
+            self.rect.width / 2,
+            self.rect.height / 2,
+            str(self.character.xp) + " / " + str(self.character.xp_requis),
+            text_font,
+            text_color,
+            True
+        )
+
+        pygame.draw.rect(self.surface, Color.PURPLE, pygame.Rect(0, 0, self.surface.get_width() * (self.character.xp / self.character.xp_requis), self.surface.get_height()))
+
+        pygame.draw.rect(self.surface, Color.GREY_LIGHTEN, self.surface.get_rect(), 2)
+
+        self.char_xp_text.draw(self.surface)
+
+    def update(self, game):
+        self.char_xp_text.update_text(str(self.character.xp) + " / " + str(self.character.xp_requis))
+
+        updated_surf = self.empty_surface.copy()
+        pygame.draw.rect(updated_surf, Color.PURPLE, pygame.Rect(0, 0, updated_surf.get_width() * (self.character.xp / self.character.xp_requis), updated_surf.get_height()))
+        pygame.draw.rect(updated_surf, Color.GREY_LIGHTEN, updated_surf.get_rect(), 2)
+        self.char_xp_text.draw(updated_surf)
+
+        self.update_surf(updated_surf)
+
+
+class CharacterSpells(BasicInterfaceElement):
+    def __init__(self, character, x, y, text_font, text_color, center=True):
+        self.empty_surface = pygame.Surface((800, 80))
+        super().__init__(x, y, self.empty_surface.copy(), center)
+        self.character = character
+
+
+class CharacterMenus(BasicInterfaceElement):
+    def __init__(self, character, x, y, text_font, text_color, center=False):
+        self.empty_surface = pygame.Surface((300, 50))
+        super().__init__(x, y, self.empty_surface.copy(), center)
+        self.character = character
 
 
 

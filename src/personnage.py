@@ -117,11 +117,6 @@ class Personnage:
                     self.deplacement_droite()
                 self.rect.midbottom = (self.x, self.y)
 
-
-
-
-
-
     def handle_event(self, game, event):
 
 
@@ -324,10 +319,18 @@ class Personnage:
         self.force_de_base += force_gagne
         self.PV_de_base += round(self.PV_de_base / 6)
 
+        # updating xp
+        self.xp -= self.xp_requis
+
         # augmentation de l'expérience requise pour le prochain lvl
         self.xp_requis += self.xp_requis_lvl_precedent
         if self.xp_requis != self.xp_requis_lvl_precedent:
             self.xp_requis_lvl_precedent = copy.copy(self.xp_requis) - self.xp_requis_lvl_precedent
+
+    def gain_xp(self, amount):
+        self.xp += amount
+        while self.xp >= self.xp_requis:
+            self.lvl_up()
 
     def deplacement_haut(self):
         self.orientation = "Dos"
@@ -408,7 +411,8 @@ class Personnage:
         """
         if self.selected_mob:
             if sort.check_reach(self.rect.center, self.selected_mob.rect.center):
-                self.selected_mob.take_damage((self.get_damage() * sort.perc_char_dmg / 100))
+                self.selected_mob.take_damage(self, (self.get_damage() * sort.perc_char_dmg / 100))
+
 
 
 

@@ -131,7 +131,7 @@ class Monstre:
             pygame.draw.rect(mob_info_surf, Color.BLACK, mob_hp_bar_rect, 2)  # Draws the border
 
 
-            hp_hp_max_surf = Font.ARIAL_23.render(utils.conversion_nombre(self.PV) + " / " + utils.conversion_nombre(self.PV_max), True, Color.BLACK)
+            hp_hp_max_surf = Font.ARIAL_23.render(utils.convert_number(self.PV) + " / " + utils.convert_number(self.PV_max), True, Color.BLACK)
             mob_info_surf.blit(hp_hp_max_surf, (mob_info_surf_rect.width / 2 - hp_hp_max_surf.get_width() / 2, mob_info_surf_rect.height / 2 - hp_hp_max_surf.get_height() / 2))
 
 
@@ -259,9 +259,14 @@ class Monstre:
         if self.est_attaquer():
             personnage.PV -= self.degat
 
-    def take_damage(self, amount):
+    def take_damage(self, character, amount):
         if self.PV - amount < 0:
             self.PV = 0
         else:
             self.PV -= amount
+
+        if self.is_dead():
+            xp_given_to_player = int(self.lvl / character.lvl * self.xp)
+            if xp_given_to_player > 0:
+                character.gain_xp(xp_given_to_player)
 

@@ -33,6 +33,12 @@ SILVER_WOOD_BUTTON_1 = pygame.image.load("./assets/interface_joueur/silver_wood_
 SILVER_WOOD_BUTTON_2 = pygame.image.load("./assets/interface_joueur/silver_wood_button_2.png")
 SILVER_WOOD_BUTTON_3 = pygame.image.load("./assets/interface_joueur/silver_wood_button_3.png")
 
+# Load images for the game user interface
+bag_sprite_sheet = pygame.image.load("./assets/interface_joueur/sac.png")
+bag_sprite_sheet_rect = bag_sprite_sheet.get_rect()
+image_bag_closed_rect = bag_sprite_sheet_rect.copy()
+IMAGE_BAG_CLOSE = bag_sprite_sheet.subsurface((0, 0, bag_sprite_sheet.get_width() / 2, bag_sprite_sheet.get_height()))
+Image_BAG_OPEN = bag_sprite_sheet.subsurface((bag_sprite_sheet.get_width() / 2, 0, bag_sprite_sheet.get_width() / 2, bag_sprite_sheet.get_height()))
 
 
 

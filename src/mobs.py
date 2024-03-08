@@ -270,3 +270,5 @@ class Monstre:
             if xp_given_to_player > 0:
                 character.gain_xp(xp_given_to_player)
 
+            character.selected_mob = None
+

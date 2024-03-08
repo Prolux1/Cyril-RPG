@@ -9,7 +9,7 @@ GREY_LIGHTEN = pygame.color.Color(200, 200, 200)
 DARK_GREY = pygame.color.Color(37, 37, 37)
 GREEN = pygame.color.Color(24, 240, 10)
 PURPLE = pygame.color.Color(102, 53, 168)
-DARK_PURPLE = pygame.color.Color(83, 19, 168)
+DARK_PURPLE = pygame.color.Color(7, 0, 114)
 YELLOW_ORANGE = pygame.color.Color(223, 172, 14)
 
 COMMON_RARITY = pygame.color.Color(187, 186, 186)

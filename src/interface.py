@@ -1,11 +1,10 @@
 import pygame
 
-from data import Font, Color
-from src.interfaceClasses import *
-from src import utils
+from data import Font, Color, Image
+from src import interfaceClasses, utils
 
 
-class FpsViewer(BasicInterfaceTextElement):
+class FpsViewer(interfaceClasses.BasicInterfaceTextElement):
     def __init__(self, fps: float):
         super().__init__(0, 0, str(fps), Font.ARIAL_30, Color.BLACK)
 
@@ -24,7 +23,7 @@ class BackgroundColor(BackgroundImage):
         self.surface.fill(color)
 
 
-class PlayButton(ButtonImage):
+class PlayButton(interfaceClasses.ButtonImage):
     def __init__(self, img, x, y, text, text_font, text_color, center=True):
         super().__init__(img, x, y, text, text_font, text_color, center)
 
@@ -32,7 +31,7 @@ class PlayButton(ButtonImage):
         game.character_selection_menu()
 
 
-class SettingsButton(ButtonImage):
+class SettingsButton(interfaceClasses.ButtonImage):
     def __init__(self, img, x, y, text, text_font, text_color, center=True):
         super().__init__(img, x, y, text, text_font, text_color, center)
 
@@ -40,7 +39,7 @@ class SettingsButton(ButtonImage):
         game.settings_menu()
 
 
-class QuitButton(ButtonImage):
+class QuitButton(interfaceClasses.ButtonImage):
     def __init__(self, img, x, y, text, text_font, text_color, center=True):
         super().__init__(img, x, y, text, text_font, text_color, center)
 
@@ -48,7 +47,7 @@ class QuitButton(ButtonImage):
         game.quit()
 
 
-class CharacterSelectionButton(ButtonImage):
+class CharacterSelectionButton(interfaceClasses.ButtonImage):
     def __init__(self, img, x, y, character, text_font, text_color, center=True):
         self.character = character
         super().__init__(img, x, y, self.character.nom, text_font, text_color, center)
@@ -59,7 +58,7 @@ class CharacterSelectionButton(ButtonImage):
 
 
 
-class CharacterCreationButton(ButtonImage):
+class CharacterCreationButton(interfaceClasses.ButtonImage):
     def __init__(self, img, x, y, text, text_font, text_color, center=True):
         super().__init__(img, x, y, text, text_font, text_color, center)
 
@@ -67,18 +66,18 @@ class CharacterCreationButton(ButtonImage):
         game.character_creation_menu()
 
 
-class CharacterNameInput(InputField):
+class CharacterNameInput(interfaceClasses.InputField):
     def __init__(self, x, y, text_font, text_color, border_color=Color.BLACK, border_radius=2, center=True):
         super().__init__(x, y, text_font, text_color, border_color, border_radius, center)
 
 
-class CharacterXpBar(BasicInterfaceElement):
+class CharacterXpBar(interfaceClasses.BasicInterfaceElement):
     def __init__(self, character, x, y, text_font, text_color, center=True):
         self.empty_surface = pygame.Surface((400, 35), pygame.SRCALPHA)
         super().__init__(x, y, self.empty_surface.copy(), center)
         self.character = character
 
-        self.char_xp_text = BasicInterfaceTextElement(
+        self.char_xp_text = interfaceClasses.BasicInterfaceTextElement(
             self.rect.width / 2,
             self.rect.height / 2,
             str(self.character.xp) + " / " + str(self.character.xp_requis),
@@ -104,18 +103,20 @@ class CharacterXpBar(BasicInterfaceElement):
         self.update_surf(updated_surf)
 
 
-class CharacterSpells(BasicInterfaceElement):
+class CharacterSpells(interfaceClasses.BasicInterfaceElement):
     def __init__(self, character, x, y, text_font, text_color, center=True):
         self.empty_surface = pygame.Surface((800, 80))
         super().__init__(x, y, self.empty_surface.copy(), center)
         self.character = character
 
 
-class CharacterMenus(BasicInterfaceElement):
+class CharacterMenus(interfaceClasses.BasicInterfaceElement):
     def __init__(self, character, x, y, text_font, text_color, center=False):
         self.empty_surface = pygame.Surface((300, 50))
         super().__init__(x, y, self.empty_surface.copy(), center)
         self.character = character
+
+        self.bag_icon = interfaceClasses.ButtonImage(Image.BAG_SPRITE_SHEET)
 
 
 

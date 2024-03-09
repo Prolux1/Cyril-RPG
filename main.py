@@ -134,7 +134,7 @@ class CyrilRpg:
         Image.BOUTON_FLECHE_HAUT_PRESSE = Image.BOUTON_FLECHE_HAUT_PRESSE.convert_alpha()
         Image.BOUTON_FLECHE_BAS = Image.BOUTON_FLECHE_BAS.convert_alpha()
         Image.BOUTON_FLECHE_BAS_PRESSE = Image.BOUTON_FLECHE_BAS_PRESSE.convert_alpha()
-        Image.IMAGE_INVENTAIRE = Image.IMAGE_INVENTAIRE.convert_alpha()
+        Image.IMAGE_INVENTORY = Image.IMAGE_INVENTORY.convert_alpha()
         Image.TABLEAU_DESCRIPTION_ITEM = Image.TABLEAU_DESCRIPTION_ITEM.convert_alpha()
         Image.IMAGE_MENU_EQUIPEMENT_PERSONNAGE = Image.IMAGE_MENU_EQUIPEMENT_PERSONNAGE.convert_alpha()
         Image.IMAGE_BARRE_DE_SORTS = Image.IMAGE_BARRE_DE_SORTS.convert_alpha()
@@ -237,7 +237,7 @@ class CyrilRpg:
         self.zones[character.zone].add_character(character)
         self.components = [
             self.zones[character.zone],
-            GameUserInterfaceClass.GameUserInterface(character)
+            gui.GameUserInterface(character)
         ]
 
 

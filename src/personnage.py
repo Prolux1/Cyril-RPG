@@ -5,7 +5,7 @@ import copy
 
 from data import Image, Color, Sound
 
-from src import sorts
+from src import sorts, inventory
 
 
 class Personnage:
@@ -53,9 +53,8 @@ class Personnage:
         self.rect = pygame.Rect(0, 0, 105, 217)
         self.rect.midbottom = (self.x, self.y)
         self.zone = "Desert"  # nom de la zone dans laquelle le joueur se trouve, par défaut il est au spawn
-        self.inventaire = [[None for i in range(8)] for j in range(8)]  # None signifie aucun objet dans la case
 
-        self.equipement = {
+        self.equipment = {
             "Casque": None,
             "Épaulières": None,
             "Cape": None,
@@ -69,6 +68,8 @@ class Personnage:
             "Bijou 1": None,
             "Bijou 2": None
         }
+
+        self.inventory = inventory.Inventory(8, 8)
 
         self.arme = None
         self.movement_speed = 7
@@ -210,7 +211,7 @@ class Personnage:
         if self.arme:
             PV_max_total += self.arme.bonus_PV
             force_total += self.arme.bonus_force
-        for equipement in self.equipement.values():
+        for equipement in self.equipment.values():
             if equipement:
                 armure_total += equipement.armure
                 PV_max_total += equipement.bonus_PV
@@ -235,13 +236,13 @@ class Personnage:
         :return:
         """
         # si la case d'équipement est vide, on ajoute l'équipement
-        if not self.equipement[equipement.type_equipement]:
+        if not self.equipment[equipement.type_equipement]:
             equipement.equipee = True
-            self.equipement[equipement.type_equipement] = equipement
-            self.inventaire[i][j] = None
+            self.equipment[equipement.type_equipement] = equipement
+            self.equipment[i][j] = None
         # sinon on ajoute d'abord la pièce équipée à l'inventaire puis on rapelle la fonction vu que la case d'équipement est désormais libre
         else:
-            self.desequiper_object(self.equipement[equipement.type_equipement])
+            self.desequiper_object(self.equipment[equipement.type_equipement])
             self.equiper_object(equipement, i, j)
 
     def equiper_arme(self, arme, i, j):
@@ -253,7 +254,7 @@ class Personnage:
         if not self.arme:
             arme.equipee = True
             self.arme = arme
-            self.inventaire[i][j] = None
+            self.inventory[i][j] = None
         # sinon on ajoute d'abord la pièce équipée à l'inventaire puis on rapelle la fonction vu que la case d'équipement est désormais libre
         else:
             self.desequiper_arme(self.arme)
@@ -274,18 +275,18 @@ class Personnage:
         Déséquipe la pièce d'équipement passé en paramètre du stuff du personnage
         :return:
         """
-        if equipement in self.equipement.values():
-            self.ajouter_item_inventaire(self.equipement[equipement.type_equipement])
-            self.equipement[equipement.type_equipement].equipee = False
-            self.equipement[equipement.type_equipement] = None
+        if equipement in self.equipment.values():
+            self.ajouter_item_inventaire(self.equipment[equipement.type_equipement])
+            self.equipment[equipement.type_equipement].equipee = False
+            self.equipment[equipement.type_equipement] = None
 
     def inventaire_est_plein(self):
         """
         :return: booléen indiquand si l'inventaire est plein ou pas
         """
-        for i in range(len(self.inventaire)):
-            for j in range(len(self.inventaire)):
-                if self.inventaire[i][j] is None:
+        for i in range(len(self.inventory)):
+            for j in range(len(self.inventory)):
+                if self.inventory[i][j] is None:
                     return False
         return True
 
@@ -296,10 +297,10 @@ class Personnage:
         :return:
         """
         if not self.inventaire_est_plein():
-            for i in range(len(self.inventaire)):
-                for j in range(len(self.inventaire)):
-                    if self.inventaire[i][j] is None:
-                        self.inventaire[i][j] = item
+            for i in range(len(self.inventory)):
+                for j in range(len(self.inventory)):
+                    if self.inventory[i][j] is None:
+                        self.inventory[i][j] = item
                         return
 
     def est_mort(self):

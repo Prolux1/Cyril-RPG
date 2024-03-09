@@ -2,6 +2,7 @@ import pygame
 
 from data import Font, Color, Image
 from src import interfaceClasses, utils
+from config import WINDOW_WIDTH, WINDOW_HEIGHT
 
 
 class FpsViewer(interfaceClasses.BasicInterfaceTextElement):
@@ -99,25 +100,101 @@ class CharacterSpells(interfaceClasses.BasicInterfaceElement):
         self.character = character
 
 
-class CharacterMenus(interfaceClasses.BasicInterfaceElement):
+class GUIMenusPanel(interfaceClasses.BasicInterfaceElement):
     def __init__(self, character, x, y, text_font, text_color, center=False):
-        self.empty_surface = pygame.Surface((300, 70))
-        super().__init__(x, y, self.empty_surface.copy(), center)
         self.character = character
+        self.components = [
+            GUIMenusItemBag(self.character),
+            GUIMenusItemEquipment(self.character),
+            GUIMenusItemDonjons(self.character)
+        ]
 
-        self.bag_icon = interfaceClasses.ButtonImage(
-            Image.BAG_ICON,
-            self.surface.get_width() - Image.BAG_ICON.get_width(),
-            0,
-            "",
-            Font.ARIAL_23,
-            Color.WHITE
+        width_needed = 0
+        height_needed = 0
+        gap_between_icons = 15
+        for c in self.components:
+            width_needed += c.rect.width
+            if c.rect.height > height_needed:
+                height_needed = c.rect.height
+
+        self.empty_surface = pygame.Surface((width_needed + gap_between_icons * len(self.components), height_needed), pygame.SRCALPHA)
+        super().__init__(x, y, self.empty_surface.copy(), center)
+
+        self.rect.x -= self.rect.width
+
+        total_width_taken = 0
+        for i in range(len(self.components)):
+            total_width_taken += self.components[i].rect.width
+            self.surface.blit(self.components[i].surface, (self.rect.width - total_width_taken, height_needed - self.components[i].rect.height))
+
+            self.components[i].rect.topleft = (
+                self.rect.topright[0] - total_width_taken,
+                self.rect.topright[1] + height_needed - self.components[i].rect.height
+            )
+
+            total_width_taken += gap_between_icons
+
+    def draw(self, surface):
+        # pygame.draw.rect(surface, Color.BLACK, self.rect, 2)
+        # for c in self.components:
+        #     pygame.draw.rect(surface, Color.BLACK, c.rect, 2)
+        surface.blit(self.surface, self.rect.topleft)
+
+    def update(self, game):
+        for c in self.components:
+            c.update(game)
+
+    def handle_event(self, game, event):
+        for c in self.components:
+            c.handle_event(game, event)
+
+
+class GUIMenusItemBag(interfaceClasses.ButtonImage):
+    def __init__(self, character):
+        self.character = character
+        super().__init__(Image.BAG_ICON, 0, 0, "", Font.ARIAL_23, Color.WHITE)
+
+        self.inventory_surface = interfaceClasses.StaticImage(
+            WINDOW_WIDTH - Image.IMAGE_INVENTORY.get_width(),
+            WINDOW_HEIGHT - Image.IMAGE_INVENTORY.get_height(),
+            Image.IMAGE_INVENTORY
         )
 
-        self.bag_icon.draw(self.surface)
+        self.show_inventory = False
+
+    def draw(self, surface):
+        if self.pressed:
+            surface.blit(self.surface_pressed, self.rect.topleft)
+        elif self.mouse_over:
+            surface.blit(self.surface_mouse_over, self.rect.topleft)
+        else:
+            surface.blit(self.surface, self.rect.topleft)
+
+        if self.show_inventory:
+            self.inventory_surface.draw(surface)
 
 
 
+    def get_clicked(self, game):
+        self.show_inventory = True
+
+
+class GUIMenusItemEquipment(interfaceClasses.ButtonImage):
+    def __init__(self, character):
+        self.character = character
+        super().__init__(Image.EQUIPMENT_ICON, 0, 0, "", Font.ARIAL_23, Color.WHITE)
+
+    def get_clicked(self, game):
+        pass
+
+
+class GUIMenusItemDonjons(interfaceClasses.ButtonImage):
+    def __init__(self, character):
+        self.character = character
+        super().__init__(Image.DONJONS_ICON, 0, 0, "", Font.ARIAL_23, Color.WHITE)
+
+    def get_clicked(self, game):
+        pass
 
 
 

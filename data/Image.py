@@ -25,7 +25,7 @@ BOUTON_FLECHE_BAS_PRESSE = pygame.image.load("./assets/boutons/fleche_bas_press√
 
 
 # chargement des images de l'interface
-IMAGE_INVENTAIRE = pygame.image.load("./assets/interface_joueur/inventaire.png")
+IMAGE_INVENTORY = pygame.image.load("./assets/interface_joueur/inventaire.png")
 TABLEAU_DESCRIPTION_ITEM = pygame.image.load("./assets/interface_joueur/tableau_description_item.png")
 IMAGE_MENU_EQUIPEMENT_PERSONNAGE = pygame.image.load("./assets/interface_joueur/menu_equipement_personnage.png")
 IMAGE_BARRE_DE_SORTS = pygame.image.load("./assets/interface_joueur/barre_de_sorts.png")
@@ -35,7 +35,8 @@ SILVER_WOOD_BUTTON_3 = pygame.image.load("./assets/interface_joueur/silver_wood_
 
 # Load images for the game user interface
 BAG_ICON = pygame.image.load("./assets/interface_joueur/sac.png")
-
+EQUIPMENT_ICON = pygame.image.load("./assets/interface_joueur/gui_equipment_menu_icon.png")
+DONJONS_ICON = pygame.image.load("./assets/interface_joueur/gui_donjons_menu_icon.png")
 
 
 # images lorsque le perso level up

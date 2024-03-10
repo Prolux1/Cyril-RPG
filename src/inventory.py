@@ -58,6 +58,9 @@ class Inventory:
                 self[i] = item
             i += 1
 
+    def is_full(self):
+        return any(o is None for o in self)
+
 
 
 

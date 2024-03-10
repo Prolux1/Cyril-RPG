@@ -27,7 +27,8 @@ BOUTON_FLECHE_BAS_PRESSE = pygame.image.load("./assets/boutons/fleche_bas_press√
 # chargement des images de l'interface
 IMAGE_INVENTORY = pygame.image.load("./assets/interface_joueur/inventaire.png")
 TABLEAU_DESCRIPTION_ITEM = pygame.image.load("./assets/interface_joueur/tableau_description_item.png")
-IMAGE_MENU_EQUIPEMENT_PERSONNAGE = pygame.image.load("./assets/interface_joueur/menu_equipement_personnage.png")
+MENU_EQUIPEMENT_PERSONNAGE = pygame.image.load("./assets/interface_joueur/menu_equipement_personnage.png")
+MENU_DONJONS = pygame.image.load("./assets/interface_joueur/menu_donjons.png")
 IMAGE_BARRE_DE_SORTS = pygame.image.load("./assets/interface_joueur/barre_de_sorts.png")
 SILVER_WOOD_BUTTON_1 = pygame.image.load("./assets/interface_joueur/silver_wood_button_1.png")
 SILVER_WOOD_BUTTON_2 = pygame.image.load("./assets/interface_joueur/silver_wood_button_2.png")

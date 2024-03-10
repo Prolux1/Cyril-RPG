@@ -272,3 +272,25 @@ class Monstre:
 
             character.selected_mob = None
 
+            # à une chance d'ajouter à l'inventaire du personnage, un équipement de type aléatoire
+            # et en adéquation avec le lvl du mob si le mob est un boss,
+            # il y a génération d'un équipement à tous les coups
+            chance_drop_equipement = random.randint(1, 5)  # chance basique : 1/5
+            chance_drop_arme = random.randint(1, 10)  # chance basique : 1/10
+            if self.est_boss:
+                character.inventory.add(utils.generation_equipement_alea(self.lvl, True))
+                chance_drop_arme = random.randint(1, 3)  # chance basique : 1/3
+                if chance_drop_arme == 1:
+                    character.inventory.add(utils.generation_arme_alea(self.lvl, True))
+            elif self.est_world_boss:
+                for i in range(3):
+                    character.inventory.add(utils.generation_equipement_alea(self.lvl, False, True))
+                chance_drop_arme = random.randint(1, 2)  # chance basique : 1/2
+                if chance_drop_arme == 1:
+                    character.inventory.add(utils.generation_arme_alea(self.lvl, False, True))
+            else:
+                if chance_drop_equipement == 1:
+                    character.inventory.add(utils.generation_equipement_alea(self.lvl))
+                if chance_drop_arme == 1:
+                    character.inventory.add(utils.generation_arme_alea(self.lvl))
+

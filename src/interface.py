@@ -111,13 +111,13 @@ class GUIMenusPanel(interfaceClasses.BasicInterfaceElement):
 
         width_needed = 0
         height_needed = 0
-        gap_between_icons = 15
+        self.gap_between_icons = 15
         for c in self.components:
             width_needed += c.rect.width
             if c.rect.height > height_needed:
                 height_needed = c.rect.height
 
-        self.empty_surface = pygame.Surface((width_needed + gap_between_icons * len(self.components), height_needed), pygame.SRCALPHA)
+        self.empty_surface = pygame.Surface((width_needed + self.gap_between_icons * len(self.components), height_needed), pygame.SRCALPHA)
         super().__init__(x, y, self.empty_surface.copy(), center)
 
         self.rect.x -= self.rect.width
@@ -132,13 +132,16 @@ class GUIMenusPanel(interfaceClasses.BasicInterfaceElement):
                 self.rect.topright[1] + height_needed - self.components[i].rect.height
             )
 
-            total_width_taken += gap_between_icons
+            total_width_taken += self.gap_between_icons
 
     def draw(self, surface):
         # pygame.draw.rect(surface, Color.BLACK, self.rect, 2)
         # for c in self.components:
         #     pygame.draw.rect(surface, Color.BLACK, c.rect, 2)
         surface.blit(self.surface, self.rect.topleft)
+
+        for c in self.components:
+            c.draw(surface)
 
     def update(self, game):
         for c in self.components:
@@ -149,52 +152,96 @@ class GUIMenusPanel(interfaceClasses.BasicInterfaceElement):
             c.handle_event(game, event)
 
 
-class GUIMenusItemBag(interfaceClasses.ButtonImage):
-    def __init__(self, character):
+class GUIMenusItem(interfaceClasses.ButtonImage):
+    def __init__(self, character, key, icon, menu, text, text_font, text_color, center=False):
         self.character = character
-        super().__init__(Image.BAG_ICON, 0, 0, "", Font.ARIAL_23, Color.WHITE)
+        self.key = key
+        super().__init__(icon, 0, 0, text, text_font, text_color, center)
 
-        self.inventory_surface = interfaceClasses.StaticImage(
-            WINDOW_WIDTH - Image.IMAGE_INVENTORY.get_width(),
-            WINDOW_HEIGHT - Image.IMAGE_INVENTORY.get_height(),
-            Image.IMAGE_INVENTORY
-        )
+        self.menu = menu
 
-        self.show_inventory = False
+        self.show_menu = False
 
     def draw(self, surface):
-        if self.pressed:
-            surface.blit(self.surface_pressed, self.rect.topleft)
-        elif self.mouse_over:
-            surface.blit(self.surface_mouse_over, self.rect.topleft)
-        else:
-            surface.blit(self.surface, self.rect.topleft)
+        if self.show_menu:
+            self.menu.draw(surface)
 
-        if self.show_inventory:
-            self.inventory_surface.draw(surface)
+    def handle_event(self, game, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:  # on click pressure
+            if event.button == 1:  # left click
+                self.pressed = self.collide_with_point(game.mouse_pos)
 
+        if event.type == pygame.MOUSEBUTTONUP:  # on click release
+            if event.button == 1:
+                if self.pressed:
+                    self.pressed = False
+                    if self.collide_with_point(game.mouse_pos):
+                        self.get_clicked(game)
 
+        if event.type == pygame.KEYDOWN:
+            if event.key == self.key:
+                self.get_clicked(game)
 
     def get_clicked(self, game):
-        self.show_inventory = True
+        self.show_menu = not self.show_menu
 
 
-class GUIMenusItemEquipment(interfaceClasses.ButtonImage):
+
+
+
+
+
+
+
+class GUIMenusItemBag(GUIMenusItem):
     def __init__(self, character):
-        self.character = character
-        super().__init__(Image.EQUIPMENT_ICON, 0, 0, "", Font.ARIAL_23, Color.WHITE)
-
-    def get_clicked(self, game):
-        pass
+        super().__init__(character, pygame.K_b, Image.BAG_ICON, GUIInventoryMenu(character.inventory), "", Font.ARIAL_23, Color.WHITE)
 
 
-class GUIMenusItemDonjons(interfaceClasses.ButtonImage):
+class GUIInventoryMenu(interfaceClasses.StaticImage):
+    def __init__(self, inventory):
+        self.inventory = inventory
+        super().__init__(WINDOW_WIDTH / 1.2, WINDOW_HEIGHT / 1.5, Image.IMAGE_INVENTORY, center=True)
+
+
+
+
+
+
+
+
+
+
+class GUIMenusItemEquipment(GUIMenusItem):
     def __init__(self, character):
-        self.character = character
-        super().__init__(Image.DONJONS_ICON, 0, 0, "", Font.ARIAL_23, Color.WHITE)
+        super().__init__(character, pygame.K_c, Image.EQUIPMENT_ICON, GUIEquipmentMenu(character.equipment), "", Font.ARIAL_23, Color.WHITE)
 
-    def get_clicked(self, game):
-        pass
+
+class GUIEquipmentMenu(interfaceClasses.StaticImage):
+    def __init__(self, equipment):
+        self.equipment = equipment
+        super().__init__(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, Image.MENU_EQUIPEMENT_PERSONNAGE, center=True)
+
+
+
+
+
+
+
+
+
+
+
+
+class GUIMenusItemDonjons(GUIMenusItem):
+    def __init__(self, character):
+        super().__init__(character, pygame.K_v, Image.DONJONS_ICON, GUIDonjonsMenu(None), "", Font.ARIAL_23, Color.WHITE)
+
+
+class GUIDonjonsMenu(interfaceClasses.StaticImage):
+    def __init__(self, donjons):
+        self.donjons = donjons
+        super().__init__(WINDOW_WIDTH / 4, WINDOW_HEIGHT / 2, Image.MENU_DONJONS, center=True)
 
 
 

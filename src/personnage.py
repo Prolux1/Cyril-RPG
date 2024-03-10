@@ -52,7 +52,7 @@ class Personnage:
         self.y = 540
         self.rect = pygame.Rect(0, 0, 105, 217)
         self.rect.midbottom = (self.x, self.y)
-        self.zone = "Desert"  # nom de la zone dans laquelle le joueur se trouve, par défaut il est au spawn
+        self.zone = "Desert"  # nom de la zone dans laquelle le joueur se trouve, par défaut, il est au spawn
 
         self.equipment = {
             "Casque": None,
@@ -266,7 +266,7 @@ class Personnage:
         :return:
         """
         if self.arme:
-            self.ajouter_item_inventaire(self.arme)
+            self.inventory.add(self.arme)
             self.arme.equipee = False
             self.arme = None
 
@@ -276,32 +276,9 @@ class Personnage:
         :return:
         """
         if equipement in self.equipment.values():
-            self.ajouter_item_inventaire(self.equipment[equipement.type_equipement])
+            self.inventory.add(self.equipment[equipement.type_equipement])
             self.equipment[equipement.type_equipement].equipee = False
             self.equipment[equipement.type_equipement] = None
-
-    def inventaire_est_plein(self):
-        """
-        :return: booléen indiquand si l'inventaire est plein ou pas
-        """
-        for i in range(len(self.inventory)):
-            for j in range(len(self.inventory)):
-                if self.inventory[i][j] is None:
-                    return False
-        return True
-
-    def ajouter_item_inventaire(self, item):
-        """
-        Ajoute l'item passé en paramètre à l'inventaire du personnage.
-        :param item:
-        :return:
-        """
-        if not self.inventaire_est_plein():
-            for i in range(len(self.inventory)):
-                for j in range(len(self.inventory)):
-                    if self.inventory[i][j] is None:
-                        self.inventory[i][j] = item
-                        return
 
     def est_mort(self):
         """

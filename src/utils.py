@@ -28,18 +28,6 @@ def convert_number(number):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
     nombre_str = str(number)
     nombre_str_reverse = nombre_str[::-1]
     nombre_convertis = ""

@@ -22,8 +22,6 @@ BOUTON_FLECHE_BAS = pygame.image.load("./assets/boutons/fleche_bas.png")
 BOUTON_FLECHE_BAS_PRESSE = pygame.image.load("./assets/boutons/fleche_bas_pressé.png")
 
 
-
-
 # chargement des images de l'interface
 IMAGE_INVENTORY = pygame.image.load("./assets/interface_joueur/inventaire.png")
 TABLEAU_DESCRIPTION_ITEM = pygame.image.load("./assets/interface_joueur/tableau_description_item.png")
@@ -85,6 +83,20 @@ CHARACTER_POSTURES = {
 # Spells Icons
 
 SPELL_TRANCHER_ICON = pygame.image.load("./assets/logos_sorts/sort1_guerrier.png")
+
+
+# Items Icons
+ITEMS_ICONS = {}
+rarity_types = ["common", "uncommon", "rare", "epic", "legendary"]
+armor_types = ["Casque", "Épaulières", "Plastron", "Gants", "Ceinture", "Jambières", "Bottes"]
+for at in armor_types:
+    ITEMS_ICONS[at] = pygame.image.load(f"./assets/items/equipement/{at}/{at}_simple.png")
+    ITEMS_ICONS[at + "_spécial"] = pygame.image.load(f"./assets/items/equipement/{at}/{at}_spécial.png")
+
+weapon_types = ["sword"]
+for wt in weapon_types:
+    for rt in rarity_types:
+        ITEMS_ICONS[f"{rt}_{wt}"] = pygame.image.load(f"./assets/items/armes/{wt}/{rt}_{wt}.png")
 
 
 

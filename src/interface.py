@@ -2,6 +2,7 @@ import pygame
 
 from data import Font, Color, Image
 from src import interfaceClasses, utils
+from src.item import *
 from config import WINDOW_WIDTH, WINDOW_HEIGHT
 
 
@@ -162,6 +163,9 @@ class GUIMenusItem(interfaceClasses.ButtonImage):
 
         self.show_menu = False
 
+    def update(self, game):
+        self.menu.update(game)
+
     def draw(self, surface):
         if self.show_menu:
             self.menu.draw(surface)
@@ -202,6 +206,93 @@ class GUIInventoryMenu(interfaceClasses.StaticImage):
     def __init__(self, inventory):
         self.inventory = inventory
         super().__init__(WINDOW_WIDTH / 1.2, WINDOW_HEIGHT / 1.5, Image.IMAGE_INVENTORY, center=True)
+        self.origin_surface = self.surface.copy()
+
+    def update(self, game):
+        updated_surf = self.origin_surface.copy()
+
+        item_info = False
+        # affichage des différents objets de l'inventaire
+        for index, item in enumerate(self.inventory):
+            if item is not None:
+                i = index // self.inventory.cols
+                j = index % self.inventory.cols
+
+                # Affichage d'un cadre autour de l'objet indiquant sa rareté
+                pygame.draw.rect(
+                    updated_surf,
+                    Color.RARITY_COLORS[item.rarity],
+                    pygame.Rect(4 + 52 * j, 3 + 52 * i, 48, 48),
+                    2
+                )
+
+                updated_surf.blit(
+                    Image.ITEMS_ICONS[item.icon_name],
+                    (
+                        4 + 52 * j + 48 / 2 - Image.ITEMS_ICONS[item.icon_name].get_width() / 2,
+                        3 + 52 * i + 48 / 2 - Image.ITEMS_ICONS[item.icon_name].get_height() / 2
+                    )
+                )
+
+                if not item_info:
+                    current_item_real_rect = pygame.Rect(self.rect.x + 4 + 52 * j, self.rect.y + 3 + 52 * i, 48, 48)
+                    # Affiche un menu indicatif de l'item survolé par la souris s'il existe
+                    if current_item_real_rect.collidepoint(game.mouse_pos):
+                        item_info_surf = pygame.Surface(Image.TABLEAU_DESCRIPTION_ITEM.get_size())
+
+                        item_info_surf.blit(Image.TABLEAU_DESCRIPTION_ITEM, (0, 0))
+                        # item_index = i * self.inventory.cols + j
+                        item_info_surf.blit(
+                            Font.ARIAL_23.render(
+                                item.type + " " + item.rarity + " lvl " + str(item.lvl), True, Color.RARITY_COLORS[item.rarity]
+                            ),
+                            (5, 5)
+                        )
+
+                        if isinstance(item, Weapon):
+                            item_info_surf.blit(
+                                Font.ARIAL_23.render(
+                                    str(item.damage) + " Damage", True, Color.WHITE
+                                ),
+                                (10, 50)
+                            )
+                        elif isinstance(item, Armor):
+                            item_info_surf.blit(
+                                Font.ARIAL_23.render(
+                                    str(item.armor) + " Armor", True, Color.WHITE
+                                ),
+                                (10, 50)
+                            )
+
+                        if isinstance(item, Equipment):
+                            item_info_surf.blit(
+                                Font.ARIAL_23.render(
+                                    "+ " + str(item.bonus_hp) + " HP", True, Color.WHITE
+                                ),
+                                (10, 80)
+                            )
+
+                            item_info_surf.blit(
+                                Font.ARIAL_23.render(
+                                    "+ " + str(item.bonus_strength) + " Strength", True, Color.WHITE
+                                ),
+                                (10, 110)
+                            )
+
+                        item_info = True
+
+        if item_info:
+            item_info_surf_rect = item_info_surf.get_rect()
+            item_info_surf_rect.topright = (game.mouse_pos[0] - self.rect.x + item_info_surf_rect.width, game.mouse_pos[1] - self.rect.y)
+
+            if item_info_surf_rect.right > self.rect.width:
+                item_info_surf_rect.right = self.rect.width
+
+            if item_info_surf_rect.bottom > self.rect.height:
+                item_info_surf_rect.bottom = self.rect.height
+
+            updated_surf.blit(item_info_surf, item_info_surf_rect.topleft)
+        self.update_surf(updated_surf)
 
 
 
@@ -215,6 +306,8 @@ class GUIInventoryMenu(interfaceClasses.StaticImage):
 class GUIMenusItemEquipment(GUIMenusItem):
     def __init__(self, character):
         super().__init__(character, pygame.K_c, Image.EQUIPMENT_ICON, GUIEquipmentMenu(character.equipment), "", Font.ARIAL_23, Color.WHITE)
+
+
 
 
 class GUIEquipmentMenu(interfaceClasses.StaticImage):

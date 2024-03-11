@@ -1,7 +1,7 @@
 import pygame
 import random
 import math
-from src import equipement, arme
+from src import item
 
 
 def regen(entite):
@@ -83,17 +83,23 @@ def generation_equipement_alea(lvl, est_boss=False, est_world_boss=False):
     :return:
     """
     equipements_possibles = ["Casque", "Épaulières", "Plastron", "Gants", "Ceinture", "Jambières", "Bottes"]
-    bonus_rarete = {"Ordinaire": 1, "Peu commun": 1.5, "Rare": 2, "Épique": 3, "Légendaire": 5}
+    bonus_rarete = {"common": 1, "uncommon": 1.5, "rare": 2, "epic": 3, "legendary": 5}
     if est_boss:
-        raretes_possibles = ["Peu commun", "Rare", "Épique"]
+        raretes_possibles = ["uncommon", "rare", "epic"]
         rarete_choisi_alea = random.choices(raretes_possibles, weights=[50, 10, 1])[0]
     elif est_world_boss:
-        raretes_possibles = ["Rare", "Épique", "Légendaire"]
+        raretes_possibles = ["rare", "epic", "legendary"]
         rarete_choisi_alea = random.choices(raretes_possibles, weights=[10, 3, 1])[0]
     else:
-        raretes_possibles = ["Ordinaire", "Peu commun"]
+        raretes_possibles = ["common", "uncommon"]
         rarete_choisi_alea = random.choices(raretes_possibles, weights=[15, 1])[0]
     equipement_choisi_alea = random.choice(equipements_possibles)
+    armor_name = equipement_choisi_alea
+    armor_icon_name = equipement_choisi_alea
+
+    if rarete_choisi_alea == "legendary":
+        armor_icon_name += "_spécial"
+
 
     # Défini les différents bonus de l'équipement gagné en fonction du lvl du mob tuée
     if lvl <= 3:
@@ -109,7 +115,16 @@ def generation_equipement_alea(lvl, est_boss=False, est_world_boss=False):
         equipement_drop_armure = bonus_increment(10, lvl)
         equipement_drop_bonus_pv = bonus_increment(3, lvl)
         equipement_drop_bonus_force = bonus_increment(5, lvl)
-    return equipement.Equipement(equipement_choisi_alea, lvl, math.ceil(equipement_drop_armure * bonus_rarete[rarete_choisi_alea]), math.ceil(equipement_drop_bonus_pv * bonus_rarete[rarete_choisi_alea]), math.ceil(equipement_drop_bonus_force * bonus_rarete[rarete_choisi_alea]), rarete_choisi_alea)
+    return item.Armor(
+        armor_name,
+        equipement_choisi_alea,
+        lvl,
+        math.ceil(equipement_drop_armure * bonus_rarete[rarete_choisi_alea]),
+        math.ceil(equipement_drop_bonus_pv * bonus_rarete[rarete_choisi_alea]),
+        math.ceil(equipement_drop_bonus_force * bonus_rarete[rarete_choisi_alea]),
+        rarete_choisi_alea,
+        armor_icon_name
+    )
 
 
 def generation_arme_alea(lvl, est_boss=False, est_world_boss=False):
@@ -121,16 +136,20 @@ def generation_arme_alea(lvl, est_boss=False, est_world_boss=False):
     :param est_world_boss: booléen
     :return:
     """
-    bonus_rarete = {"Ordinaire": 1, "Peu commun": 2, "Rare": 3, "Épique": 5, "Légendaire": 7}
+    weapon_types = ["sword"]
+    bonus_rarete = {"common": 1, "uncommon": 2, "rare": 3, "epic": 5, "legendary": 7}
     if est_boss:
-        raretes_possibles = ["Peu commun", "Rare", "Épique"]
+        raretes_possibles = ["uncommon", "rare", "epic"]
         rarete_choisi_alea = random.choices(raretes_possibles, weights=[50, 10, 1])[0]
     elif est_world_boss:
-        raretes_possibles = ["Rare", "Épique", "Légendaire"]
+        raretes_possibles = ["rare", "epic", "legendary"]
         rarete_choisi_alea = random.choices(raretes_possibles, weights=[10, 5, 1])[0]
     else:
-        raretes_possibles = ["Ordinaire", "Peu commun"]
+        raretes_possibles = ["common", "uncommon"]
         rarete_choisi_alea = random.choices(raretes_possibles, weights=[50, 1])[0]
+    weapon_type = random.choice(weapon_types)
+    weapon_name = weapon_type
+    weapon_icon_name = f"{rarete_choisi_alea}_{weapon_type}"
 
     # Défini les différents bonus de l'arme gagnés en fonction du lvl du mob tuée
     if lvl <= 3:
@@ -147,7 +166,16 @@ def generation_arme_alea(lvl, est_boss=False, est_world_boss=False):
         arme_drop_bonus_pv = bonus_increment(3, lvl)
         arme_drop_bonus_force = bonus_increment(6, lvl)
 
-    return arme.Arme(lvl, math.ceil(arme_drop_degat * bonus_rarete[rarete_choisi_alea]), math.ceil(arme_drop_bonus_pv * bonus_rarete[rarete_choisi_alea]), math.ceil(arme_drop_bonus_force * bonus_rarete[rarete_choisi_alea]), rarete_choisi_alea)
+    return item.Weapon(
+        weapon_name,
+        weapon_type,
+        lvl,
+        math.ceil(arme_drop_degat * bonus_rarete[rarete_choisi_alea]),
+        math.ceil(arme_drop_bonus_pv * bonus_rarete[rarete_choisi_alea]),
+        math.ceil(arme_drop_bonus_force * bonus_rarete[rarete_choisi_alea]),
+        rarete_choisi_alea,
+        weapon_icon_name
+    )
 
 
 def frame(frame_sheet, largeur, hauteur, taille, nb_frames, couleur=None):

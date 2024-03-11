@@ -12,11 +12,13 @@ PURPLE = pygame.color.Color(102, 53, 168)
 DARK_PURPLE = pygame.color.Color(7, 0, 114)
 YELLOW_ORANGE = pygame.color.Color(223, 172, 14)
 
-COMMON_RARITY = pygame.color.Color(187, 186, 186)
-UNCOMMON_RARITY = pygame.color.Color(74, 176, 16)
-RARE_RARITY = pygame.color.Color(12, 107, 220)
-EPIC_RARITY = pygame.color.Color(109, 25, 167)
-LEGENDARY_RARITY = pygame.color.Color(225, 100, 13)
+RARITY_COLORS = {
+    "common": pygame.color.Color(187, 186, 186),
+    "uncommon": pygame.color.Color(74, 176, 16),
+    "rare": pygame.color.Color(12, 107, 220),
+    "epic": pygame.color.Color(109, 25, 167),
+    "legendary": pygame.color.Color(225, 100, 13)
+}
 
 
 

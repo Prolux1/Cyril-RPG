@@ -8,7 +8,6 @@ from src import utils
 
 
 class Monstre:
-
     def __init__(self, lvl, PV, degat, nom, image, frames, x, y, xp, hit_box, est_boss=False, est_world_boss=False):
         self.lvl = lvl
         self.PV = PV
@@ -257,7 +256,7 @@ class Monstre:
         :return:
         """
         if self.est_attaquer():
-            personnage.PV -= self.degat
+            personnage.receive_damage(self.degat)
 
     def take_damage(self, character, amount):
         if self.PV - amount < 0:
@@ -275,22 +274,27 @@ class Monstre:
             # à une chance d'ajouter à l'inventaire du personnage, un équipement de type aléatoire
             # et en adéquation avec le lvl du mob si le mob est un boss,
             # il y a génération d'un équipement à tous les coups
-            chance_drop_equipement = random.randint(1, 5)  # chance basique : 1/5
-            chance_drop_arme = random.randint(1, 10)  # chance basique : 1/10
-            if self.est_boss:
-                character.inventory.add(utils.generation_equipement_alea(self.lvl, True))
-                chance_drop_arme = random.randint(1, 3)  # chance basique : 1/3
-                if chance_drop_arme == 1:
-                    character.inventory.add(utils.generation_arme_alea(self.lvl, True))
-            elif self.est_world_boss:
+            if self.est_world_boss:
+                weapon_drop_chance = 50  # chance basique : 50 %
                 for i in range(3):
                     character.inventory.add(utils.generation_equipement_alea(self.lvl, False, True))
-                chance_drop_arme = random.randint(1, 2)  # chance basique : 1/2
-                if chance_drop_arme == 1:
-                    character.inventory.add(utils.generation_arme_alea(self.lvl, False, True))
+            elif self.est_boss:
+                weapon_drop_chance = 100 / 3  # chance basique : 33.3333333333 %
+                character.inventory.add(utils.generation_equipement_alea(self.lvl, True))
             else:
-                if chance_drop_equipement == 1:
+                equipment_drop_chance = 100  # equipment % drop chance (basic : 20%)
+                weapon_drop_chance = 50  # weapon % drop chance (basic : 10 %)
+
+                if random.random() < equipment_drop_chance / 100:
                     character.inventory.add(utils.generation_equipement_alea(self.lvl))
-                if chance_drop_arme == 1:
-                    character.inventory.add(utils.generation_arme_alea(self.lvl))
+
+            if random.random() < weapon_drop_chance / 100:
+                character.inventory.add(utils.generation_arme_alea(self.lvl, self.est_boss, self.est_world_boss))
+
+        # The mob automatically fight back
+        # souffrance = 5
+        # for i in range(souffrance):
+        #     self.attaquer(character)
+        self.attaquer(character)
+
 

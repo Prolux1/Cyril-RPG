@@ -5,7 +5,7 @@ import copy
 
 from data import Image, Color, Sound
 
-from src import sorts, inventory
+from src import sorts, inventory, item
 
 
 class Personnage:
@@ -119,9 +119,6 @@ class Personnage:
                 self.rect.midbottom = (self.x, self.y)
 
     def handle_event(self, game, event):
-
-
-
         if event.type == pygame.MOUSEBUTTONUP:
             self.select_mob(game.zones[self.zone].get_all_mobs(), game.mouse_pos)
 
@@ -151,22 +148,7 @@ class Personnage:
         #     else:
         #         self.PV = self.PV_max
         #
-        # # Si on ouvre l'inventaire avec 'i'
-        # if event.key == pygame.K_i:
-        #     # Permet d'alterner entre ouvert et fermer lorsqu'on appuie sur "i" pour ouvrir l'inventaire
-        #     if dic_menu["Inventaire"] is False:
-        #         dic_menu["Inventaire"] = True
-        #     else:
-        #         dic_menu["Inventaire"] = False
-        #
-        # # Si on ouvre le menu d'équipement du personnage avec 'c'
-        # if event.key == pygame.K_c:
-        #     if dic_menu["Personnage"] is False:
-        #         dic_menu["Personnage"] = True
-        #     else:
-        #         dic_menu["Personnage"] = False
-        #
-        # # Si on appuie sur '←-' (Backspace), supprime l'object à l'emplacment cibler par la souris
+        # # Si on appuie sur '←-' (Backspace), supprime l'objet à l'emplacement ciblé par la souris
         # if event.key == pygame.K_BACKSPACE:
         #     if dic_menu["Inventaire"]:
         #         for i in range(len(self.inventaire)):
@@ -194,7 +176,7 @@ class Personnage:
     def get_damage(self):
         total = 0
         if self.arme:
-            total += self.arme.degat
+            total += self.arme.damage
 
         total += self.force
 
@@ -230,55 +212,33 @@ class Personnage:
         if self.PV > self.PV_max:
             self.PV = self.PV_max
 
-    def equiper_object(self, equipement, i, j):
-        """
-        Equipe la pièce d'équipement passé en paramètre sur le stuff du personnage
-        :return:
-        """
-        # si la case d'équipement est vide, on ajoute l'équipement
-        if not self.equipment[equipement.type_equipement]:
-            equipement.equipee = True
-            self.equipment[equipement.type_equipement] = equipement
-            self.equipment[i][j] = None
-        # sinon on ajoute d'abord la pièce équipée à l'inventaire puis on rapelle la fonction vu que la case d'équipement est désormais libre
-        else:
-            self.desequiper_object(self.equipment[equipement.type_equipement])
-            self.equiper_object(equipement, i, j)
+    def equip(self, equipment_piece):
+        if isinstance(equipment_piece, item.Weapon):
+            # si la case d'arme est vide, on équipe l'arme
+            if not self.arme:
+                self.arme = equipment_piece
+            # sinon, on ajoute d'abord la pièce équipée à l'inventaire puis
+            # on rappelle la fonction vu que la case d'équipement est désormais libre
+            else:
+                self.unequip(self.arme)
+                self.equip(equipment_piece)
+        elif isinstance(equipment_piece, item.Armor):
+            # same for armor
+            if not self.equipment[equipment_piece.type]:
+                self.equipment[equipment_piece.type] = equipment_piece
+            else:
+                self.unequip(self.equipment[equipment_piece.type])
+                self.equip(equipment_piece)
 
-    def equiper_arme(self, arme, i, j):
-        """
-        Equipe l'arme passé en paramètre sur le stuff du personnage
-        :return:
-        """
-        # si la case d'arme est vide on équipe l'arme
-        if not self.arme:
-            arme.equipee = True
-            self.arme = arme
-            self.inventory[i][j] = None
-        # sinon on ajoute d'abord la pièce équipée à l'inventaire puis on rapelle la fonction vu que la case d'équipement est désormais libre
-        else:
-            self.desequiper_arme(self.arme)
-            self.equiper_arme(arme, i, j)
-
-    def desequiper_arme(self, arme):
-        """
-        Déséquipe l'arme passé en paramètre du stuff du personnage
-        :return:
-        """
-        if self.arme:
-            self.inventory.add(self.arme)
-            self.arme.equipee = False
-            self.arme = None
-
-    def desequiper_object(self, equipement):
-        """
-        Déséquipe la pièce d'équipement passé en paramètre du stuff du personnage
-        :return:
-        """
-        if equipement in self.equipment.values():
-            self.inventory.add(self.equipment[equipement.type_equipement])
-            self.equipment[equipement.type_equipement].equipee = False
-            self.equipment[equipement.type_equipement] = None
+    def unequip(self, equipment_piece):
+        if isinstance(equipment_piece, item.Weapon):
+            if self.arme:
+                self.inventory.add(self.arme)
+                self.arme = None
+        elif isinstance(equipment_piece, item.Armor):
+            if equipment_piece in self.equipment.values():
+                self.inventory.add(self.equipment[equipment_piece.type])
+                self.equipment[equipment_piece.type] = None
 
     def est_mort(self):
         """
@@ -378,6 +338,12 @@ class Personnage:
                 directions_possibles.remove("Bas")
 
         return directions_possibles
+
+    def receive_damage(self, amount):
+        if self.PV - amount < 0:
+            self.PV = 0
+        else:
+            self.PV -= amount
 
     def attaquer(self, mobs, sort, attaques_multiples=False):
         """

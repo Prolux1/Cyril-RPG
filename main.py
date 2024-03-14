@@ -190,7 +190,7 @@ class CyrilRpg:
         ]
 
         if SHOW_FPS:
-            self.components.append(interface.FpsViewer(self.clock.get_fps()))
+            self.components.append(interface.FpsViewer(self.clock.get_fps(), WINDOW_WIDTH, 0))
             # for i in range(3000):  # Todo: I WOKE UP IN A NEW BUGATTI
             #     lol = interface.FpsViewer(self.clock.get_fps())
             #     lol.rect.topleft = (random.randint(0, WINDOW_WIDTH), random.randint(0, WINDOW_HEIGHT))
@@ -202,11 +202,8 @@ class CyrilRpg:
             interface.CharacterNameInput(WINDOW_WIDTH / 2, WINDOW_HEIGHT - 100, Font.ARIAL_23, Color.WHITE)
         ]
 
-
-
-
         if SHOW_FPS:
-            self.components.append(interface.FpsViewer(self.clock.get_fps()))
+            self.components.append(interface.FpsViewer(self.clock.get_fps(), WINDOW_WIDTH, 0))
 
     def character_selection_menu(self):
         self.components = [
@@ -222,9 +219,8 @@ class CyrilRpg:
         # Adding a button to create new character
         self.components.append(interface.CharacterCreationButton(Image.SILVER_WOOD_BUTTON_2, WINDOW_WIDTH / 2, WINDOW_HEIGHT - Image.SILVER_WOOD_BUTTON_2.get_height(),"Create character", Font.ARIAL_23, Color.GREY))
 
-
         if SHOW_FPS:
-            self.components.append(interface.FpsViewer(self.clock.get_fps()))
+            self.components.append(interface.FpsViewer(self.clock.get_fps(), WINDOW_WIDTH, 0))
 
     def settings_menu(self):
         self.components = [
@@ -232,7 +228,7 @@ class CyrilRpg:
         ]
 
         if SHOW_FPS:
-            self.components.append(interface.FpsViewer(self.clock.get_fps()))
+            self.components.append(interface.FpsViewer(self.clock.get_fps(), WINDOW_WIDTH, 0))
 
     def enter_world(self, character):
         self.zones[character.zone].add_character(character)
@@ -241,9 +237,8 @@ class CyrilRpg:
             gui.GameUserInterface(character)
         ]
 
-
         if SHOW_FPS:
-            self.components.append(interface.FpsViewer(self.clock.get_fps()))
+            self.components.append(interface.FpsViewer(self.clock.get_fps(), WINDOW_WIDTH, 0))
 
 
     def info_classe_guerrier(self):

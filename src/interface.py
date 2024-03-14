@@ -7,11 +7,12 @@ from config import WINDOW_WIDTH, WINDOW_HEIGHT
 
 
 class FpsViewer(interfaceClasses.BasicInterfaceTextElement):
-    def __init__(self, fps: float):
-        super().__init__(0, 0, str(fps), Font.ARIAL_30, Color.BLACK)
+    def __init__(self, fps: float, x, y):
+        super().__init__(x, y, str(round(fps)), Font.ARIAL_30, Color.BLACK)
 
     def update(self, game):
         self.update_text(str(round(game.clock.get_fps())))
+        self.rect.topright = (self.x, self.y)
 
 
 class PlayButton(interfaceClasses.ButtonImage):
@@ -96,8 +97,9 @@ class CharacterXpBar(interfaceClasses.BasicInterfaceElement):
 
 class CharacterSpells(interfaceClasses.BasicInterfaceElement):
     def __init__(self, character, x, y, text_font, text_color, center=True):
-        self.empty_surface = pygame.Surface((800, 80))
+        self.empty_surface = pygame.Surface((800, 80), pygame.SRCALPHA)
         super().__init__(x, y, self.empty_surface.copy(), center)
+        pygame.draw.rect(self.surface, Color.BLACK, self.surface.get_rect(), 2)
         self.character = character
 
 
@@ -186,6 +188,8 @@ class GUIMenusItem(interfaceClasses.ButtonImage):
             if event.key == self.key:
                 self.get_clicked(game)
 
+        self.menu.handle_event(game, event)
+
     def get_clicked(self, game):
         self.show_menu = not self.show_menu
 
@@ -199,12 +203,12 @@ class GUIMenusItem(interfaceClasses.ButtonImage):
 
 class GUIMenusItemBag(GUIMenusItem):
     def __init__(self, character):
-        super().__init__(character, pygame.K_b, Image.BAG_ICON, GUIInventoryMenu(character.inventory), "", Font.ARIAL_23, Color.WHITE)
+        super().__init__(character, pygame.K_b, Image.BAG_ICON, GUIInventoryMenu(character), "", Font.ARIAL_23, Color.WHITE)
 
 
 class GUIInventoryMenu(interfaceClasses.StaticImage):
-    def __init__(self, inventory):
-        self.inventory = inventory
+    def __init__(self, character):
+        self.character = character
         super().__init__(WINDOW_WIDTH / 1.2, WINDOW_HEIGHT / 1.5, Image.IMAGE_INVENTORY, center=True)
         self.origin_surface = self.surface.copy()
 
@@ -213,10 +217,10 @@ class GUIInventoryMenu(interfaceClasses.StaticImage):
 
         item_info = False
         # affichage des différents objets de l'inventaire
-        for index, item in enumerate(self.inventory):
+        for index, item in enumerate(self.character.inventory):
             if item is not None:
-                i = index // self.inventory.cols
-                j = index % self.inventory.cols
+                i = index // self.character.inventory.cols
+                j = index % self.character.inventory.cols
 
                 # Affichage d'un cadre autour de l'objet indiquant sa rareté
                 pygame.draw.rect(
@@ -294,6 +298,23 @@ class GUIInventoryMenu(interfaceClasses.StaticImage):
             updated_surf.blit(item_info_surf, item_info_surf_rect.topleft)
         self.update_surf(updated_surf)
 
+    def handle_event(self, game, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 3:
+                # équipe la pièce d'équipement sélectionner si le joueur fait un clique droit dessus depuis l'inventaire
+                for index, item in enumerate(self.character.inventory):
+                    if item is not None:
+                        i = index // self.character.inventory.cols
+                        j = index % self.character.inventory.cols
+
+                        current_item_real_rect = pygame.Rect(self.rect.x + 4 + 52 * j, self.rect.y + 3 + 52 * i, 48, 48)
+
+                        if current_item_real_rect.collidepoint(game.mouse_pos):
+                            if isinstance(item, Equipment):
+                                self.character.equip(item)
+                                self.character.inventory[index] = None
+
+
 
 
 
@@ -305,15 +326,95 @@ class GUIInventoryMenu(interfaceClasses.StaticImage):
 
 class GUIMenusItemEquipment(GUIMenusItem):
     def __init__(self, character):
-        super().__init__(character, pygame.K_c, Image.EQUIPMENT_ICON, GUIEquipmentMenu(character.equipment), "", Font.ARIAL_23, Color.WHITE)
+        super().__init__(character, pygame.K_c, Image.EQUIPMENT_ICON, GUIEquipmentMenu(character), "", Font.ARIAL_23, Color.WHITE)
 
 
 
 
 class GUIEquipmentMenu(interfaceClasses.StaticImage):
-    def __init__(self, equipment):
-        self.equipment = equipment
+    def __init__(self, character):
+        self.character = character
         super().__init__(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, Image.MENU_EQUIPEMENT_PERSONNAGE, center=True)
+        self.origin_surface = self.surface.copy()
+
+    def update(self, game):
+        updated_surf = self.origin_surface.copy()
+
+        item_info = False
+        # show all the equipment currently equipped by the character
+
+        # Affiche les stats du personnage
+        affiche_stat_PV_max = Font.ARIAL_23.render("PV max : " + str(self.character.PV_max), True, Color.WHITE)
+        affiche_stat_armure = Font.ARIAL_23.render("Armure : " + str(self.character.armure), True, Color.WHITE)
+        affiche_stat_force = Font.ARIAL_23.render("Force : " + str(self.character.force), True, Color.WHITE)
+
+        updated_surf.blit(affiche_stat_PV_max, (10, self.rect.height - affiche_stat_force.get_height() - affiche_stat_armure.get_height() - affiche_stat_PV_max.get_height() - 5))
+        updated_surf.blit(affiche_stat_armure, (10, self.rect.height - affiche_stat_force.get_height() - affiche_stat_armure.get_height() - 5))
+        updated_surf.blit(affiche_stat_force, (10, self.rect.height - affiche_stat_force.get_height() - 5))
+
+        # affiche l'arme du personnage
+        if self.character.arme:
+            pygame.draw.rect(updated_surf, Color.RARITY_COLORS[self.character.arme.rarity], [956, 602, 53, 53], 2)
+            updated_surf.blit(Image.ITEMS_ICONS[self.character.arme.icon_name], [966, 612])
+
+            # Affiché arme
+
+        # affiche les différents pièces d'équipements du personnage
+        i = 0
+        for e in self.character.equipment.values():
+            # if object_equiper:
+            #     # équipements de gauche
+            #     if object_equiper.type_equipement == "Casque":
+            #         pygame.draw.rect(self.window, self.raretes_couleur[object_equiper.rarete], [849, 232, 53, 53], 2)
+            #         self.window.blit(object_equiper.logo_objet, [859, 242])
+            #     elif object_equiper.type_equipement == "Épaulières":
+            #         pygame.draw.rect(self.window, self.raretes_couleur[object_equiper.rarete], [849, 306, 53, 53], 2)
+            #         self.window.blit(object_equiper.logo_objet, [859, 316])
+            #     elif object_equiper.type_equipement == "Cape":
+            #         pygame.draw.rect(self.window, self.raretes_couleur[object_equiper.rarete], [849, 380, 53, 53], 2)
+            #         self.window.blit(object_equiper.logo_objet, [859, 390])
+            #     elif object_equiper.type_equipement == "Plastron":
+            #         pygame.draw.rect(self.window, self.raretes_couleur[object_equiper.rarete], [849, 454, 53, 53], 2)
+            #         self.window.blit(object_equiper.logo_objet, [859, 464])
+            #     elif object_equiper.type_equipement == "Ceinture":
+            #         pygame.draw.rect(self.window, self.raretes_couleur[object_equiper.rarete], [849, 528, 53, 53], 2)
+            #         self.window.blit(object_equiper.logo_objet, [859, 538])
+            #
+            #     # équipements de droite
+            #     elif object_equiper.type_equipement == "Gants":
+            #         pygame.draw.rect(self.window, self.raretes_couleur[object_equiper.rarete], [1078, 232, 53, 53], 2)
+            #         self.window.blit(object_equiper.logo_objet, [1088, 242])
+            #     elif object_equiper.type_equipement == "Jambières":
+            #         pygame.draw.rect(self.window, self.raretes_couleur[object_equiper.rarete], [1078, 306, 53, 53], 2)
+            #         self.window.blit(object_equiper.logo_objet, [1088, 316])
+            #     elif object_equiper.type_equipement == "Bottes":
+            #         pygame.draw.rect(self.window, self.raretes_couleur[object_equiper.rarete], [1078, 380, 53, 53], 2)
+            #         self.window.blit(object_equiper.logo_objet, [1088, 390])
+            #     elif object_equiper.type_equipement == "Bague":
+            #         pygame.draw.rect(self.window, self.raretes_couleur[object_equiper.rarete], [1078, 454, 53, 53], 2)
+            #         self.window.blit(object_equiper.logo_objet, [1088, 464])
+            #     elif object_equiper.type_equipement == "Bague":
+            #         pygame.draw.rect(self.window, self.raretes_couleur[object_equiper.rarete], [1078, 528, 53, 53], 2)
+            #         self.window.blit(object_equiper.logo_objet, [1088, 538])
+            #     elif object_equiper.type_equipement == "Bijou":
+            #         pygame.draw.rect(self.window, self.raretes_couleur[object_equiper.rarete], [1078, 602, 53, 53], 2)
+            #         self.window.blit(object_equiper.logo_objet, [1088, 612])
+            #     elif object_equiper.type_equipement == "Bijou":
+            #         pygame.draw.rect(self.window, self.raretes_couleur[object_equiper.rarete], [1078, 676, 53, 53], 2)
+            #         self.window.blit(object_equiper.logo_objet, [1088, 686])
+
+                # Affiche un menu indicatif de l'item de gauche survolé par la souris s'il existe
+                if i <= 4:
+                    pass
+                else:
+                    pass
+
+        self.update_surf(updated_surf)
+
+    def handle_event(self, game, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 3:  # right click
+                pass
 
 
 
@@ -339,5 +440,48 @@ class GUIDonjonsMenu(interfaceClasses.StaticImage):
 
 
 
+
+
+
+
+
+class CharacterFrame(interfaceClasses.BasicInterfaceElement):
+    def __init__(self, character, x, y, text_font, text_color, center=False):
+        self.empty_surface = pygame.Surface((250, 80), pygame.SRCALPHA)
+        super().__init__(x, y, self.empty_surface.copy(), center)
+        self.character = character
+
+        self.char_hp_text = interfaceClasses.BasicInterfaceTextElement(
+            self.rect.width / 2,
+            self.rect.height / 2,
+            str(self.character.PV) + " / " + str(self.character.PV_max),
+            text_font,
+            text_color,
+            True
+        )
+
+        pygame.draw.rect(self.surface, Color.PURPLE, pygame.Rect(0, 0, self.surface.get_width() * (self.character.PV / self.character.PV_max), self.surface.get_height()))
+
+        pygame.draw.rect(self.surface, Color.GREY_LIGHTEN, self.surface.get_rect(), 2)
+
+        self.char_hp_text.draw(self.surface)
+
+    def update(self, game):
+        self.char_hp_text.update_text(str(self.character.PV) + " / " + str(self.character.PV_max))
+
+        perc_hp_left = self.character.PV / self.character.PV_max
+
+        updated_surf = self.empty_surface.copy()
+
+        if perc_hp_left >= 0.5:
+            color_char_hp_bar_rect = (24 + 216 * (1 - perc_hp_left ** 2), 240, 10)
+        else:
+            color_char_hp_bar_rect = (240, 240 * (2 * perc_hp_left), 10)
+
+        pygame.draw.rect(updated_surf, color_char_hp_bar_rect, pygame.Rect(0, 0, updated_surf.get_width() * perc_hp_left, updated_surf.get_height()))
+        pygame.draw.rect(updated_surf, Color.BLACK, updated_surf.get_rect(), 2)
+        self.char_hp_text.draw(updated_surf)
+
+        self.update_surf(updated_surf)
 
 

@@ -5,9 +5,12 @@ from data import Color
 class BasicInterfaceElement:
     def __init__(self, x, y, surf, center=False):
         self.surface = surf
+        self.x = x
+        self.y = y
+        self.center = center
         self.rect = self.surface.get_rect()
 
-        if center:
+        if self.center:
             self.rect.center = (x, y)
         else:
             self.rect.topleft = (x, y)
@@ -18,6 +21,11 @@ class BasicInterfaceElement:
     def update_surf(self, new_surf):
         self.surface = new_surf
         self.rect.size = self.surface.get_size()
+
+        if self.center:
+            self.rect.center = (self.x, self.y)
+        else:
+            self.rect.topleft = (self.x, self.y)
 
     def update(self, game):
         pass

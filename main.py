@@ -428,129 +428,12 @@ class CyrilRpg:
                 pygame.draw.ellipse(self.window, self.Gris, [823, 496, 294, 44])
             self.window.blit(affiche_respawn_perso, [880, 500])
 
-    def affichage_personnages(self, personnage):
-        # affichage des personnages dans la zone
-        for perso in self.zones[personnage.zone].personnages_zone:
-            if not perso.est_mort():
-                self.window.blit(perso.postures[perso.orientation], [perso.x, perso.y])
-
-                # affichage du nom et du lvl du personnage
-                affiche_nom_lvl_perso = self.police.render(perso.nom + " lvl " + str(perso.lvl), True, self.Noir)
-                self.window.blit(affiche_nom_lvl_perso, [perso.x - 10, perso.y - 50])
-
-                # affichage de la hit_box du personnage
-                personnage.hit_box[0] = personnage.x
-                personnage.hit_box[1] = personnage.y
-                #pygame.draw.rect(self.fenetre, self.Noir, personnage.hit_box, 2)
-
-    def affichage_mob_image_orientation(self, mob):
-        """
-        Positionnement de l'image du monstre personnaliser en fonction de l'orientation du monstre
-        :return:
-        """
-        if mob.orientation == "Gauche":
-            if mob.nom == "Rat" or mob.nom == "Boss Rat":
-                self.window.blit(mob.image, [mob.x - 40, mob.y + 40])
-            elif mob.nom == "Cerf" or mob.nom == "Boss Cerf":
-                self.window.blit(mob.image, [mob.x - 40, mob.y])
-            elif mob.nom == "Orc":
-                self.window.blit(mob.image, [mob.x - 10, mob.y])
-            elif mob.nom == "Loup humain":
-                self.window.blit(mob.image, [mob.x, mob.y])
-            elif mob.nom == "Dotum":
-                self.window.blit(mob.image, [mob.x - 22 * 8, mob.y - 10 * 8])
-            elif mob.nom == "Fenrir":
-                self.window.blit(mob.image, [mob.x - 24 * 12, mob.y - 10 * 12])
-
-        elif mob.orientation == "Droite":
-            if mob.nom == "Rat" or mob.nom == "Boss Rat":
-                self.window.blit(mob.image, [mob.x - 80, mob.y + 40])
-            elif mob.nom == "Cerf" or mob.nom == "Boss Cerf":
-                self.window.blit(mob.image, [mob.x - 40, mob.y])
-            elif mob.nom == "Orc":
-                self.window.blit(mob.image, [mob.x, mob.y])
-            elif mob.nom == "Loup humain":
-                self.window.blit(mob.image, [mob.x, mob.y])
-            elif mob.nom == "Dotum":
-                self.window.blit(mob.image, [mob.x - 26 * 8, mob.y + 3 * 8])
-            elif mob.nom == "Fenrir":
-                self.window.blit(mob.image, [mob.x - 30 * 12, mob.y + 3 * 12])
-
-        elif mob.orientation == "Dos":
-            if mob.nom == "Rat" or mob.nom == "Boss Rat":
-                self.window.blit(mob.image, [mob.x, mob.y + 40])
-            elif mob.nom == "Cerf" or mob.nom == "Boss Cerf":
-                self.window.blit(mob.image, [mob.x, mob.y])
-            elif mob.nom == "Orc":
-                self.window.blit(mob.image, [mob.x - 30, mob.y])
-            elif mob.nom == "Loup humain":
-                self.window.blit(mob.image, [mob.x, mob.y])
-            elif mob.nom == "Dotum":
-                self.window.blit(mob.image, [mob.x - 24 * 8, mob.y - 17 * 8])
-            elif mob.nom == "Fenrir":
-                self.window.blit(mob.image, [mob.x - 28 * 12, mob.y - 17 * 12])
-
-        else:
-            if mob.nom == "Rat" or mob.nom == "Boss Rat":
-                self.window.blit(mob.image, [mob.x, mob.y])
-            elif mob.nom == "Cerf" or mob.nom == "Boss Cerf":
-                self.window.blit(mob.image, [mob.x, mob.y])
-            elif mob.nom == "Orc":
-                self.window.blit(mob.image, [mob.x - 30, mob.y])
-            elif mob.nom == "Loup humain":
-                self.window.blit(mob.image, [mob.x, mob.y])
-            elif mob.nom == "Dotum":
-                self.window.blit(mob.image, [mob.x - 25 * 8, mob.y - 5 * 8])
-            elif mob.nom == "Fenrir":
-                self.window.blit(mob.image, [mob.x - 27 * 12, mob.y - 5 * 12])
-
-    def affichage_mobs(self, mobs_zone):
-        # affichage de touts les mobs présents dans la zone du joueur ainsi que de leurs PV au-dessus d'eux
-        for mob in mobs_zone:
-            if mob.nom == "Fenrir":
-                mob.deplacement(0.18)
-            else:
-                mob.deplacement(0.1)
-
-            # Positionnement de l'image du monstre personnaliser en fonction de l'orientation du monstre
-            self.affichage_mob_image_orientation(mob)
-
-            # affichage du nom du mob et de son lvl
-            affiche_nom_lvl_mob = self.police.render(mob.nom + " lvl " + str(mob.lvl), True, self.Noir)
-            self.window.blit(affiche_nom_lvl_mob, [mob.x + 39 - len(mob.nom + " lvl " + str(mob.lvl)) * 5, mob.y - 80])
-
-            pygame.draw.rect(self.window, self.Noir, [mob.x - 50, mob.y - 50, 210, 50], 2)
-            if mob.PV >= mob.PV_max / 2:
-                pygame.draw.rect(self.window, (24 + 216 * (1 - (mob.PV / mob.PV_max) ** 2), 240, 10), [mob.x - 48, mob.y - 48, (207 * mob.PV) / mob.PV_max, 47])
-            else:
-                pygame.draw.rect(self.window, (240, 240 * (2 * mob.PV / mob.PV_max), 10), [mob.x - 48, mob.y - 48, (207 * mob.PV) / mob.PV_max, 47])
-
-            # affichage du nombre de PV du mob au dessus de sa tête
-            if len(str(mob.PV) + " / " + str(mob.PV_max)) <= 13:
-                affiche_PV_mob = self.police.render(utils.conversion_nombre(mob.PV) + " / " + utils.conversion_nombre(mob.PV_max), True, self.Noir)
-                self.window.blit(affiche_PV_mob, [mob.x + 80 - len(str(mob.PV) + " / " + str(mob.PV_max)) * 10, mob.y - 40])
-            else:
-                affiche_PV_mob = self.police_3.render(utils.conversion_nombre(mob.PV) + " / " + utils.conversion_nombre(mob.PV_max), True, self.Noir)
-                self.window.blit(affiche_PV_mob, [mob.x + 45 - len(str(mob.PV) + " / " + str(mob.PV_max)) * 5, mob.y - 38])
-
-            # affiche la hit box du mob
-            #pygame.draw.rect(self.fenetre, self.Noir, mob.hit_box, 2)
-
     def affichage_interface_jeu(self, personnage, dic_menu):
         """
         Prends en paramètre un dictionnaire contenant le nom du menu et son état ex: {"Inventaire: True"} signifie que l'inventaire est ouvert
         Prends également en paramètre le personnage pour affiche les objets de son inventaire
         Affichage de l'interface du jeu
         """
-
-        # affichage des PV + rectangle de couleur verte représentant la vie du personnage
-        pygame.draw.rect(self.window, self.Noir, [10, 10, 210, 50], 2)
-        if personnage.PV >= personnage.PV_max / 2:
-            pygame.draw.rect(self.window, (24 + 216 * (1 - (personnage.PV / personnage.PV_max) ** 2), 240, 10), [12, 12, (207 * personnage.PV) / personnage.PV_max, 47])
-        else:
-            pygame.draw.rect(self.window, (240, 240 * (2 * personnage.PV / personnage.PV_max), 10), [12, 12, (207 * personnage.PV) / personnage.PV_max, 47])
-        affiche_PV_perso = self.police.render(str(math.ceil(personnage.PV)) + " / " + str(personnage.PV_max), True, self.Noir)
-        self.window.blit(affiche_PV_perso, [50, 17])
 
         # affichage de la barre de sorts
         self.window.blit(self.image_barre_de_sorts, [700, 1009])
@@ -580,47 +463,6 @@ class CyrilRpg:
                 if personnage.sorts[i].zone_effet:
                     affiche_zone_effet = self.police_3.render("Dégâts de zone", True, self.Noir)
                     self.window.blit(affiche_zone_effet, [self.mouse_pos[0] + 5, self.mouse_pos[1] - 35])
-
-        selectionner = False
-        # affichage de l'inventaire s'il est ouvert
-        if dic_menu["Inventaire"]:
-            self.window.blit(self.image_inventaire, [1400, 500])
-
-            # affichage des différents objets de l'inventaire ainsi qu'un cadre autour de l'objet indiquant sa rareté
-            for i in range(len(personnage.inventaire)):
-                for j in range(len(personnage.inventaire[0])):
-                    if personnage.inventaire[i][j]:
-                        pygame.draw.rect(self.window, self.raretes_couleur[personnage.inventaire[i][j].rarete], [1417 + 52 * j, 533 + 52 * i, 39, 39], 2)
-                        self.window.blit(personnage.inventaire[i][j].logo_objet, [1421 + 52 * j, 537 + 52 * i])
-                        #self.fenetre.blit(self.logo_equipement_ceinture_simple, [1421 + 52 * j, 537 + 52 * i])
-
-                        # Affiche un menu indicatif de l'item survolé par la souris s'il existe
-                        if 1417 + 52 * j < self.mouse_pos[0] < 1417 + 52 * j + 39 and 533 + 52 * i < self.mouse_pos[1] < 533 + 52 * i + 39:
-                            selectionner = True
-                            i_item = i
-                            j_item = j
-
-                            affiche_type_rarete_lvl_equipement = self.police_3.render(personnage.inventaire[i][j].type_equipement + " " + personnage.inventaire[i][j].rarete + " lvl " + str(personnage.inventaire[i][j].lvl), True, self.raretes_couleur[personnage.inventaire[i][j].rarete])
-                            if personnage.inventaire[i][j].type_equipement == "Arme":
-                                affiche_degat_arme = self.police_3.render(str(personnage.inventaire[i][j].degat) + " Dégâts", True, self.Noir)
-                            else:
-                                affiche_armure_equipement = self.police_3.render(str(personnage.inventaire[i][j].armure) + " Armure", True, self.Noir)
-                            affiche_bonus_PV_equipement = self.police_3.render("+ " + str(personnage.inventaire[i][j].bonus_PV) + " PV", True, self.Noir)
-                            affiche_bonus_force_equipement = self.police_3.render("+ " + str(personnage.inventaire[i][j].bonus_force) + " Force", True, self.Noir)
-
-            # Si un équipement est sélectionner on l'affiche tout a la fin pour superposer les écritures et le menu indicatif sur les autres items
-            if selectionner:
-                self.window.blit(self.tableau_description_item, [self.mouse_pos[0], self.mouse_pos[1]])
-                self.window.blit(affiche_type_rarete_lvl_equipement, [self.mouse_pos[0] + 5, self.mouse_pos[1] + 5])
-                if personnage.inventaire[i_item][j_item].type_equipement == "Arme":
-                    self.window.blit(affiche_degat_arme, [self.mouse_pos[0] + 10, self.mouse_pos[1] + 50])
-                else:
-                    self.window.blit(affiche_armure_equipement, [self.mouse_pos[0] + 10, self.mouse_pos[1] + 50])
-                self.window.blit(affiche_bonus_PV_equipement, [self.mouse_pos[0] + 10, self.mouse_pos[1] + 80])
-                self.window.blit(affiche_bonus_force_equipement, [self.mouse_pos[0] + 10, self.mouse_pos[1] + 110])
-                if personnage.inventaire[i_item][j_item].equipee:
-                    affiche_equipee_equipement = self.police_3.render("équipée", True, self.Noir)
-                    self.window.blit(affiche_equipee_equipement, [self.mouse_pos[0] + 100, self.mouse_pos[1] + 20])
 
         selectionner = False
         selectionner_arme = False
@@ -749,22 +591,6 @@ class CyrilRpg:
                 self.window.blit(affiche_info_armure1, [self.mouse_pos[0] + 10, self.mouse_pos[1] + 10])
                 self.window.blit(affiche_info_armure2, [self.mouse_pos[0] + 10, self.mouse_pos[1] + 40])
                 self.window.blit(affiche_info_armure3, [self.mouse_pos[0] + 10, self.mouse_pos[1] + 70])
-
-    def menu_parametre(self):
-        execution = True
-        while execution:
-            self.horloge.tick(60)
-            self.mouse_pos = pygame.mouse.get_pos()  # récupère la position de la souris
-            self.window.fill(self.Blanc)
-            for event in pygame.event.get():  # à chaque événement provoqué par l'utilisateur
-                if event.type == pygame.QUIT:  # si un des événements évoque la fermeture d'une fenêtre (par exemple cliquez sur la croix rouge en haut a droite ou appuyez alt+F4) ferme le jeu
-                    execution = False
-                if event.type == pygame.K_ESCAPE:
-                    execution = False
-                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    pass
-
-            self.affichage_menu_parametre()
 
     def menu_creer_perso(self):
         classe_select = 'Guerrier'
@@ -968,21 +794,8 @@ class CyrilRpg:
                     execution = False
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
 
-                    # équipe la pièce d'équipement sélectionner si le joueur fait un clique droit dessus depuis l'inventaire
-                    if dic_menu["Inventaire"]:
-                        for i in range(len(personnage.inventaire)):
-                            for j in range(len(personnage.inventaire[0])):
-                                if personnage.inventaire[i][j]:
-                                    if 1417 + 52 * j < self.mouse_pos[0] < 1417 + 52 * j + 39 and 533 + 52 * i < self.mouse_pos[1] < 533 + 52 * i + 39:
-                                        if personnage.inventaire[i][j].type_equipement == "Arme":
-                                            if not personnage.inventaire_est_plein() or not personnage.arme:
-                                                personnage.equiper_arme(personnage.inventaire[i][j], i, j)
-                                        elif personnage.inventaire[i][j].type_equipement in personnage.equipement.keys():
-                                            if not personnage.inventaire_est_plein() or not personnage.equipement[personnage.inventaire[i][j].type_equipement]:
-                                                personnage.equiper_object(personnage.inventaire[i][j], i, j)
-                                                self.son_equiper_armure_lourde.play()
-
-                    # déséquipe la pièce d'équipement sélectionner si le joueur fait un clique droit dessus depuis le menu de personnage
+                    # déséquipe la pièce d'équipement sélectionné si le joueur
+                    # fait un clique droit dessus depuis le menu de personnage
                     if dic_menu["Personnage"]:
                         if not personnage.inventaire_est_plein():
                             if personnage.arme:
@@ -1023,42 +836,6 @@ class CyrilRpg:
                         self.music_boss.stop()
                         self.zones[personnage.zone].personnages_zone.remove(personnage)
                     if not personnage.est_mort():
-                        # liste de booléens indiquant toutes les touches pressées
-                        touches_presses = pygame.key.get_pressed()
-                        deplacements_possibles = personnage.verifier_personnage_obstacles(self.zones[personnage.zone].obstacles)
-                        if touches_presses[pygame.K_z] and touches_presses[pygame.K_d]:
-                            if "Haut" in deplacements_possibles and "Droite" in deplacements_possibles:
-                                personnage.deplacement_haut_droite()
-                        elif touches_presses[pygame.K_z] and touches_presses[pygame.K_q]:
-                            if "Haut" in deplacements_possibles and "Gauche" in deplacements_possibles:
-                                personnage.deplacement_haut_gauche()
-                        elif touches_presses[pygame.K_s] and touches_presses[pygame.K_q]:
-                            if "Bas" in deplacements_possibles and "Gauche" in deplacements_possibles:
-                                personnage.deplacement_bas_gauche()
-                        elif touches_presses[pygame.K_s] and touches_presses[pygame.K_d]:
-                            if "Bas" in deplacements_possibles and "Droite" in deplacements_possibles:
-                                personnage.deplacement_bas_droite()
-                        elif event.key == pygame.K_z:
-                            if "Haut" in deplacements_possibles:
-                                personnage.deplacement_haut()
-                        elif event.key == pygame.K_q:
-                            if "Gauche" in deplacements_possibles:
-                                personnage.deplacement_gauche()
-                        elif event.key == pygame.K_s:
-                            if "Bas" in deplacements_possibles:
-                                personnage.deplacement_bas()
-                        elif event.key == pygame.K_d:
-                            if "Droite" in deplacements_possibles:
-                                personnage.deplacement_droite()
-
-                        # Si le personnage lance le sort 1
-                        if event.key == pygame.K_1:
-                            if personnage.sorts[0].temps_restant_rechargement == 0:
-                                self.sons_attaque_perso[random.randint(0, len(self.sons_attaque_perso) - 1)].play()
-                                personnage.attaquer(mobs_zone, personnage.sorts[0])
-                                personnage.sorts[0].temps_restant_rechargement = personnage.sorts[0].temps_rechargement
-                                #affiche_zone_effet_s1 = True
-
                         # Si le personnage lance le sort 2
                         if event.key == pygame.K_2:
                             if len(personnage.sorts) >= 2:
@@ -1076,21 +853,6 @@ class CyrilRpg:
                             else:
                                 personnage.PV = personnage.PV_max
 
-                        # Si on ouvre l'inventaire avec 'i'
-                        if event.key == pygame.K_i:
-                            # Permet d'alterner entre ouvert et fermer lorsqu'on appuie sur "i" pour ouvrir l'inventaire
-                            if dic_menu["Inventaire"] is False:
-                                dic_menu["Inventaire"] = True
-                            else:
-                                dic_menu["Inventaire"] = False
-
-                        # Si on ouvre le menu d'équipement du personnage avec 'c'
-                        if event.key == pygame.K_c:
-                            if dic_menu["Personnage"] is False:
-                                dic_menu["Personnage"] = True
-                            else:
-                                dic_menu["Personnage"] = False
-
                         # Si on appuie sur '←-' (Backspace), supprime l'object à l'emplacment cibler par la souris
                         if event.key == pygame.K_BACKSPACE:
                             if dic_menu["Inventaire"]:
@@ -1098,13 +860,6 @@ class CyrilRpg:
                                     for j in range(len(personnage.inventaire[0])):
                                         if 1417 + 52 * j < self.mouse_pos[0] < 1417 + 52 * j + 39 and 533 + 52 * i < self.mouse_pos[1] < 533 + 52 * i + 39:
                                             personnage.inventaire[i][j] = None
-
-            for sort in personnage.sorts:
-                if sort.temps_restant_rechargement != 0:
-                    if sort.temps_restant_rechargement > 0:
-                        sort.temps_restant_rechargement -= 0.01
-                    if sort.temps_restant_rechargement < 0:
-                        sort.temps_restant_rechargement = 0
 
             if sort_lancer == "Tourbillon":
                 if temps_attaques_tourbillon[1] == 3:
@@ -1120,81 +875,13 @@ class CyrilRpg:
                         temps_attaques_tourbillon[0] = None
                         temps_attaques_tourbillon[1] += 1
 
-            if not personnage.est_mort():
-                if personnage.PV < personnage.PV_max:
-                    if temps_regen is None:
-                        temps_regen = self.temps.__round__()
-
-                if temps_regen:
-                    if self.temps.__round__() == temps_regen + 2:
-                        personnage.PV = utils.regen(personnage)
-                        temps_regen = None
-            elif temps_regen is not None:
-                temps_regen = None
-
-            # Ajoute un mob aléatoire dans la zone du joueur
-            if len(mobs_zone) < self.zones[personnage.zone].nb_max_monstres:
-                if mob_spawn_timer is None:
-                    mob_spawn_timer = self.temps.__round__()
-                elif self.temps.__round__() == mob_spawn_timer + 2:
-                    mobs_zone.append(self.generer_mob(personnage.zone))
-                    mob_spawn_timer = None
-
-            if personnage.xp >= personnage.xp_requis:
-                personnage.xp -= personnage.xp_requis
-                self.son_level_up.play()
-                level_up = True
-                temps_affiche_level_up = self.temps.__round__()
-                personnage.lvl_up()
-
-                if personnage.lvl == 10:
-                    personnage.sorts.append(sorts.Sort("Tourbillon", 3, pygame.image.load("./assets/logos_sorts/sort2_guerrier.png").convert_alpha(), 10, (395, 300)))
-
-            personnage.mise_a_jour_stats()
-
             self.affichage_jeu(personnage)
-            self.affichage_mobs(mobs_zone)
-            self.affichage_personnages(personnage)
             self.affichage_interface_jeu(personnage, dic_menu)
-
-            personnage.mise_a_jour_stats()
-
-            # affichage d'une barre d'expérience tout en bas qui se remplis en tuant des mobs
-            pygame.draw.rect(self.window, self.Noir, [1500, 1070, 420, 10], 2)
-            pygame.draw.rect(self.window, self.Violet, [1502, 1072, 417 * (personnage.xp / personnage.xp_requis), 7])
-
-            # affiche la quantité d'expérience / quantité d'expérience requise
-            affiche_xp_xp_requis = self.police.render(utils.conversion_nombre(personnage.xp) + " / " + utils.conversion_nombre(personnage.xp_requis), True, self.Violet)
-            self.window.blit(affiche_xp_xp_requis, [1650, 1030])
 
             # affiche la barre des sorts (3 emplacements de sorts pour l'instant)
 
             for mob in mobs_zone:
                 if mob.est_mort():
-                    personnage.xp += mob.xp * xp_multiplier
-                    xp_obtenu += mob.xp * xp_multiplier
-
-                    # à une chance d'ajouter à l'inventaire du personnage, un équipement de type aléatoire et en adéquation avec le lvl du mob
-                    # si le mob est un boss il y a génération d'un équipement à tout les coups
-                    chance_drop_equipement = random.randint(1, 5)  # chance basique : 1/5
-                    chance_drop_arme = random.randint(1, 10)  # chance basique : 1/10
-                    if mob.est_boss:
-                        personnage.ajouter_item_inventaire(utils.generation_equipement_alea(mob.lvl, True))
-                        chance_drop_arme = random.randint(1, 3) # chance basique : 1/3
-                        if chance_drop_arme == 1:
-                            personnage.ajouter_item_inventaire(utils.generation_arme_alea(mob.lvl, True))
-                    elif mob.est_world_boss:
-                        for i in range(3):
-                            personnage.ajouter_item_inventaire(utils.generation_equipement_alea(mob.lvl, False, True))
-                        chance_drop_arme = random.randint(1, 2)  # chance basique : 1/2
-                        if chance_drop_arme == 1:
-                            personnage.ajouter_item_inventaire(utils.generation_arme_alea(mob.lvl, False, True))
-                    else:
-                        if chance_drop_equipement == 1:
-                            personnage.ajouter_item_inventaire(utils.generation_equipement_alea(mob.lvl))
-                        if chance_drop_arme == 1:
-                            personnage.ajouter_item_inventaire(utils.generation_arme_alea(mob.lvl))
-                    mobs_zone.remove(mob)
                     temps_affiche_xp = self.temps.__round__()
 
             # affiche l'xp obtenu suite aux monstres tués
@@ -1206,16 +893,16 @@ class CyrilRpg:
                     xp_obtenu = 0
 
             # Affiche un message indiquant que le joueur à level up
-            if level_up:
-                if temps_affiche_level_up + 2 > self.temps:
-                    if temps_affiche_level_up + level_up_alpha / 255 < self.temps:
-                        if level_up_alpha != 255:
-                            level_up_alpha += 51
-                    self.images_level_up[(level_up_alpha // 51) - 1].set_alpha(level_up_alpha)
-                    self.window.blit(self.images_level_up[(level_up_alpha // 51) - 1], [personnage.x - 80, personnage.y - 240])
-                else:
-                    level_up = False
-                    level_up_alpha = 51
+            # if level_up:
+            #     if temps_affiche_level_up + 2 > self.temps:
+            #         if temps_affiche_level_up + level_up_alpha / 255 < self.temps:
+            #             if level_up_alpha != 255:
+            #                 level_up_alpha += 51
+            #         self.images_level_up[(level_up_alpha // 51) - 1].set_alpha(level_up_alpha)
+            #         self.window.blit(self.images_level_up[(level_up_alpha // 51) - 1], [personnage.x - 80, personnage.y - 240])
+            #     else:
+            #         level_up = False
+            #         level_up_alpha = 51
 
             # affichage d'un message si le joueur meurt
             if personnage.est_mort():

@@ -37,9 +37,6 @@ class Personnage:
             self.PV = 124
 
 
-
-
-
         self.armure = 0
         self.reduction_degats = 0
         self.force_de_base = 3000000000  # 3 by default
@@ -66,7 +63,7 @@ class Personnage:
             "Bague 1": None,
             "Bague 2": None,
             "Bijou 1": None,
-            "Bijou 2": None
+            "Artifact": None
         }
 
         self.inventory = inventory.Inventory(8, 8)
@@ -76,6 +73,8 @@ class Personnage:
 
         self.selected_mob = None
 
+        self.passive_regen_timer = None
+
     def draw(self, surface):
         surface.blit(Image.CHARACTER_POSTURES[self.orientation], self.rect.topleft)
         # pygame.draw.rect(surface, "black", self.rect, 2)
@@ -84,6 +83,8 @@ class Personnage:
         # pygame.draw.circle(surface, Color.BLACK, self.rect.center, self.spells[0].reach, 2)
 
     def update(self, game, zone):
+        self.update_stats()
+
         if not self.est_mort():
             key_pressed = pygame.key.get_pressed()
             deplacements_possibles = self.verifier_personnage_obstacles(zone.obstacles)
@@ -117,6 +118,22 @@ class Personnage:
                 if "Droite" in deplacements_possibles:
                     self.deplacement_droite()
                 self.rect.midbottom = (self.x, self.y)
+
+            # if character is not dead we regen 1 % of its
+            # max hp every 2 seconds
+
+            if self.PV < self.PV_max:
+                if self.passive_regen_timer is None:
+                    self.passive_regen_timer = game.time + 2
+                else:
+                    if game.time >= self.passive_regen_timer:
+                        self.regen()
+                        self.passive_regen_timer = game.time + 2
+            else:
+                self.passive_regen_timer = None
+
+
+
 
     def handle_event(self, game, event):
         if event.type == pygame.MOUSEBUTTONUP:
@@ -182,7 +199,7 @@ class Personnage:
 
         return total
 
-    def mise_a_jour_stats(self):
+    def update_stats(self):
         """
         Met à jour les stats du joueur en fonction de l'équipement équipée
         """
@@ -191,13 +208,13 @@ class Personnage:
         force_total = self.force_de_base
 
         if self.arme:
-            PV_max_total += self.arme.bonus_PV
-            force_total += self.arme.bonus_force
-        for equipement in self.equipment.values():
-            if equipement:
-                armure_total += equipement.armure
-                PV_max_total += equipement.bonus_PV
-                force_total += equipement.bonus_force
+            PV_max_total += self.arme.bonus_hp
+            force_total += self.arme.bonus_strength
+        for eq in self.equipment.values():
+            if eq:
+                armure_total += eq.armor
+                PV_max_total += eq.bonus_hp
+                force_total += eq.bonus_strength
         self.armure = armure_total
         if self.armure <= 500:
             self.reduction_degats = (self.armure / (self.armure + 1000))
@@ -208,7 +225,7 @@ class Personnage:
         self.PV_max = PV_max_total
         self.force = force_total
 
-        #Si les PV sont supérieur aux PV max, on change cela
+        # Si les PV sont supérieurs aux PV max, on change cela
         if self.PV > self.PV_max:
             self.PV = self.PV_max
 
@@ -229,6 +246,7 @@ class Personnage:
             else:
                 self.unequip(self.equipment[equipment_piece.type])
                 self.equip(equipment_piece)
+            Sound.EQUIPER_ARMURE_LOURDE.play()
 
     def unequip(self, equipment_piece):
         if isinstance(equipment_piece, item.Weapon):
@@ -267,8 +285,18 @@ class Personnage:
 
     def gain_xp(self, amount):
         self.xp += amount
+        has_lvl_up = False
         while self.xp >= self.xp_requis:
             self.lvl_up()
+            has_lvl_up = True
+
+        if has_lvl_up:
+            Sound.SON_LEVEL_UP.play()
+
+        # temps_affiche_level_up = self.temps.__round__()
+        # if self.lvl == 10:
+        #     self.spells.append(sorts.Sort("Tourbillon", 3, pygame.image.load(
+        #         "./assets/logos_sorts/sort2_guerrier.png").convert_alpha(), 10, (395, 300)))
 
     def deplacement_haut(self):
         self.orientation = "Dos"
@@ -344,6 +372,14 @@ class Personnage:
             self.PV = 0
         else:
             self.PV -= amount
+
+    def regen(self):
+        # Regen 1 % of the max hp of the character
+        if self.PV + self.PV_max / 100 < self.PV_max:
+            self.PV += self.PV_max / 100
+            self.PV = round(self.PV)
+        else:
+            self.PV = self.PV_max
 
     def attaquer(self, mobs, sort, attaques_multiples=False):
         """

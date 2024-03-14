@@ -22,6 +22,9 @@ class BasicInterfaceElement:
         self.surface = new_surf
         self.rect.size = self.surface.get_size()
 
+        self.update_rect()
+
+    def update_rect(self):
         if self.center:
             self.rect.center = (self.x, self.y)
         else:

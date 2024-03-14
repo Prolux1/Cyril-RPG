@@ -4,17 +4,6 @@ import math
 from src import item
 
 
-def regen(entite):
-    """
-    Regen une entité ayant des PV à hauteur d'1% de ses PV max
-    :param entite:
-    :return:
-    """
-    if entite.PV + entite.PV_max / 100 > entite.PV_max:
-        return entite.PV_max
-    return entite.PV + entite.PV_max / 100
-
-
 def bonus_increment(nombre, lvl):
     for i in range(3, lvl):
         nombre += math.ceil(nombre / 4)

@@ -81,8 +81,9 @@ CHARACTER_POSTURES = {
 }
 
 # Spells Icons
-
-SPELL_TRANCHER_ICON = pygame.image.load("./assets/logos_sorts/sort1_guerrier.png")
+SPELL_ICONS = {
+    "cleave": pygame.image.load("./assets/logos_sorts/sort1_guerrier.png")
+}
 
 
 # Items Icons

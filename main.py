@@ -167,7 +167,8 @@ class CyrilRpg:
                 Image.FRAMES_MOB_FENRIR[p][i] = Image.FRAMES_MOB_FENRIR[p][i].convert_alpha()
             Image.CHARACTER_POSTURES[p] = Image.CHARACTER_POSTURES[p].convert_alpha()
 
-        Image.SPELL_TRANCHER_ICON = Image.SPELL_TRANCHER_ICON.convert_alpha()
+        for s in Image.SPELL_ICONS:
+            Image.SPELL_ICONS[s] = Image.SPELL_ICONS[s].convert_alpha()
 
     def save_screenshot(self):
         if not os.path.isdir("screenshots"):

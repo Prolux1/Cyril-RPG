@@ -5,7 +5,7 @@ from src import CircleClass
 
 
 class Spell:
-    def __init__(self, nom, perc_char_dmg, temps_rechargement, zone_effet=None, reach=16/9 * 100):
+    def __init__(self, nom, perc_char_dmg, temps_rechargement, icon_name, zone_effet=None, reach=16/9 * 100):
         self.nom = nom
         self.zone_effet = zone_effet  # un tuple (x, y) qui représente la taille de la zone d'effet
         self.perc_char_dmg = perc_char_dmg  # If perc_char_dmg = 100, this means that this spell will do 100% of the character damage
@@ -13,6 +13,8 @@ class Spell:
         self.last_time_used = None
 
         self.reach = reach
+
+        self.icon_name = icon_name
 
     def ready(self, game_time):
         if self.last_time_used is None:

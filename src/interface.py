@@ -97,10 +97,47 @@ class CharacterXpBar(interfaceClasses.BasicInterfaceElement):
 
 class CharacterSpells(interfaceClasses.BasicInterfaceElement):
     def __init__(self, character, x, y, text_font, text_color, center=True):
-        self.empty_surface = pygame.Surface((800, 80), pygame.SRCALPHA)
-        super().__init__(x, y, self.empty_surface.copy(), center)
-        pygame.draw.rect(self.surface, Color.BLACK, self.surface.get_rect(), 2)
         self.character = character
+        self.text_font = text_font
+        self.text_color = text_color
+        self.origin_surf = pygame.Surface((800, 80), pygame.SRCALPHA)
+        super().__init__(x, y, self.origin_surf.copy(), center)
+        pygame.draw.rect(self.surface, Color.BLACK, self.surface.get_rect(), 2)
+
+
+    def update(self, game):
+        updated_surf = self.origin_surf.copy()
+
+        pygame.draw.rect(updated_surf, Color.BLACK, updated_surf.get_rect(), 2)
+
+        total_width_taken = 0
+        for i, s in enumerate(self.character.spells):
+            spell_icon_rect = Image.SPELL_ICONS[s.icon_name].get_rect()
+            spell_icon_rect.x = 2 + total_width_taken
+            spell_icon_rect.y = updated_surf.get_height() / 2 - spell_icon_rect.height / 2
+            updated_surf.blit(Image.SPELL_ICONS[s.icon_name], (spell_icon_rect.x, spell_icon_rect.y))
+
+            # The spell of index i is casted using the i+1 keyboard key, we indicate this
+            spell_key_surf = self.text_font.render(str(i+1), True, self.text_color)
+            updated_surf.blit(spell_key_surf, (spell_icon_rect.x + spell_icon_rect.width - spell_key_surf.get_width(), spell_icon_rect.y + spell_icon_rect.height - spell_key_surf.get_height()))
+
+            total_width_taken += Image.SPELL_ICONS[s.icon_name].get_width()
+
+
+
+        self.update_surf(updated_surf)
+
+
+    def handle_event(self, game, event):
+        pass
+
+
+
+
+
+
+
+
 
 
 class GUIMenusPanel(interfaceClasses.BasicInterfaceElement):

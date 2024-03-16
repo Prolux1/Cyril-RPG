@@ -5,7 +5,7 @@ import copy
 
 from data import Image, Color, Sound
 
-from src import sorts, inventory, item
+from src import sorts, inventory, item, utils
 
 
 class Personnage:
@@ -18,6 +18,7 @@ class Personnage:
         self.xp = 0
         self.xp_requis = 400  # xp requis pour le lvl suivant
         self.xp_requis_lvl_precedent = 400  # xp requis au lvl d'avant
+        self.xp_multiplier = 10
 
 
 
@@ -39,7 +40,7 @@ class Personnage:
 
         self.armure = 0
         self.reduction_degats = 0
-        self.force_de_base = 3000000000  # 3 by default
+        self.force_de_base = 25  # 3 by default
         self.force = self.force_de_base
         self.PV_max = self.PV
         #if classe == "Guerrier":
@@ -132,21 +133,19 @@ class Personnage:
             else:
                 self.passive_regen_timer = None
 
-
-
-
     def handle_event(self, game, event):
-        if event.type == pygame.MOUSEBUTTONUP:
-            self.select_mob(game.zones[self.zone].get_all_mobs(), game.mouse_pos)
+        if not self.est_mort():
+            if event.type == pygame.MOUSEBUTTONUP:
+                self.select_mob(game.zones[self.zone].get_all_mobs(), game.mouse_pos)
 
-        # Character spells casting
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_1:
-                if self.spells[0].ready(game.time):
-                    Sound.SONS_ATTAQUE_PERSO[random.randint(0, len(Sound.SONS_ATTAQUE_PERSO) - 1)].play()
-                    self.attaquer(game.zones[self.zone].get_all_mobs(), self.spells[0])
-                    self.spells[0].set_timer(game.time)
-                    # affiche_zone_effet_s1 = True
+            # Character spells casting
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_1:
+                    if self.spells[0].ready(game.time):
+                        Sound.SONS_ATTAQUE_PERSO[random.randint(0, len(Sound.SONS_ATTAQUE_PERSO) - 1)].play()
+                        self.attaquer(game.zones[self.zone].get_all_mobs(), self.spells[0])
+                        self.spells[0].set_timer(game.time)
+                        # affiche_zone_effet_s1 = True
         #
         # # Si le personnage lance le sort 2
         # if event.key == pygame.K_2:
@@ -272,7 +271,7 @@ class Personnage:
         force_gagne = round(self.force_de_base / 2)
         if force_gagne == 0:
             force_gagne = 1
-        self.force_de_base += force_gagne
+        self.force_de_base += utils.fibo(self.lvl)
         self.PV_de_base += round(self.PV_de_base / 6)
 
         # updating xp

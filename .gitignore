@@ -161,5 +161,6 @@ cython_debug/
 
 # Others fodlers to exclude
 screenshots/
+website/
 
 

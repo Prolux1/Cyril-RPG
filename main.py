@@ -170,6 +170,19 @@ class CyrilRpg:
         for s in Image.SPELL_ICONS:
             Image.SPELL_ICONS[s] = Image.SPELL_ICONS[s].convert_alpha()
 
+        ### Converting images for the game user interface
+        # Icons for the GUIMenusPanel
+        Image.BAG_ICON = Image.BAG_ICON.convert_alpha()
+        Image.EQUIPMENT_ICON = Image.EQUIPMENT_ICON.convert_alpha()
+        Image.DONJONS_ICON = Image.DONJONS_ICON.convert_alpha()
+
+        # Icons for the CharacterFrame
+        Image.CHARACTER_LEVEL_FRAME = Image.CHARACTER_LEVEL_FRAME.convert_alpha()
+
+
+        ###
+
+
     def save_screenshot(self):
         if not os.path.isdir("screenshots"):
             os.mkdir(os.path.join("screenshots"))
@@ -753,7 +766,6 @@ class CyrilRpg:
         affiche_zone_effet_s1 = True
         affiche_zone_effet_s2 = False
         xp_obtenu = 0
-        xp_multiplier = 1
         mob_spawn_timer = None
         level_up, level_up_alpha = False, 51
         dic_menu = {"Inventaire": False, "Personnage": False}  # État des différents menus de l'interface du joueur

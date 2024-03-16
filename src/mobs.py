@@ -119,15 +119,17 @@ class Monstre:
             name_lvl_surf = Font.ARIAL_23.render(self.nom + " lvl " + str(self.lvl), True, Color.BLACK)
             mob_info_surf.blit(name_lvl_surf, (mob_info_surf_rect.width / 2 - name_lvl_surf.get_width() / 2, 0))
 
-            mob_hp_bar_rect = pygame.Rect(0, mob_info_surf_rect.height / 2 - 40 / 2, mob_info_surf_rect.width, 40)
+            mob_frame_rect = pygame.Rect(0, mob_info_surf_rect.height / 2 - 40 / 2, mob_info_surf_rect.width, 40)
 
-            if self.PV >= self.PV_max / 2:
-                color_mob_hp_bar_rect = (24 + 216 * (1 - (self.PV / self.PV_max) ** 2), 240, 10)
+
+            perc_hp_left = self.PV / self.PV_max
+            if perc_hp_left >= 0.5:
+                color_mob_hp_bar_rect = (24 + 216 * (1 - perc_hp_left ** 2), 240, 10)
             else:
-                color_mob_hp_bar_rect = (240, 240 * (2 * self.PV / self.PV_max), 10)
+                color_mob_hp_bar_rect = (240, 240 * (2 * perc_hp_left), 10)
 
-            pygame.draw.rect(mob_info_surf, color_mob_hp_bar_rect, mob_hp_bar_rect)
-            pygame.draw.rect(mob_info_surf, Color.BLACK, mob_hp_bar_rect, 2)  # Draws the border
+            pygame.draw.rect(mob_info_surf, color_mob_hp_bar_rect, pygame.Rect(0, mob_frame_rect.y, mob_frame_rect.width * perc_hp_left, mob_frame_rect.height))
+            pygame.draw.rect(mob_info_surf, Color.BLACK, mob_frame_rect, 2)  # Draws the border
 
 
             hp_hp_max_surf = Font.ARIAL_23.render(utils.convert_number(self.PV) + " / " + utils.convert_number(self.PV_max), True, Color.BLACK)
@@ -265,7 +267,7 @@ class Monstre:
             self.PV -= amount
 
         if self.is_dead():
-            xp_given_to_player = int(self.lvl / character.lvl * self.xp)
+            xp_given_to_player = int(self.lvl / character.lvl * self.xp * character.xp_multiplier)
             if xp_given_to_player > 0:
                 character.gain_xp(xp_given_to_player)
 

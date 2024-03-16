@@ -217,7 +217,17 @@ def text_surface(text, text_font, text_color, surf_width):
     pygame.font.Font.metrics()
 
 
+def fibo(n):
+    if n == 0 or n == 1:
+        return 1
+    elif n < 0:
+        return None
+    else:
+        vals = [1, 1]
+        for i in range(2, n + 1):
+            vals.append(vals[i-1] + vals[i-2])
 
+        return vals[n]
 
 
 

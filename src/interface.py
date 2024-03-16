@@ -72,7 +72,7 @@ class CharacterXpBar(interfaceClasses.BasicInterfaceElement):
         self.char_xp_text = interfaceClasses.BasicInterfaceTextElement(
             self.rect.width / 2,
             self.rect.height / 2,
-            str(self.character.xp) + " / " + str(self.character.xp_requis),
+            utils.convert_number(self.character.xp) + " / " + utils.convert_number(self.character.xp_requis),
             text_font,
             text_color,
             True
@@ -85,7 +85,7 @@ class CharacterXpBar(interfaceClasses.BasicInterfaceElement):
         self.char_xp_text.draw(self.surface)
 
     def update(self, game):
-        self.char_xp_text.update_text(str(self.character.xp) + " / " + str(self.character.xp_requis))
+        self.char_xp_text.update_text(utils.convert_number(self.character.xp) + " / " + utils.convert_number(self.character.xp_requis))
 
         updated_surf = self.empty_surface.copy()
         pygame.draw.rect(updated_surf, Color.PURPLE, pygame.Rect(0, 0, updated_surf.get_width() * (self.character.xp / self.character.xp_requis), updated_surf.get_height()))
@@ -135,7 +135,7 @@ class CharacterSpells(interfaceClasses.BasicInterfaceElement):
             # time before the spell can be cast again
             if not s.ready(game.time):
                 spell_time_remaining = s.last_time_used + s.temps_rechargement - game.time
-                spell_time_remaining_surf = self.text_font.render(str(round(spell_time_remaining, 1)), True, self.text_color)
+                spell_time_remaining_surf = self.text_font.render(str(round(spell_time_remaining, 1)), True, Color.RED)
                 updated_surf.blit(spell_time_remaining_surf, (spell_icon_rect.centerx - spell_time_remaining_surf.get_width() / 2, spell_icon_rect.centery - spell_time_remaining_surf.get_height() / 2))
 
 
@@ -375,20 +375,21 @@ class GUIInventoryMenu(interfaceClasses.StaticImage):
         self.update_surf(updated_surf)
 
     def handle_event(self, game, event):
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 3:
-                # équipe la pièce d'équipement sélectionner si le joueur fait un clique droit dessus depuis l'inventaire
-                for index, item in enumerate(self.character.inventory):
-                    if item is not None:
-                        i = index // self.character.inventory.cols
-                        j = index % self.character.inventory.cols
+        if not self.character.est_mort():
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 3:
+                    # équipe la pièce d'équipement sélectionner si le joueur fait un clique droit dessus depuis l'inventaire
+                    for index, item in enumerate(self.character.inventory):
+                        if item is not None:
+                            i = index // self.character.inventory.cols
+                            j = index % self.character.inventory.cols
 
-                        current_item_real_rect = pygame.Rect(self.rect.x + 4 + 52 * j, self.rect.y + 3 + 52 * i, 48, 48)
+                            current_item_real_rect = pygame.Rect(self.rect.x + 4 + 52 * j, self.rect.y + 3 + 52 * i, 48, 48)
 
-                        if current_item_real_rect.collidepoint(game.mouse_pos):
-                            if isinstance(item, Equipment):
-                                self.character.equip(item)
-                                self.character.inventory[index] = None
+                            if current_item_real_rect.collidepoint(game.mouse_pos):
+                                if isinstance(item, Equipment):
+                                    self.character.equip(item)
+                                    self.character.inventory[index] = None
 
 
 
@@ -440,9 +441,15 @@ class GUIEquipmentMenu(interfaceClasses.StaticImage):
         )
         self.char_max_hp_surf.y -= self.char_strength_surf.rect.height + self.char_armor_surf.rect.height + self.char_max_hp_surf.rect.height + 5
 
-        self.char_strength_surf.draw(self.surface)
-        self.char_armor_surf.draw(self.surface)
-        self.char_max_hp_surf.draw(self.surface)
+        self.char_name_and_level_surf = interfaceClasses.BasicInterfaceTextElement(
+            self.rect.width / 2,
+            0,
+            self.character.nom + " level " + str(self.character.lvl),
+            Font.ARIAL_16,
+            Color.WHITE,
+            True
+        )
+        self.char_name_and_level_surf.y += self.char_name_and_level_surf.rect.height
 
         self.item_info_surf = None
         self.item_info_surf_rect = None
@@ -457,9 +464,11 @@ class GUIEquipmentMenu(interfaceClasses.StaticImage):
         self.char_strength_surf.update_text("Strength : " + str(self.character.force))
         self.char_armor_surf.update_text("Armor : " + str(self.character.armure))
         self.char_max_hp_surf.update_text("Hp : " + str(self.character.PV_max))
+        self.char_name_and_level_surf.update_text(self.character.nom + " level " + str(self.character.lvl))
 
         updated_surf = self.origin_surface.copy()
 
+        self.char_name_and_level_surf.draw(updated_surf)
         self.char_strength_surf.draw(updated_surf)
         self.char_armor_surf.draw(updated_surf)
         self.char_max_hp_surf.draw(updated_surf)
@@ -542,24 +551,25 @@ class GUIEquipmentMenu(interfaceClasses.StaticImage):
         self.update_surf(updated_surf)
 
     def handle_event(self, game, event):
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 3:  # right click
-                if self.character.arme:
-                    real_weapon_slot_rect = pygame.Rect(158 + self.rect.x, 404 + self.rect.y, 48, 48)
-                    if real_weapon_slot_rect.collidepoint(game.mouse_pos):
-                        self.character.unequip(self.character.arme)
+        if not self.character.est_mort():
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 3:  # right click
+                    if self.character.arme:
+                        real_weapon_slot_rect = pygame.Rect(158 + self.rect.x, 404 + self.rect.y, 48, 48)
+                        if real_weapon_slot_rect.collidepoint(game.mouse_pos):
+                            self.character.unequip(self.character.arme)
 
-                for i, e in enumerate(self.character.equipment.values()):
-                    if e:
-                        # équipement de gauche
-                        if i < 5:
-                            real_e_slot_rect = pygame.Rect(51 + self.rect.x, 34 + 74 * i + self.rect.y, 48, 48)
-                        # équipement de droite
-                        else:
-                            real_e_slot_rect = pygame.Rect(280 + self.rect.x, 34 + 74 * (i - 5) + self.rect.y, 48, 48)
+                    for i, e in enumerate(self.character.equipment.values()):
+                        if e:
+                            # équipement de gauche
+                            if i < 5:
+                                real_e_slot_rect = pygame.Rect(51 + self.rect.x, 34 + 74 * i + self.rect.y, 48, 48)
+                            # équipement de droite
+                            else:
+                                real_e_slot_rect = pygame.Rect(280 + self.rect.x, 34 + 74 * (i - 5) + self.rect.y, 48, 48)
 
-                        if real_e_slot_rect.collidepoint(game.mouse_pos):
-                            self.character.unequip(e)
+                            if real_e_slot_rect.collidepoint(game.mouse_pos):
+                                self.character.unequip(e)
 
 
 
@@ -593,40 +603,60 @@ class GUIDonjonsMenu(interfaceClasses.StaticImage):
 
 class CharacterFrame(interfaceClasses.BasicInterfaceElement):
     def __init__(self, character, x, y, text_font, text_color, center=False):
-        self.empty_surface = pygame.Surface((250, 80), pygame.SRCALPHA)
-        super().__init__(x, y, self.empty_surface.copy(), center)
         self.character = character
 
+        self.char_hp_rect = pygame.Rect(
+            0,
+            0,
+            300,
+            80
+        )
+
         self.char_hp_text = interfaceClasses.BasicInterfaceTextElement(
-            self.rect.width / 2,
-            self.rect.height / 2,
-            str(self.character.PV) + " / " + str(self.character.PV_max),
+            self.char_hp_rect.width / 2,
+            self.char_hp_rect.height / 2,
+            utils.convert_number(self.character.PV) + " / " + utils.convert_number(self.character.PV_max),
             text_font,
             text_color,
             True
         )
 
-        pygame.draw.rect(self.surface, Color.PURPLE, pygame.Rect(0, 0, self.surface.get_width() * (self.character.PV / self.character.PV_max), self.surface.get_height()))
+        self.char_level_frame_surf = pygame.Surface((40, 30), pygame.SRCALPHA)
+        pygame.draw.ellipse(self.char_level_frame_surf, Color.BLACK, pygame.Rect(0, 0, self.char_level_frame_surf.get_width(), self.char_level_frame_surf.get_height()), 2)
 
-        pygame.draw.rect(self.surface, Color.GREY_LIGHTEN, self.surface.get_rect(), 2)
+        self.char_lvl_text = interfaceClasses.BasicInterfaceTextElement(
+            self.char_level_frame_surf.get_width() / 2,
+            self.char_level_frame_surf.get_height() / 2.5 + self.char_hp_rect.height,
+            str(self.character.lvl),
+            Font.CHARACTER_LEVEL,
+            Color.YELLOW_ORANGE,
+            True
+        )
 
-        self.char_hp_text.draw(self.surface)
+
+
+        self.origin_surf = pygame.Surface((self.char_hp_rect.width, self.char_hp_rect.height + self.char_level_frame_surf.get_height()), pygame.SRCALPHA)
+        super().__init__(x, y, self.origin_surf.copy(), center)
 
     def update(self, game):
-        self.char_hp_text.update_text(str(self.character.PV) + " / " + str(self.character.PV_max))
+        self.char_hp_text.update_text(utils.convert_number(self.character.PV) + " / " + utils.convert_number(self.character.PV_max))
+        self.char_lvl_text.update_text(str(self.character.lvl))
 
         perc_hp_left = self.character.PV / self.character.PV_max
 
-        updated_surf = self.empty_surface.copy()
+        updated_surf = self.origin_surf.copy()
 
         if perc_hp_left >= 0.5:
             color_char_hp_bar_rect = (24 + 216 * (1 - perc_hp_left ** 2), 240, 10)
         else:
             color_char_hp_bar_rect = (240, 240 * (2 * perc_hp_left), 10)
 
-        pygame.draw.rect(updated_surf, color_char_hp_bar_rect, pygame.Rect(0, 0, updated_surf.get_width() * perc_hp_left, updated_surf.get_height()))
-        pygame.draw.rect(updated_surf, Color.BLACK, updated_surf.get_rect(), 2)
+        pygame.draw.rect(updated_surf, color_char_hp_bar_rect, pygame.Rect(0, 0, self.char_hp_rect.width * perc_hp_left, self.char_hp_rect.height))
+        pygame.draw.rect(updated_surf, Color.BLACK, self.char_hp_rect, 2)
         self.char_hp_text.draw(updated_surf)
+
+        self.char_lvl_text.draw(updated_surf)
+        updated_surf.blit(self.char_level_frame_surf, (self.char_hp_rect.x, self.char_hp_rect.height))
 
         self.update_surf(updated_surf)
 

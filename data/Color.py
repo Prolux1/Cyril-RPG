@@ -11,6 +11,7 @@ GREEN = pygame.color.Color(24, 240, 10)
 PURPLE = pygame.color.Color(102, 53, 168)
 DARK_PURPLE = pygame.color.Color(7, 0, 114)
 YELLOW_ORANGE = pygame.color.Color(223, 172, 14)
+BACKGROUND_SHADOW = pygame.color.Color(0, 0, 0, 100)
 
 RARITY_COLORS = {
     "common": pygame.color.Color(187, 186, 186),

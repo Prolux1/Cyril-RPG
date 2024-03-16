@@ -622,10 +622,11 @@ class CharacterFrame(interfaceClasses.BasicInterfaceElement):
         )
 
         self.char_level_frame_surf = pygame.Surface((40, 30), pygame.SRCALPHA)
+        pygame.draw.ellipse(self.char_level_frame_surf, Color.BACKGROUND_SHADOW, pygame.Rect(0, 0, self.char_level_frame_surf.get_width(), self.char_level_frame_surf.get_height()))
         pygame.draw.ellipse(self.char_level_frame_surf, Color.BLACK, pygame.Rect(0, 0, self.char_level_frame_surf.get_width(), self.char_level_frame_surf.get_height()), 2)
 
         self.char_lvl_text = interfaceClasses.BasicInterfaceTextElement(
-            self.char_level_frame_surf.get_width() / 2,
+            self.char_hp_rect.right + self.char_level_frame_surf.get_width() / 2,
             self.char_level_frame_surf.get_height() / 2.5 + self.char_hp_rect.height,
             str(self.character.lvl),
             Font.CHARACTER_LEVEL,
@@ -635,7 +636,7 @@ class CharacterFrame(interfaceClasses.BasicInterfaceElement):
 
 
 
-        self.origin_surf = pygame.Surface((self.char_hp_rect.width, self.char_hp_rect.height + self.char_level_frame_surf.get_height()), pygame.SRCALPHA)
+        self.origin_surf = pygame.Surface((self.char_hp_rect.width + self.char_level_frame_surf.get_width(), self.char_hp_rect.height + self.char_level_frame_surf.get_height()), pygame.SRCALPHA)
         super().__init__(x, y, self.origin_surf.copy(), center)
 
     def update(self, game):
@@ -655,9 +656,59 @@ class CharacterFrame(interfaceClasses.BasicInterfaceElement):
         pygame.draw.rect(updated_surf, Color.BLACK, self.char_hp_rect, 2)
         self.char_hp_text.draw(updated_surf)
 
+        updated_surf.blit(self.char_level_frame_surf, self.char_hp_rect.bottomright)
         self.char_lvl_text.draw(updated_surf)
-        updated_surf.blit(self.char_level_frame_surf, (self.char_hp_rect.x, self.char_hp_rect.height))
 
         self.update_surf(updated_surf)
+
+
+
+class CharacterRespawnButton(interfaceClasses.ButtonImage):
+    def __init__(self, character, img, x, y, text, text_font, text_color, center=True):
+        self.character = character
+        super().__init__(img, x, y, text, text_font, text_color, center)
+
+    def get_clicked(self, game):
+        self.character.respawn()
+
+
+class CharacterDead(interfaceClasses.BackgroundColor):
+    def __init__(self, character):
+        self.character = character
+        super().__init__((WINDOW_WIDTH, WINDOW_HEIGHT), Color.BACKGROUND_SHADOW)
+        self.origin_surf = self.surface.copy()
+
+        self.respawn_button = CharacterRespawnButton(character, Image.SILVER_WOOD_BUTTONS[3], self.rect.width / 2, self.rect.height / 2, "Respawn", Font.ARIAL_23, Color.GREY)
+
+        self.character_is_dead_text = interfaceClasses.BasicInterfaceTextElement(
+            self.rect.width / 2,
+            self.rect.height / 2 - self.respawn_button.rect.height,
+            "You died",
+            Font.ARIAL_40,
+            Color.RED,
+            True
+        )
+
+
+    def draw(self, surface):
+        if self.character.est_mort():
+            surface.blit(self.surface, self.rect.topleft)
+
+    def update(self, game):
+        if self.character.est_mort():
+            self.respawn_button.update(game)
+
+            updated_surf = self.origin_surf.copy()
+            self.respawn_button.draw(updated_surf)
+            self.character_is_dead_text.draw(updated_surf)
+            self.update_surf(updated_surf)
+
+    def handle_event(self, game, event):
+        if self.character.est_mort:
+            self.respawn_button.handle_event(game, event)
+
+
+
+
 
 

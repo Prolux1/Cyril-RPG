@@ -258,7 +258,7 @@ class Monstre:
         :return:
         """
         if self.est_attaquer():
-            personnage.receive_damage(self.degat)
+            personnage.receive_damage(self.degat*self.degat)
 
     def take_damage(self, character, amount):
         if self.PV - amount < 0:

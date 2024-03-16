@@ -64,7 +64,7 @@ class BackgroundImage(StaticImage):
 
 class BackgroundColor(BackgroundImage):
     def __init__(self, size, color):
-        super().__init__(pygame.surface.Surface(size))
+        super().__init__(pygame.surface.Surface(size, pygame.SRCALPHA))
         self.surface.fill(color)
 
 

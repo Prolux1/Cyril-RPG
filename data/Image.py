@@ -28,9 +28,12 @@ TABLEAU_DESCRIPTION_ITEM = pygame.image.load("./assets/interface_joueur/tableau_
 MENU_EQUIPEMENT_PERSONNAGE = pygame.image.load("./assets/interface_joueur/menu_equipement_personnage.png")
 MENU_DONJONS = pygame.image.load("./assets/interface_joueur/menu_donjons.png")
 IMAGE_BARRE_DE_SORTS = pygame.image.load("./assets/interface_joueur/barre_de_sorts.png")
-SILVER_WOOD_BUTTON_1 = pygame.image.load("./assets/interface_joueur/silver_wood_button_1.png")
-SILVER_WOOD_BUTTON_2 = pygame.image.load("./assets/interface_joueur/silver_wood_button_2.png")
-SILVER_WOOD_BUTTON_3 = pygame.image.load("./assets/interface_joueur/silver_wood_button_3.png")
+
+### Loading the wood buttons
+SILVER_WOOD_BUTTONS = [pygame.image.load(f"./assets/interface_joueur/silver_wood_button_{i+1}.png") for i in range(4)]
+GOLD_WOOD_BUTTONS = []
+
+###
 
 ### Load images for the game user interface
 # Icons for the GUIMenusPanel
@@ -39,7 +42,7 @@ EQUIPMENT_ICON = pygame.image.load("./assets/interface_joueur/gui_equipment_menu
 DONJONS_ICON = pygame.image.load("./assets/interface_joueur/gui_donjons_menu_icon.png")
 
 # Icons for the CharacterFrame
-CHARACTER_LEVEL_FRAME = pygame.image.load("./assets/interface_joueur/character_level_frame.png")
+# CHARACTER_LEVEL_FRAME = pygame.image.load("./assets/interface_joueur/character_level_frame.png")
 
 
 # images lorsque le perso level up

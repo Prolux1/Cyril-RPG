@@ -139,9 +139,14 @@ class CyrilRpg:
         Image.MENU_EQUIPEMENT_PERSONNAGE = Image.MENU_EQUIPEMENT_PERSONNAGE.convert_alpha()
         Image.MENU_DONJONS = Image.MENU_DONJONS.convert_alpha()
         Image.IMAGE_BARRE_DE_SORTS = Image.IMAGE_BARRE_DE_SORTS.convert_alpha()
-        Image.SILVER_WOOD_BUTTON_1 = Image.SILVER_WOOD_BUTTON_1.convert_alpha()
-        Image.SILVER_WOOD_BUTTON_2 = Image.SILVER_WOOD_BUTTON_2.convert_alpha()
-        Image.SILVER_WOOD_BUTTON_3 = Image.SILVER_WOOD_BUTTON_3.convert_alpha()
+
+        ### Converting the wood buttons
+
+        for i in range(len(Image.SILVER_WOOD_BUTTONS)):
+            Image.SILVER_WOOD_BUTTONS[i] = Image.SILVER_WOOD_BUTTONS[i].convert_alpha()
+
+        ###
+
         for i in range(len(Image.IMAGES_LEVEL_UP)):
             Image.IMAGES_LEVEL_UP[i] = Image.IMAGES_LEVEL_UP[i].convert_alpha()
         Image.SPAWN = Image.SPAWN.convert_alpha()
@@ -177,7 +182,7 @@ class CyrilRpg:
         Image.DONJONS_ICON = Image.DONJONS_ICON.convert_alpha()
 
         # Icons for the CharacterFrame
-        Image.CHARACTER_LEVEL_FRAME = Image.CHARACTER_LEVEL_FRAME.convert_alpha()
+        # Image.CHARACTER_LEVEL_FRAME = Image.CHARACTER_LEVEL_FRAME.convert_alpha()
 
 
         ###
@@ -198,9 +203,9 @@ class CyrilRpg:
             interfaceClasses.StaticImage(WINDOW_WIDTH / 2, 110, Image.FOND_MARBRE_TITRE, center=True),
             interfaceClasses.StaticImage(WINDOW_WIDTH / 2 + 135, 110, Image.OEIL_BLEU),
             interfaceClasses.BasicInterfaceTextElement(WINDOW_WIDTH / 2, 110, "Cyril RPG", Font.TITLE, Color.BLACK, center=True),
-            interface.PlayButton(Image.SILVER_WOOD_BUTTON_3, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 3, "Play", Font.ARIAL_40, Color.GREY),
-            interface.SettingsButton(Image.SILVER_WOOD_BUTTON_2, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2.25, "Settings", Font.ARIAL_40, Color.GREY, center=True),
-            interface.QuitButton(Image.SILVER_WOOD_BUTTON_1, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 1.8, "Quit", Font.ARIAL_40, Color.GREY, center=True)
+            interface.PlayButton(Image.SILVER_WOOD_BUTTONS[2], WINDOW_WIDTH / 2, WINDOW_HEIGHT / 3, "Play", Font.ARIAL_40, Color.GREY),
+            interface.SettingsButton(Image.SILVER_WOOD_BUTTONS[1], WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2.25, "Settings", Font.ARIAL_40, Color.GREY, center=True),
+            interface.QuitButton(Image.SILVER_WOOD_BUTTONS[0], WINDOW_WIDTH / 2, WINDOW_HEIGHT / 1.8, "Quit", Font.ARIAL_40, Color.GREY, center=True)
         ]
 
         if SHOW_FPS:
@@ -227,11 +232,11 @@ class CyrilRpg:
         # Adding all the characters to a list to select one of them
         for i, c in enumerate(self.player.characters):
             self.components.append(
-                interface.CharacterSelectionButton(Image.SILVER_WOOD_BUTTON_1, WINDOW_WIDTH / 2, 200 + (100 * (i+1)), c, Font.ARIAL_23, Color.GREY)
+                interface.CharacterSelectionButton(Image.SILVER_WOOD_BUTTONS[0], WINDOW_WIDTH / 2, 200 + (100 * (i+1)), c, Font.ARIAL_23, Color.GREY)
             )
 
         # Adding a button to create new character
-        self.components.append(interface.CharacterCreationButton(Image.SILVER_WOOD_BUTTON_2, WINDOW_WIDTH / 2, WINDOW_HEIGHT - Image.SILVER_WOOD_BUTTON_2.get_height(),"Create character", Font.ARIAL_23, Color.GREY))
+        self.components.append(interface.CharacterCreationButton(Image.SILVER_WOOD_BUTTONS[1], WINDOW_WIDTH / 2, WINDOW_HEIGHT - Image.SILVER_WOOD_BUTTONS[1].get_height(),"Create character", Font.ARIAL_23, Color.GREY))
 
         if SHOW_FPS:
             self.components.append(interface.FpsViewer(self.clock.get_fps(), WINDOW_WIDTH, 0))

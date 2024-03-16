@@ -380,6 +380,9 @@ class Personnage:
         else:
             self.PV = self.PV_max
 
+    def respawn(self):
+        self.PV = 1
+
     def attaquer(self, mobs, sort, attaques_multiples=False):
         """
 

@@ -21,14 +21,14 @@ Mobs:
 
 In development:
 
- 	- Redo the monster structure by making a HostileNPC class that inherits from a parent NPC class, so we can make a FriendlyNPC class and then make quest givers, merchants etc...
+ - Redo the monster structure by making a HostileNPC class that inherits from a parent NPC class, so we can make a FriendlyNPC class and then make quest givers, merchants etc...
 	
-	- Quest system (requires a new NPC structure)
+ - Quest system (requires a new NPC structure)
 	
-	- Redo interface with images for spell bar, character frame (top left), xp bar.
+ - Redo interface with images for spell bar, character frame (top left), xp bar.
 	
-	- Have a camera centered on the player and apply an offset to the entities in the zone so that when he moves, the entities move.
+ - Have a camera centered on the player and apply an offset to the entities in the zone so that when he moves, the entities move.
 	
-	- Have a spell book where spells are stored, so that the player can change them and modify his spell bar as he wishes.
+ - Have a spell book where spells are stored, so that the player can change them and modify his spell bar as he wishes.
 
 

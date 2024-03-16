@@ -20,7 +20,8 @@ Mobs:
 
 
 In development:
-	- Redo the monster structure by making a HostileNPC class that inherits from a parent NPC class, so we can make a FriendlyNPC class and then make quest givers, merchants etc...
+
+ 	- Redo the monster structure by making a HostileNPC class that inherits from a parent NPC class, so we can make a FriendlyNPC class and then make quest givers, merchants etc...
 	
 	- Quest system (requires a new NPC structure)
 	

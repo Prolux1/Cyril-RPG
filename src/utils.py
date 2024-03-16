@@ -11,55 +11,67 @@ def bonus_increment(nombre, lvl):
 
 
 def convert_number(number):
-    units = ["K", "M", "B", "T"]
-
-    # if number < 100_000:
+    return f"{number:_}".replace('_', ' ')
 
 
 
-    nombre_str = str(number)
-    nombre_str_reverse = nombre_str[::-1]
-    nombre_convertis = ""
-    nb_chiffres = 0
 
-    if len(nombre_str) <= 5:
-        for i in range(len(nombre_str)):
-            nb_chiffres += 1
-            nombre_convertis += nombre_str_reverse[i]
-            if nb_chiffres % 3 == 0 and i != len(nombre_str) - 1:
-                nombre_convertis += " "
 
-    else:
-        nb_milliers = 0
-        for i in range(len(nombre_str)):
-            nb_chiffres += 1
-            if nb_chiffres % 3 == 0:
-                nb_milliers += 1
 
-        if nb_milliers >= 6:
-            nombre_convertis += units[3] + " "
-            nombre_convertis += nombre_str_reverse[(3 * 5) - len(nombre_str) - 3:]
-        else:
-            nombre_convertis += units[nb_milliers - 2] + " "
-            nombre_convertis += nombre_str_reverse[(3 * nb_milliers) - len(nombre_str) - 3:]
 
-            table_nombre = [str(i) for i in range(10)]
-            compt_0 = 0
-            nombre_convertis_final = ""
-            for carac in nombre_convertis:
-                if carac in table_nombre:
-                    compt_0 += 1
-                nombre_convertis_final += carac
-                if compt_0 == 3:
-                    nombre_convertis_final += " "
-                    compt_0 = 0
 
-            if nombre_convertis_final[-1] == " ":
-                return nombre_convertis_final[::-1][1:]
-            return nombre_convertis_final[::-1]
-        #print(nb_milliers)
 
-    return nombre_convertis[::-1]
+
+
+
+    # units = ["K", "M", "B", "T"]
+    #
+    # nombre_str = str(number)
+    # nombre_str_reverse = nombre_str[::-1]
+    # nombre_convertis = ""
+    # nb_chiffres = 0
+    #
+    # if len(nombre_str) <= 5:
+    #     for i in range(len(nombre_str)):
+    #         nb_chiffres += 1
+    #         nombre_convertis += nombre_str_reverse[i]
+    #         if nb_chiffres % 3 == 0 and i != len(nombre_str) - 1:
+    #             nombre_convertis += " "
+    #
+    # else:
+    #     nb_milliers = 0
+    #     for i in range(len(nombre_str)):
+    #         nb_chiffres += 1
+    #         if nb_chiffres % 3 == 0:
+    #             nb_milliers += 1
+    #
+    #     if nb_milliers >= 6:
+    #         nombre_convertis += units[3] + " "
+    #         nombre_convertis += nombre_str_reverse[(3 * 5) - len(nombre_str) - 3:]
+    #     else:
+    #         nombre_convertis += units[nb_milliers - 2] + " "
+    #         nombre_convertis += nombre_str_reverse[(3 * nb_milliers) - len(nombre_str) - 3:]
+    #
+    #         table_nombre = [str(i) for i in range(10)]
+    #         compt_0 = 0
+    #         nombre_convertis_final = ""
+    #         for carac in nombre_convertis:
+    #             if carac in table_nombre:
+    #                 compt_0 += 1
+    #             nombre_convertis_final += carac
+    #             if compt_0 == 3:
+    #                 nombre_convertis_final += " "
+    #                 compt_0 = 0
+    #
+    #         if nombre_convertis_final[-1] == " ":
+    #             return nombre_convertis_final[::-1][1:]
+    #         return nombre_convertis_final[::-1]
+    #     #print(nb_milliers)
+    #
+    # return nombre_convertis[::-1]
+
+
+
 
 
 def generation_equipement_alea(lvl, est_boss=False, est_world_boss=False):
@@ -192,13 +204,17 @@ def frame(frame_sheet, largeur, hauteur, taille, nb_frames, couleur=None):
     return frames_mob
 
 
+def text_surface(text, text_font, text_color, surf_width):
+    """
+    Return a surface that contains all the text passed in parameter,
+    without exceeding the specified 'surf_width'
+    """
+    text_surf = text_font.render(text, True, text_color)
+    text_surf_rect = text_surf.get_rect()
 
+    lines = text_surf_rect.width // surf_width
 
-
-
-
-
-
+    pygame.font.Font.metrics()
 
 
 

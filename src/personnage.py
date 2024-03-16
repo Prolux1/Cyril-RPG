@@ -26,7 +26,7 @@ class Personnage:
             self.PV_de_base = 150
             self.PV = 150
             self.spells = [
-                sorts.Spell("Cleave", 150, 0.3, "cleave", (150, 50))
+                sorts.Spell("Cleave", 150, 0.5, "cleave", (150, 50))
             ]
             # Spell("Trancher", 4, Image.SPELL_TRANCHER_ICON, 0.3, (150, 50))
         elif self.classe == "Chasseur":
@@ -391,7 +391,7 @@ class Personnage:
         """
         if self.selected_mob:
             if sort.check_reach(self.rect.center, self.selected_mob.rect.center):
-                self.selected_mob.take_damage(self, (self.get_damage() * sort.perc_char_dmg / 100))
+                self.selected_mob.take_damage(self, round(self.get_damage() * sort.perc_char_dmg / 100))
 
 
 

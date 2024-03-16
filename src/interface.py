@@ -100,15 +100,25 @@ class CharacterSpells(interfaceClasses.BasicInterfaceElement):
         self.character = character
         self.text_font = text_font
         self.text_color = text_color
-        self.origin_surf = pygame.Surface((800, 80), pygame.SRCALPHA)
+        self.origin_surf = pygame.Surface((800, 54), pygame.SRCALPHA)
         super().__init__(x, y, self.origin_surf.copy(), center)
         pygame.draw.rect(self.surface, Color.BLACK, self.surface.get_rect(), 2)
+
+        self.spell_info_surf = None
+        self.spell_info_surf_rect = None
+
+    def draw(self, surface):
+        surface.blit(self.surface, self.rect.topleft)
+        if self.spell_info_surf:
+            surface.blit(self.spell_info_surf, self.spell_info_surf_rect.topleft)
 
 
     def update(self, game):
         updated_surf = self.origin_surf.copy()
 
         pygame.draw.rect(updated_surf, Color.BLACK, updated_surf.get_rect(), 2)
+
+        spell_info = None
 
         total_width_taken = 0
         for i, s in enumerate(self.character.spells):
@@ -121,9 +131,47 @@ class CharacterSpells(interfaceClasses.BasicInterfaceElement):
             spell_key_surf = self.text_font.render(str(i+1), True, self.text_color)
             updated_surf.blit(spell_key_surf, (spell_icon_rect.x + spell_icon_rect.width - spell_key_surf.get_width(), spell_icon_rect.y + spell_icon_rect.height - spell_key_surf.get_height()))
 
+            # If the spell is reloading, displays the remaining
+            # time before the spell can be cast again
+            if not s.ready(game.time):
+                spell_time_remaining = s.last_time_used + s.temps_rechargement - game.time
+                spell_time_remaining_surf = self.text_font.render(str(round(spell_time_remaining, 1)), True, self.text_color)
+                updated_surf.blit(spell_time_remaining_surf, (spell_icon_rect.centerx - spell_time_remaining_surf.get_width() / 2, spell_icon_rect.centery - spell_time_remaining_surf.get_height() / 2))
+
+
+            # if mouse hovers the spell, display information about it
+            if spell_info is None:
+                spell_icon_real_rect = pygame.Rect(self.rect.x + spell_icon_rect.x, self.rect.y + spell_icon_rect.y, spell_icon_rect.width, spell_icon_rect.height)
+                if spell_icon_real_rect.collidepoint(game.mouse_pos):
+                    spell_info = s
+
             total_width_taken += Image.SPELL_ICONS[s.icon_name].get_width()
 
+        if spell_info:
+            spell_info_surf = Image.TABLEAU_DESCRIPTION_ITEM.copy()
 
+            # "Quickly cleaves the enemy and inflicts "
+            #     + str(self.character.get_damage() * spell_info.perc_char_dmg / 100)
+            #     + " melee damage to the enemy"
+            spell_info_surf.blit(Font.ARIAL_23.render(
+                spell_info.nom + " inflicts "
+                + utils.convert_number(round(self.character.get_damage() * spell_info.perc_char_dmg / 100))
+                + " damage to the enemy",
+                True, self.text_color
+            ), (5, 5))
+
+            (self.character.get_damage() * spell_info.perc_char_dmg / 100)
+
+            spell_info_surf_rect = spell_info_surf.get_rect()
+            spell_info_surf_rect.topleft = (game.mouse_pos[0] + 12, game.mouse_pos[1] + 12)
+
+            spell_info_surf_rect.right = min(spell_info_surf_rect.right, game.window.get_width())
+            spell_info_surf_rect.bottom = min(spell_info_surf_rect.bottom, game.window.get_height())
+
+            self.spell_info_surf = spell_info_surf
+            self.spell_info_surf_rect = spell_info_surf_rect
+        else:
+            self.spell_info_surf, self.spell_info_surf_rect = None, None
 
         self.update_surf(updated_surf)
 
@@ -251,6 +299,14 @@ class GUIInventoryMenu(interfaceClasses.StaticImage):
         super().__init__(WINDOW_WIDTH / 1.2, WINDOW_HEIGHT / 1.5, Image.IMAGE_INVENTORY, center=True)
         self.origin_surface = self.surface.copy()
 
+        self.item_info_surf = None
+        self.item_info_surf_rect = None
+
+    def draw(self, surface):
+        surface.blit(self.surface, self.rect.topleft)
+        if self.item_info_surf:
+            surface.blit(self.item_info_surf, self.item_info_surf_rect.topleft)
+
     def update(self, game):
         updated_surf = self.origin_surface.copy()
 
@@ -305,15 +361,16 @@ class GUIInventoryMenu(interfaceClasses.StaticImage):
                 item_info_surf.blit(Font.ARIAL_23.render("+ " + str(item_info.bonus_strength) + " Strength", True, Color.WHITE), (10, 110))
 
             item_info_surf_rect = item_info_surf.get_rect()
-            item_info_surf_rect.topright = (game.mouse_pos[0] - self.rect.x + item_info_surf_rect.width, game.mouse_pos[1] - self.rect.y)
+            item_info_surf_rect.topleft = (game.mouse_pos[0] + 12, game.mouse_pos[1] + 12)
 
-            if item_info_surf_rect.right > self.rect.width:
-                item_info_surf_rect.right = self.rect.width
+            item_info_surf_rect.right = min(item_info_surf_rect.right, game.window.get_width())
+            item_info_surf_rect.bottom = min(item_info_surf_rect.bottom, game.window.get_height())
 
-            if item_info_surf_rect.bottom > self.rect.height:
-                item_info_surf_rect.bottom = self.rect.height
-
-            updated_surf.blit(item_info_surf, item_info_surf_rect.topleft)
+            self.item_info_surf = item_info_surf
+            self.item_info_surf_rect = item_info_surf_rect
+        else:
+            self.item_info_surf = None
+            self.item_info_surf_rect = None
 
         self.update_surf(updated_surf)
 
@@ -386,6 +443,14 @@ class GUIEquipmentMenu(interfaceClasses.StaticImage):
         self.char_strength_surf.draw(self.surface)
         self.char_armor_surf.draw(self.surface)
         self.char_max_hp_surf.draw(self.surface)
+
+        self.item_info_surf = None
+        self.item_info_surf_rect = None
+
+    def draw(self, surface):
+        surface.blit(self.surface, self.rect.topleft)
+        if self.item_info_surf:
+            surface.blit(self.item_info_surf, self.item_info_surf_rect.topleft)
 
     def update(self, game):
         # Updating the stats surfaces of the character to show in the menu
@@ -463,15 +528,16 @@ class GUIEquipmentMenu(interfaceClasses.StaticImage):
                 item_info_surf.blit(Font.ARIAL_23.render("+ " + str(item_info.bonus_strength) + " Strength", True, Color.WHITE), (10, 110))
 
             item_info_surf_rect = item_info_surf.get_rect()
-            item_info_surf_rect.topright = (game.mouse_pos[0] - self.rect.x + item_info_surf_rect.width, game.mouse_pos[1] - self.rect.y)
+            item_info_surf_rect.topleft = (game.mouse_pos[0] + 12, game.mouse_pos[1] + 12)
 
-            if item_info_surf_rect.right > self.rect.width:
-                item_info_surf_rect.right = self.rect.width
+            item_info_surf_rect.right = min(item_info_surf_rect.right, game.window.get_width())
+            item_info_surf_rect.bottom = min(item_info_surf_rect.bottom, game.window.get_height())
 
-            if item_info_surf_rect.bottom > self.rect.height:
-                item_info_surf_rect.bottom = self.rect.height
-
-            updated_surf.blit(item_info_surf, item_info_surf_rect.topleft)
+            self.item_info_surf = item_info_surf
+            self.item_info_surf_rect = item_info_surf_rect
+        else:
+            self.item_info_surf = None
+            self.item_info_surf_rect = None
 
         self.update_surf(updated_surf)
 

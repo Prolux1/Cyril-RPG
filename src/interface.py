@@ -112,7 +112,6 @@ class CharacterSpells(interfaceClasses.BasicInterfaceElement):
         if self.spell_info_surf:
             surface.blit(self.spell_info_surf, self.spell_info_surf_rect.topleft)
 
-
     def update(self, game):
         updated_surf = self.origin_surf.copy()
 
@@ -454,6 +453,7 @@ class GUIEquipmentMenu(interfaceClasses.StaticImage):
         self.item_info_surf = None
         self.item_info_surf_rect = None
 
+
     def draw(self, surface):
         surface.blit(self.surface, self.rect.topleft)
         if self.item_info_surf:
@@ -472,6 +472,33 @@ class GUIEquipmentMenu(interfaceClasses.StaticImage):
         self.char_strength_surf.draw(updated_surf)
         self.char_armor_surf.draw(updated_surf)
         self.char_max_hp_surf.draw(updated_surf)
+
+        info_armure = None
+        char_armor_real_rect = pygame.Rect(self.x + self.char_armor_surf.rect.x,
+                                           self.y + self.char_armor_surf.rect.y,
+                                           self.char_armor_surf.rect.width,
+                                           self.char_armor_surf.rect.height)
+
+        pygame.draw.rect(updated_surf, Color.GREEN, char_armor_real_rect, 2)
+        if char_armor_real_rect.collidepoint(game.mouse_pos):
+            armor_dmg_reduction_info_surf = Image.TABLEAU_DESCRIPTION_ITEM.copy()
+
+            armor_dmg_reduction_info_surf.blit(
+                Font.ARIAL_23.render("L'armure réduit les dégats", True, Color.WHITE), (10, 50))
+
+            armor_dmg_reduction_info_surf.blit(
+                Font.ARIAL_23.render("reçus par votre personnage", True, Color.WHITE), (10, 50))
+
+            armor_dmg_reduction_info_surf.blit(
+                Font.ARIAL_23.render("Réduction de dégats : " + str(round(self.character.reduction_degats * 100, 2)), True, Color.WHITE), (10, 80))
+
+            armor_dmg_reduction_info_surf_rect = armor_dmg_reduction_info_surf.get_rect()
+            armor_dmg_reduction_info_surf_rect.topleft = (game.mouse_pos[0] + 12, game.mouse_pos[1] + 12)
+
+            armor_dmg_reduction_info_surf_rect.right = min(armor_dmg_reduction_info_surf_rect.right, game.window.get_width())
+            armor_dmg_reduction_info_surf_rect.bottom = min(armor_dmg_reduction_info_surf_rect.bottom, game.window.get_height())
+
+            updated_surf.blit(armor_dmg_reduction_info_surf, armor_dmg_reduction_info_surf_rect.topleft)
 
         item_info = None
 

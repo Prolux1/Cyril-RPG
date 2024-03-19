@@ -27,8 +27,10 @@ In development:
 	
  - Redo interface with images for spell bar, character frame (top left), xp bar.
 	
- - Have a camera centered on the player and apply an offset to the entities in the zone so that when he moves, the entities move.
+ - Have a camera centered on the player and thus, apply an offset to all the entities in the zone.
 	
  - Have a spell book where spells are stored, so that the player can change them and modify his spell bar as he wishes.
+
+ - Add professions like mining, woodcutting with ressources that can be found in the open world.
 
 

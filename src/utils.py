@@ -13,64 +13,7 @@ def bonus_increment(nombre, lvl):
 def convert_number(number):
     return f"{number:_}".replace('_', ' ')
 
-
-
-
-
-
-
-
-
-
-
-
     # units = ["K", "M", "B", "T"]
-    #
-    # nombre_str = str(number)
-    # nombre_str_reverse = nombre_str[::-1]
-    # nombre_convertis = ""
-    # nb_chiffres = 0
-    #
-    # if len(nombre_str) <= 5:
-    #     for i in range(len(nombre_str)):
-    #         nb_chiffres += 1
-    #         nombre_convertis += nombre_str_reverse[i]
-    #         if nb_chiffres % 3 == 0 and i != len(nombre_str) - 1:
-    #             nombre_convertis += " "
-    #
-    # else:
-    #     nb_milliers = 0
-    #     for i in range(len(nombre_str)):
-    #         nb_chiffres += 1
-    #         if nb_chiffres % 3 == 0:
-    #             nb_milliers += 1
-    #
-    #     if nb_milliers >= 6:
-    #         nombre_convertis += units[3] + " "
-    #         nombre_convertis += nombre_str_reverse[(3 * 5) - len(nombre_str) - 3:]
-    #     else:
-    #         nombre_convertis += units[nb_milliers - 2] + " "
-    #         nombre_convertis += nombre_str_reverse[(3 * nb_milliers) - len(nombre_str) - 3:]
-    #
-    #         table_nombre = [str(i) for i in range(10)]
-    #         compt_0 = 0
-    #         nombre_convertis_final = ""
-    #         for carac in nombre_convertis:
-    #             if carac in table_nombre:
-    #                 compt_0 += 1
-    #             nombre_convertis_final += carac
-    #             if compt_0 == 3:
-    #                 nombre_convertis_final += " "
-    #                 compt_0 = 0
-    #
-    #         if nombre_convertis_final[-1] == " ":
-    #             return nombre_convertis_final[::-1][1:]
-    #         return nombre_convertis_final[::-1]
-    #     #print(nb_milliers)
-    #
-    # return nombre_convertis[::-1]
-
-
 
 
 
@@ -204,17 +147,27 @@ def frame(frame_sheet, largeur, hauteur, taille, nb_frames, couleur=None):
     return frames_mob
 
 
-def text_surface(text, text_font, text_color, surf_width):
+def text_surface(text: str, text_font: pygame.font.Font, text_color: tuple[int, int, int] | pygame.Color, surf_width: int | float) -> pygame.Surface:
     """
     Return a surface that contains all the text passed in parameter,
     without exceeding the specified 'surf_width'
     """
     text_surf = text_font.render(text, True, text_color)
-    text_surf_rect = text_surf.get_rect()
+    text_size = text_surf.get_size()
+    lines = int(math.ceil(text_font.size(text)[0] / surf_width))
+    line_height = text_size[1]
 
-    lines = text_surf_rect.width // surf_width
 
-    pygame.font.Font.metrics()
+    surf_res = pygame.Surface((surf_width, line_height * lines), pygame.SRCALPHA)
+
+    for i in range(lines):
+        width_left = text_size[0] - surf_width * i
+        surf_res.blit(
+            text_surf.subsurface(pygame.Rect(surf_width * i, 0, min(surf_width, width_left), line_height)),
+            (0, line_height * i)
+        )
+
+    return surf_res
 
 
 def fibo(n):

@@ -663,8 +663,6 @@ class CharacterFrame(interfaceClasses.BasicInterfaceElement):
             True
         )
 
-
-
         self.origin_surf = pygame.Surface((self.char_hp_rect.width + self.char_level_frame_surf.get_width(), self.char_hp_rect.height + self.char_level_frame_surf.get_height()), pygame.SRCALPHA)
         super().__init__(x, y, self.origin_surf.copy(), center)
 

@@ -366,11 +366,11 @@ class Personnage:
 
         return directions_possibles
 
-    def receive_damage(self, amount):
+    def receive_damage(self, amount: int):
         if self.PV - amount < 0:
             self.PV = 0
         else:
-            self.PV -= amount
+            self.PV -= round(amount * (1 - self.reduction_degats))
 
     def regen(self):
         # Regen 1 % of the max hp of the character

@@ -8,7 +8,7 @@ from src import utils
 
 
 class Monstre:
-    def __init__(self, lvl, PV, degat, nom, image, frames, x, y, xp, hit_box, est_boss=False, est_world_boss=False):
+    def __init__(self, lvl, PV, degat, nom, image, frames, x, y, xp, offset, est_boss=False, est_world_boss=False):
         self.lvl = lvl
         self.PV = PV
         self.PV_max = PV
@@ -19,11 +19,9 @@ class Monstre:
         self.y = y
         self.rect = self.image.get_rect()
         self.rect.midbottom = (self.x, self.y)
-        self.xp = xp
+        self.offset = offset
 
-        #if self.nom == "Halouf":
-        #    self.hit_box = [self.x, self.y, 102, 159]
-        self.hit_box = hit_box
+        self.xp = xp
 
         self.orientation = "Face"
         self.frames = frames  # Frames d'un mob sous forme de dico
@@ -40,63 +38,7 @@ class Monstre:
         self.hovered_by_mouse = False
 
     def draw(self, surface):
-        # if self.orientation == "Gauche":
-        #     if self.nom == "Rat" or self.nom == "Boss Rat":
-        #         surface.blit(self.image, [self.rect.midbottom[0] - 40, self.rect.midbottom[1] + 40])
-        #     elif self.nom == "Cerf" or self.nom == "Boss Cerf":
-        #         surface.blit(self.image, [self.x - 40, self.y])
-        #     elif self.nom == "Orc":
-        #         surface.blit(self.image, [self.x - 10, self.y])
-        #     elif self.nom == "Loup humain":
-        #         surface.blit(self.image, [self.x, self.y])
-        #     elif self.nom == "Dotum":
-        #         surface.blit(self.image, [self.x - 22 * 8, self.y - 10 * 8])
-        #     elif self.nom == "Fenrir":
-        #         surface.blit(self.image, [self.x - 24 * 12, self.y - 10 * 12])
-        #
-        # elif self.orientation == "Droite":
-        #     if self.nom == "Rat" or self.nom == "Boss Rat":
-        #         surface.blit(self.image, [self.rect.midbottom[0] - 80, self.rect.midbottom[1] + 40])
-        #     elif self.nom == "Cerf" or self.nom == "Boss Cerf":
-        #         surface.blit(self.image, [self.x - 40, self.y])
-        #     elif self.nom == "Orc":
-        #         surface.blit(self.image, [self.x, self.y])
-        #     elif self.nom == "Loup humain":
-        #         surface.blit(self.image, [self.x, self.y])
-        #     elif self.nom == "Dotum":
-        #         surface.blit(self.image, [self.x - 26 * 8, self.y + 3 * 8])
-        #     elif self.nom == "Fenrir":
-        #         surface.blit(self.image, [self.x - 30 * 12, self.y + 3 * 12])
-        #
-        # elif self.orientation == "Dos":
-        #     if self.nom == "Rat" or self.nom == "Boss Rat":
-        #         surface.blit(self.image, [self.rect.midbottom[0], self.rect.midbottom[1] + 40])
-        #     elif self.nom == "Cerf" or self.nom == "Boss Cerf":
-        #         surface.blit(self.image, [self.x, self.y])
-        #     elif self.nom == "Orc":
-        #         surface.blit(self.image, [self.x - 30, self.y])
-        #     elif self.nom == "Loup humain":
-        #         surface.blit(self.image, [self.x, self.y])
-        #     elif self.nom == "Dotum":
-        #         surface.blit(self.image, [self.x - 24 * 8, self.y - 17 * 8])
-        #     elif self.nom == "Fenrir":
-        #         surface.blit(self.image, [self.x - 28 * 12, self.y - 17 * 12])
-        #
-        # else:
-        #     if self.nom == "Rat" or self.nom == "Boss Rat":
-        #         surface.blit(self.image, [self.rect.midbottom[0], self.rect.midbottom[1]])
-        #     elif self.nom == "Cerf" or self.nom == "Boss Cerf":
-        #         surface.blit(self.image, [self.x, self.y])
-        #     elif self.nom == "Orc":
-        #         surface.blit(self.image, [self.x - 30, self.y])
-        #     elif self.nom == "Loup humain":
-        #         surface.blit(self.image, [self.x, self.y])
-        #     elif self.nom == "Dotum":
-        #         surface.blit(self.image, [self.x - 25 * 8, self.y - 5 * 8])
-        #     elif self.nom == "Fenrir":
-        #         surface.blit(self.image, [self.x - 27 * 12, self.y - 5 * 12])
-
-        surface.blit(self.image, self.rect.topleft)
+        surface.blit(self.image, self.rect.topleft - self.offset)
         # pygame.draw.rect(surface, "black", self.rect, 2)
 
         if self.hovered_by_mouse:
@@ -105,7 +47,7 @@ class Monstre:
             # shaped surface over it
             image_copy = self.image.copy()
             image_copy.fill(Color.RED_HOVER, None, pygame.BLEND_RGB_ADD)
-            surface.blit(image_copy, self.rect.topleft)
+            surface.blit(image_copy, self.rect.topleft - self.offset)
 
         if self.selected or self.hovered_by_mouse:
             # if this mob is selected, we indicate the quantity a multitude of information
@@ -136,28 +78,7 @@ class Monstre:
             mob_info_surf.blit(hp_hp_max_surf, (mob_info_surf_rect.width / 2 - hp_hp_max_surf.get_width() / 2, mob_info_surf_rect.height / 2 - hp_hp_max_surf.get_height() / 2))
 
 
-            surface.blit(mob_info_surf, mob_info_surf_rect.topleft)
-
-            # if self.PV >= self.PV_max / 2:
-            #     pygame.draw.rect(self.window, (24 + 216 * (1 - (self.PV / self.PV_max) ** 2), 240, 10),
-            #                      [self.x - 48, self.y - 48, (207 * self.PV) / self.PV_max, 47])
-            # else:
-            #     pygame.draw.rect(self.window, (240, 240 * (2 * self.PV / self.PV_max), 10),
-            #                      [self.x - 48, self.y - 48, (207 * self.PV) / self.PV_max, 47])
-            #
-            # # affichage du nombre de PV du mob au dessus de sa tête
-            # if len(str(self.PV) + " / " + str(self.PV_max)) <= 13:
-            #     affiche_PV_self = self.police.render(
-            #         utils.conversion_nombre(self.PV) + " / " + utils.conversion_nombre(self.PV_max), True, self.Noir)
-            #     self.window.blit(affiche_PV_self,
-            #                      [self.x + 80 - len(str(self.PV) + " / " + str(self.PV_max)) * 10, self.y - 40])
-            # else:
-            #     affiche_PV_self = self.police_3.render(
-            #         utils.conversion_nombre(self.PV) + " / " + utils.conversion_nombre(self.PV_max), True, self.Noir)
-            #     self.window.blit(affiche_PV_self,
-            #                      [self.x + 45 - len(str(self.PV) + " / " + str(self.PV_max)) * 5, self.y - 38])
-            
-            
+            surface.blit(mob_info_surf, mob_info_surf_rect.topleft - self.offset)
 
     def update(self, game, zone):
         if self.is_dead():
@@ -167,7 +88,7 @@ class Monstre:
             self.rect = self.image.get_rect()
             self.rect.midbottom = (self.x, self.y)
 
-            self.hovered_by_mouse = self.rect.collidepoint(game.mouse_pos)
+            self.hovered_by_mouse = pygame.Rect(self.rect.topleft - self.offset, self.rect.size).collidepoint(game.mouse_pos)
 
         # if self.rect.collidepoint(game.mouse_pos):
         #     pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)

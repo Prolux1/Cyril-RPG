@@ -2,7 +2,7 @@ import random
 
 from data import Image
 
-from src import mobs
+from src import mobs, personnage
 
 
 
@@ -11,6 +11,7 @@ class Zone:
     def __init__(self, nom, nb_max_monstres):
         self.nom = nom  # nom de la zone
         self.entities_in_zone = []  # contains both mobs and characters
+        self.player_character = None
         self.obstacles = []  # liste de rect
         self.nb_max_monstres = nb_max_monstres
 
@@ -38,10 +39,14 @@ class Zone:
             entity.handle_event(game, event)
 
     def add_character(self, character):
+        self.player_character = character
         self.entities_in_zone.append(character)
 
     def get_all_mobs(self):
         return [entity for entity in self.entities_in_zone if isinstance(entity, mobs.Monstre)]
+
+    def get_player_character(self):
+        return self.player_character
 
     def get_nb_mobs(self):
         return len(self.get_all_mobs())
@@ -59,12 +64,12 @@ class Zone:
                 mob_x, mob_y = random.randint(300, 1800), random.randint(200, 900)
                 mob = mobs.Monstre(lvl_mob, 623, 24, "Boss Rat", Image.FRAMES_MOB_BOSS_RAT["Face"][0],
                                    Image.FRAMES_MOB_BOSS_RAT, mob_x, mob_y, random.randint(800, 900),
-                                   [mob_x - 5, mob_y + 40, 130, 120], True)
+                                   self.get_player_character().offset, True)
             else:
                 lvl_mob = random.randint(1, 5)
                 mob_x, mob_y = random.randint(300, 1800), random.randint(200, 900)
                 mob = mobs.Monstre(lvl_mob, 59 + 9 * lvl_mob, 3 + lvl_mob, "Rat", Image.FRAMES_MOB_RAT["Face"][0],
-                                   Image.FRAMES_MOB_RAT, mob_x, mob_y, random.randint(40, 60), [mob_x, mob_y + 40, 87, 110])
+                                   Image.FRAMES_MOB_RAT, mob_x, mob_y, random.randint(40, 60), self.get_player_character().offset)
                 # mob = Monstre(lvl_mob, 59 + 9 * lvl_mob, 3 + lvl_mob, "Loup humain", self.frames_mob_loup_humain["Face"][0], self.frames_mob_loup_humain, mob_x, mob_y, randint(40, 60) * xp_multiplier, [mob_x, mob_y + 40, 35 * 4, 44 * 4])
         elif self.nom == "Marais":
             proba_boss = random.randint(1, 20)
@@ -73,18 +78,18 @@ class Zone:
                 mob_x, mob_y = random.randint(300, 1800), random.randint(200, 900)
                 mob = mobs.Monstre(lvl_mob, 27138, 107, "Boss Cerf", Image.FRAMES_MOB_BOSS_CERF["Face"][0],
                                    Image.FRAMES_MOB_BOSS_CERF, mob_x, mob_y, random.randint(800, 900) * lvl_mob,
-                                   [mob_x - 25, mob_y + 40, 152, 200], True)
+                                   self.get_player_character().offset, True)
             else:
                 lvl_mob = random.randint(11, 18)
                 mob_x, mob_y = random.randint(300, 1800), random.randint(200, 900)
                 mob = mobs.Monstre(lvl_mob, 47 + 111 * lvl_mob, 6 * lvl_mob, "Cerf", Image.FRAMES_MOB_CERF["Face"][0],
                                    Image.FRAMES_MOB_CERF, mob_x, mob_y, random.randint(40, 60) * lvl_mob,
-                                   [mob_x - 20, mob_y + 40, 102, 159])
+                                   self.get_player_character().offset)
         elif self.nom == "Marais corrompu":
             lvl_mob = 25
             mob_x, mob_y = random.randint(300, 1800), random.randint(200, 900)
             mob = mobs.Monstre(lvl_mob, 120000, 250, "Orc", Image.frames_mob_orc["Face"][0], Image.frames_mob_orc, mob_x,
-                               mob_y, random.randint(1500, 1700) * lvl_mob, [mob_x - 10, mob_y, 125, 240], False, True)
+                               mob_y, random.randint(1500, 1700) * lvl_mob, self.get_player_character().offset, False, True)
 
         # lvl_mob = 30
         # mob_x, mob_y = randint(300, 1600), randint(100, 800)

@@ -11,18 +11,24 @@ from data import *
 
 
 class CyrilRpg:
-
     def __init__(self):
-        pygame.init()  # Initialization of pygame module
-        pygame.mixer.init()  # Initialization of sound module for pygame
-        pygame.display.set_caption("Cyril RPG")  # Window title
+        pygame.mixer.init()  # Initialisation du son du jeu
+        pygame.display.set_caption("Cyril RPG")  # Titre de la fenêtre de mon jeu de coiffeur qui sait coiffer sans son peigne
         self.window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.FULLSCREEN)
         self.mouse_pos = pygame.mouse.get_pos()
         self.components = []
         self.clock = pygame.time.Clock()
         self.time = pygame.time.get_ticks() / 1000
+        self.fps_max = 60
 
-        self.player = None
+        save: sauvegarde.Sauvegarde = sauvegarde.charger_sauvegarde()
+        self.joueur: joueur.Joueur = save.joueur
+
+        if self.joueur is None:
+            self.joueur = joueur.Joueur(utils.nom_joueur_random())  # Création d'un joueur de test
+
+            # Ajout d'un personnage de test (un joueur peu avoir plusieurs personnages)
+            self.joueur.add_character(personnage.Personnage(utils.nom_personnage_rp_random(), "Guerrier"))
 
         self.lac_sud = obstacle.Obstacle(pygame.image.load("./assets/obstacles/lac_sud.png").convert_alpha())
         self.zones = {
@@ -53,20 +59,21 @@ class CyrilRpg:
 
     def run(self):
         # self.load_data()
-        self.convert_images()
+        utils.conversion_format_imgs()
 
         self.main_menu()
 
-        while 1:
-            self.update()
+        while 1:  # C'est extrêmement insolent de faire ça en python
+            self.clock.tick(self.fps_max)
+            self.time = pygame.time.get_ticks() / 1000
+            self.mouse_pos = pygame.mouse.get_pos()
+
             self.handle_events()
+            self.update()
             self.draw()
             pygame.display.flip()
 
     def update(self):
-        self.clock.tick(60)
-        self.time = pygame.time.get_ticks() / 1000
-        self.mouse_pos = pygame.mouse.get_pos()
         for c in self.components:
             c.update(self)
 
@@ -89,104 +96,9 @@ class CyrilRpg:
             c.draw(self.window)
 
     def quit(self):
-        # self.save_data()
+        sauvegarde.ecrire_sauvegarde(self)
         pygame.quit()
         exit()
-
-    def load_data(self):
-        """
-        All data will be pickle and saved in save/data.pkl.
-        """
-        # We load data only if save directory exists,
-        # else we create it
-        if os.path.isdir("save"):
-            # If the data.pkl file exist, we load the data
-            # else we do nothing because we have nothing to load
-            if os.path.isfile("save/save.pkl"):
-                with open("save/save.pkl", "rb") as save_file:
-                    data = pickle.load(save_file)
-                    # Todo: change the structure of data to be a list like data["player"] to get player data
-                    self.player = data
-        else:
-            os.mkdir(os.path.join("save"))
-
-    def save_data(self):
-        if not os.path.isdir("save"):
-            os.mkdir(os.path.join("save"))
-
-        with open("save/save.pkl", "wb") as save_file:
-            pickle.dump(self.player, save_file)
-
-    def convert_images(self):
-        Image.BACKGROUND_MENU = Image.BACKGROUND_MENU.convert_alpha()
-        Image.FOND_MARBRE_TITRE = Image.FOND_MARBRE_TITRE.convert_alpha()
-        Image.OEIL_BLEU = Image.OEIL_BLEU.convert_alpha()
-        Image.FLECHE = Image.FLECHE.convert_alpha()
-        Image.FLECHE_2 = Image.FLECHE_2.convert_alpha()
-        Image.EPEE_INFO = Image.EPEE_INFO.convert_alpha()
-        Image.ARBALETE_INFO = Image.ARBALETE_INFO.convert_alpha()
-        Image.BATON_INFO = Image.BATON_INFO.convert_alpha()
-        Image.TABLEAU_PERSO = Image.TABLEAU_PERSO.convert_alpha()
-        Image.EPEE_LOGO = Image.EPEE_LOGO.convert_alpha()
-        Image.ARBALETE_LOGO = Image.ARBALETE_LOGO.convert_alpha()
-        Image.BATON_LOGO = Image.BATON_LOGO.convert_alpha()
-        Image.BOUTON_FLECHE_HAUT = Image.BOUTON_FLECHE_HAUT.convert_alpha()
-        Image.BOUTON_FLECHE_HAUT_PRESSE = Image.BOUTON_FLECHE_HAUT_PRESSE.convert_alpha()
-        Image.BOUTON_FLECHE_BAS = Image.BOUTON_FLECHE_BAS.convert_alpha()
-        Image.BOUTON_FLECHE_BAS_PRESSE = Image.BOUTON_FLECHE_BAS_PRESSE.convert_alpha()
-        Image.IMAGE_INVENTORY = Image.IMAGE_INVENTORY.convert_alpha()
-        Image.TABLEAU_DESCRIPTION_ITEM = Image.TABLEAU_DESCRIPTION_ITEM.convert_alpha()
-        Image.MENU_EQUIPEMENT_PERSONNAGE = Image.MENU_EQUIPEMENT_PERSONNAGE.convert_alpha()
-        Image.MENU_DONJONS = Image.MENU_DONJONS.convert_alpha()
-        Image.IMAGE_BARRE_DE_SORTS = Image.IMAGE_BARRE_DE_SORTS.convert_alpha()
-
-        ### Converting the wood buttons
-
-        for i in range(len(Image.SILVER_WOOD_BUTTONS)):
-            Image.SILVER_WOOD_BUTTONS[i] = Image.SILVER_WOOD_BUTTONS[i].convert_alpha()
-
-        ###
-
-        for i in range(len(Image.IMAGES_LEVEL_UP)):
-            Image.IMAGES_LEVEL_UP[i] = Image.IMAGES_LEVEL_UP[i].convert_alpha()
-        Image.SPAWN = Image.SPAWN.convert_alpha()
-        Image.DESERT = Image.DESERT.convert_alpha()
-        Image.MARAIS = Image.MARAIS.convert_alpha()
-        Image.MARAIS_CORROMPU = Image.MARAIS_CORROMPU.convert_alpha()
-        for p in Image.POSITIONS:
-            for i in range(len(Image.FRAMES_MOB_RAT[p])):
-                Image.FRAMES_MOB_RAT[p][i] = Image.FRAMES_MOB_RAT[p][i].convert_alpha()
-            for i in range(len(Image.FRAMES_MOB_BOSS_RAT[p])):
-                Image.FRAMES_MOB_BOSS_RAT[p][i] = Image.FRAMES_MOB_BOSS_RAT[p][i].convert_alpha()
-            for i in range(len(Image.FRAMES_MOB_CERF[p])):
-                Image.FRAMES_MOB_CERF[p][i] = Image.FRAMES_MOB_CERF[p][i].convert_alpha()
-            for i in range(len(Image.FRAMES_MOB_BOSS_CERF[p])):
-                Image.FRAMES_MOB_BOSS_CERF[p][i] = Image.FRAMES_MOB_BOSS_CERF[p][i].convert_alpha()
-            for i in range(len(Image.FRAMES_MOB_ORC[p])):
-                Image.FRAMES_MOB_ORC[p][i] = Image.FRAMES_MOB_ORC[p][i].convert_alpha()
-            for i in range(len(Image.FRAMES_MOB_LOUP_HUMAIN[p])):
-                Image.FRAMES_MOB_LOUP_HUMAIN[p][i] = Image.FRAMES_MOB_LOUP_HUMAIN[p][i].convert_alpha()
-            for i in range(len(Image.FRAMES_MOB_DOTUM[p])):
-                Image.FRAMES_MOB_DOTUM[p][i] = Image.FRAMES_MOB_DOTUM[p][i].convert_alpha()
-            for i in range(len(Image.FRAMES_MOB_FENRIR[p])):
-                Image.FRAMES_MOB_FENRIR[p][i] = Image.FRAMES_MOB_FENRIR[p][i].convert_alpha()
-            Image.CHARACTER_POSTURES[p] = Image.CHARACTER_POSTURES[p].convert_alpha()
-
-        for s in Image.SPELL_ICONS:
-            Image.SPELL_ICONS[s] = Image.SPELL_ICONS[s].convert_alpha()
-
-        ### Converting images for the game user interface
-        # Icons for the GUIMenusPanel
-        Image.BAG_ICON = Image.BAG_ICON.convert_alpha()
-        Image.EQUIPMENT_ICON = Image.EQUIPMENT_ICON.convert_alpha()
-        Image.DONJONS_ICON = Image.DONJONS_ICON.convert_alpha()
-
-        # Icons for the CharacterFrame
-        # Image.CHARACTER_LEVEL_FRAME = Image.CHARACTER_LEVEL_FRAME.convert_alpha()
-
-
-        ###
-
 
     def save_screenshot(self):
         if not os.path.isdir("screenshots"):
@@ -572,10 +484,10 @@ class CyrilRpg:
 
             pygame.display.flip()  # Permet de mettre à jour la fenêtre
 
-    def jeu(self, personnage):
+    def jeu(self, perso):
         """
         Lance le jeu avec le personnage passé en paramètre.
-        :param personnage:
+        :param perso:
         :return:
         """
         execution = True
@@ -587,22 +499,22 @@ class CyrilRpg:
         level_up, level_up_alpha = False, 51
         dic_menu = {"Inventaire": False, "Personnage": False}  # État des différents menus de l'interface du joueur
         pygame.key.set_repeat(200, 30)
-        personnage.connecte = True
+        perso.connecte = True
         sort_lancer = None
         temps_attaques_tourbillon = [None, 0]  # liste indiquant le temps à attendre et le nombre d'attaques effectuer
         # Stuff de départ lvl 22 cheaté :)
         #for i in range(30):
-        #    personnage.ajouter_item_inventaire(generation_equipement_alea(22, True))
-        #personnage.ajouter_item_inventaire(generation_arme_alea(22, True))
+        #    perso.ajouter_item_inventaire(generation_equipement_alea(22, True))
+        #perso.ajouter_item_inventaire(generation_arme_alea(22, True))
         while execution:
             self.horloge.tick(60)
             self.mouse_pos = pygame.mouse.get_pos()  # récupère la position de la souris
             self.temps = pygame.time.get_ticks() / 1000
             self.window.fill(self.Blanc)
-            mobs_zone = self.zones[personnage.zone].monstres_zone
+            mobs_zone = self.zones[perso.zone].monstres_zone
 
-            self.affichage_jeu(personnage)
-            self.affichage_interface_jeu(personnage, dic_menu)
+            self.affichage_jeu(perso)
+            self.affichage_interface_jeu(perso, dic_menu)
 
             # affiche la barre des sorts (3 emplacements de sorts pour l'instant)
 
@@ -614,7 +526,7 @@ class CyrilRpg:
             if xp_obtenu != 0:
                 if temps_affiche_xp + 2 > self.temps.__round__():
                     affiche_xp_obtenu = self.police.render("+ " + str(xp_obtenu) + " XP", True, self.Violet)
-                    self.window.blit(affiche_xp_obtenu, [personnage.x + 100, personnage.y + 50])
+                    self.window.blit(affiche_xp_obtenu, [perso.x + 100, perso.y + 50])
                 else:
                     xp_obtenu = 0
 
@@ -625,55 +537,53 @@ class CyrilRpg:
             #             if level_up_alpha != 255:
             #                 level_up_alpha += 51
             #         self.images_level_up[(level_up_alpha // 51) - 1].set_alpha(level_up_alpha)
-            #         self.window.blit(self.images_level_up[(level_up_alpha // 51) - 1], [personnage.x - 80, personnage.y - 240])
+            #         self.window.blit(self.images_level_up[(level_up_alpha // 51) - 1], [perso.x - 80, perso.y - 240])
             #     else:
             #         level_up = False
             #         level_up_alpha = 51
 
             # Si le personnage s'approche des bordures d'une zone, il change de zone
-            if personnage.x <= 20 and self.monde.index(personnage.zone) != 0:
-                self.zones[personnage.zone].personnages_zone.remove(personnage)
-                personnage.zone = self.monde[self.monde.index(personnage.zone) - 1]
-                self.zones[personnage.zone].personnages_zone.append(personnage)
-                personnage.x = 1750
-            elif personnage.x >= 1800 and self.monde.index(personnage.zone) != len(self.monde) - 1:
-                zone_quitte = personnage.zone
-                self.zones[personnage.zone].personnages_zone.remove(personnage)
-                personnage.zone = self.monde[self.monde.index(personnage.zone) + 1]
-                self.zones[personnage.zone].personnages_zone.append(personnage)
+            if perso.x <= 20 and self.monde.index(perso.zone) != 0:
+                self.zones[perso.zone].personnages_zone.remove(perso)
+                perso.zone = self.monde[self.monde.index(perso.zone) - 1]
+                self.zones[perso.zone].personnages_zone.append(perso)
+                perso.x = 1750
+            elif perso.x >= 1800 and self.monde.index(perso.zone) != len(self.monde) - 1:
+                zone_quitte = perso.zone
+                self.zones[perso.zone].personnages_zone.remove(perso)
+                perso.zone = self.monde[self.monde.index(perso.zone) + 1]
+                self.zones[perso.zone].personnages_zone.append(perso)
                 if zone_quitte == "Marais corrompu":
-                    personnage.x = 50
-                    personnage.y = 450
+                    perso.x = 50
+                    perso.y = 450
                 else:
-                    personnage.x = 50
+                    perso.x = 50
 
             pygame.display.flip()  # Permet de mettre à jour la fenêtre
 
 
 if __name__ == "__main__":
-    noms_random_joueurs = [
-        "ShadowHunter", "QuantumGamer", "MysticFury", "CyberNinjaX", "VelocityRaptor",
-        "StarlightStriker", "BlazePhoenix", "EchoPulse", "FrostByte", "VortexVoyager",
-        "ZenithSpectre", "MirageWanderer", "ThunderVolt", "CelestialSorcerer", "RogueReaper",
-        "InfernoProwler", "FrostbiteFalcon", "LunaLurker", "OmegaOracle"
-    ]
+    # Le jeu ce joue en plein écran 1920 x 1080, si l'écran du joueur n'est pas de ce format
+    # On lui indique de modifié la résolution de son écran
+    pygame.init()
+    info = pygame.display.Info()
+    largeur_ecran, hauteur_ecran = info.current_w, info.current_h  # info.current_w, info.current_h ou pour test la fenetre d'erreur 1280, 720
+    if largeur_ecran != 1920 or hauteur_ecran != 1080:
+        import tkinter as tk
+        from tkinter import messagebox
 
-    noms_random_personnages = [
-        "Aldric l'Intrépide", "Elena l'Enchanteresse", "Garrick le Gardien", "Isolde la Sombre",
-        "Thrain le Vaillant", "Lyria l'Étoilée", "Cedric l'Éclair", "Faelan le Mystique",
-        "Elara la Furtive", "Darius le Défenseur", "Sylas le Silencieux", "Vivienne la Vindicative",
-        "Gwendolyn la Glorieuse", "Xander le Xénophobe", "Seraphina la Sérénade", "Kael le Courageux",
-        "Luna la Légendaire", "Roland le Rédempteur", "Morgana la Maléfique", "Thorin le Tonnerre"
-    ]
+        def show_error():
+            root = tk.Tk()
+            root.withdraw()  # Hide the main root window
+            messagebox.showerror("Mauvaise résolution fréro",
+                                 "Le jeu ce joue uniquement en résolution d'écran 1920x1080.")
+            root.destroy()
 
-    joueur_test = joueur.Joueur(random.choice(noms_random_joueurs))
-    jeu = CyrilRpg()
-    jeu.player = joueur_test
-
-    # Création d'un personnage de test
-    personnage_test = personnage.Personnage(random.choice(noms_random_personnages), "Guerrier")
-    jeu.player.add_character(personnage_test)
+        show_error()
 
 
-
-    jeu.run()
+        pygame.quit()
+    else:
+        print("Entering game")
+        jeu = CyrilRpg()
+        jeu.run()

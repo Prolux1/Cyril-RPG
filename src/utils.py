@@ -185,3 +185,102 @@ def fibo(n):
 
 
 
+# Fonctions utilitaires pour générer des pseudos de joueurs aléatoires, utiles pour faire des tests
+
+def nom_joueur_random():
+    noms_random_joueurs = [
+        "ShadowHunter", "QuantumGamer", "MysticFury", "CyberNinjaX", "VelocityRaptor",
+        "StarlightStriker", "BlazePhoenix", "EchoPulse", "FrostByte", "VortexVoyager",
+        "ZenithSpectre", "MirageWanderer", "ThunderVolt", "CelestialSorcerer", "RogueReaper",
+        "InfernoProwler", "FrostbiteFalcon", "LunaLurker", "OmegaOracle"
+    ]
+    return random.choice(noms_random_joueurs)
+
+def nom_personnage_rp_random():
+    noms_random_personnages = [
+        "Aldric l'Intrépide", "Elena l'Enchanteresse", "Garrick le Gardien", "Isolde la Sombre",
+        "Thrain le Vaillant", "Lyria l'Étoilée", "Cedric l'Éclair", "Faelan le Mystique",
+        "Elara la Furtive", "Darius le Défenseur", "Sylas le Silencieux", "Vivienne la Vindicative",
+        "Gwendolyn la Glorieuse", "Xander le Xénophobe", "Seraphina la Sérénade", "Kael le Courageux",
+        "Luna la Légendaire", "Roland le Rédempteur", "Morgana la Maléfique", "Thorin le Tonnerre"
+    ]
+    return random.choice(noms_random_personnages)
+
+
+########
+
+def conversion_format_imgs():
+    from data import Image
+    Image.BACKGROUND_MENU = Image.BACKGROUND_MENU.convert_alpha()
+    Image.FOND_MARBRE_TITRE = Image.FOND_MARBRE_TITRE.convert_alpha()
+    Image.OEIL_BLEU = Image.OEIL_BLEU.convert_alpha()
+    Image.FLECHE = Image.FLECHE.convert_alpha()
+    Image.FLECHE_2 = Image.FLECHE_2.convert_alpha()
+    Image.EPEE_INFO = Image.EPEE_INFO.convert_alpha()
+    Image.ARBALETE_INFO = Image.ARBALETE_INFO.convert_alpha()
+    Image.BATON_INFO = Image.BATON_INFO.convert_alpha()
+    Image.TABLEAU_PERSO = Image.TABLEAU_PERSO.convert_alpha()
+    Image.EPEE_LOGO = Image.EPEE_LOGO.convert_alpha()
+    Image.ARBALETE_LOGO = Image.ARBALETE_LOGO.convert_alpha()
+    Image.BATON_LOGO = Image.BATON_LOGO.convert_alpha()
+    Image.BOUTON_FLECHE_HAUT = Image.BOUTON_FLECHE_HAUT.convert_alpha()
+    Image.BOUTON_FLECHE_HAUT_PRESSE = Image.BOUTON_FLECHE_HAUT_PRESSE.convert_alpha()
+    Image.BOUTON_FLECHE_BAS = Image.BOUTON_FLECHE_BAS.convert_alpha()
+    Image.BOUTON_FLECHE_BAS_PRESSE = Image.BOUTON_FLECHE_BAS_PRESSE.convert_alpha()
+    Image.IMAGE_INVENTORY = Image.IMAGE_INVENTORY.convert_alpha()
+    Image.TABLEAU_DESCRIPTION_ITEM = Image.TABLEAU_DESCRIPTION_ITEM.convert_alpha()
+    Image.MENU_EQUIPEMENT_PERSONNAGE = Image.MENU_EQUIPEMENT_PERSONNAGE.convert_alpha()
+    Image.MENU_DONJONS = Image.MENU_DONJONS.convert_alpha()
+    Image.IMAGE_BARRE_DE_SORTS = Image.IMAGE_BARRE_DE_SORTS.convert_alpha()
+
+    ### Converting the wood buttons
+
+    for i in range(len(Image.SILVER_WOOD_BUTTONS)):
+        Image.SILVER_WOOD_BUTTONS[i] = Image.SILVER_WOOD_BUTTONS[i].convert_alpha()
+
+    ###
+
+    for i in range(len(Image.IMAGES_LEVEL_UP)):
+        Image.IMAGES_LEVEL_UP[i] = Image.IMAGES_LEVEL_UP[i].convert_alpha()
+    Image.SPAWN = Image.SPAWN.convert_alpha()
+    Image.DESERT = Image.DESERT.convert_alpha()
+    Image.MARAIS = Image.MARAIS.convert_alpha()
+    Image.MARAIS_CORROMPU = Image.MARAIS_CORROMPU.convert_alpha()
+    for p in Image.POSITIONS:
+        for i in range(len(Image.FRAMES_MOB_RAT[p])):
+            Image.FRAMES_MOB_RAT[p][i] = Image.FRAMES_MOB_RAT[p][i].convert_alpha()
+        for i in range(len(Image.FRAMES_MOB_BOSS_RAT[p])):
+            Image.FRAMES_MOB_BOSS_RAT[p][i] = Image.FRAMES_MOB_BOSS_RAT[p][i].convert_alpha()
+        for i in range(len(Image.FRAMES_MOB_CERF[p])):
+            Image.FRAMES_MOB_CERF[p][i] = Image.FRAMES_MOB_CERF[p][i].convert_alpha()
+        for i in range(len(Image.FRAMES_MOB_BOSS_CERF[p])):
+            Image.FRAMES_MOB_BOSS_CERF[p][i] = Image.FRAMES_MOB_BOSS_CERF[p][i].convert_alpha()
+        for i in range(len(Image.FRAMES_MOB_ORC[p])):
+            Image.FRAMES_MOB_ORC[p][i] = Image.FRAMES_MOB_ORC[p][i].convert_alpha()
+        for i in range(len(Image.FRAMES_MOB_LOUP_HUMAIN[p])):
+            Image.FRAMES_MOB_LOUP_HUMAIN[p][i] = Image.FRAMES_MOB_LOUP_HUMAIN[p][i].convert_alpha()
+        for i in range(len(Image.FRAMES_MOB_DOTUM[p])):
+            Image.FRAMES_MOB_DOTUM[p][i] = Image.FRAMES_MOB_DOTUM[p][i].convert_alpha()
+        for i in range(len(Image.FRAMES_MOB_FENRIR[p])):
+            Image.FRAMES_MOB_FENRIR[p][i] = Image.FRAMES_MOB_FENRIR[p][i].convert_alpha()
+        Image.CHARACTER_POSTURES[p] = Image.CHARACTER_POSTURES[p].convert_alpha()
+
+    for s in Image.SPELL_ICONS:
+        Image.SPELL_ICONS[s] = Image.SPELL_ICONS[s].convert_alpha()
+
+    ### Converting images for the game user interface
+    # Icons for the GUIMenusPanel
+    Image.BAG_ICON = Image.BAG_ICON.convert_alpha()
+    Image.EQUIPMENT_ICON = Image.EQUIPMENT_ICON.convert_alpha()
+    Image.DONJONS_ICON = Image.DONJONS_ICON.convert_alpha()
+
+    # Icons for the CharacterFrame
+    # Image.CHARACTER_LEVEL_FRAME = Image.CHARACTER_LEVEL_FRAME.convert_alpha()
+
+    ###
+
+
+
+
+
+

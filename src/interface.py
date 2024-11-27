@@ -731,7 +731,7 @@ class CharacterDead(interfaceClasses.BackgroundColor):
             self.update_surf(updated_surf)
 
     def handle_event(self, game, event):
-        if self.character.est_mort:
+        if self.character.est_mort():
             self.respawn_button.handle_event(game, event)
 
 

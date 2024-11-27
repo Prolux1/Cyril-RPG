@@ -4,12 +4,11 @@ import random
 import copy
 
 from data import Image, Color, Sound
-
 from src import sorts, inventory, item, utils
+from config import WINDOW_WIDTH, WINDOW_HEIGHT
 
 
 class Personnage:
-
     def __init__(self, nom, classe):
         self.nom = nom
         self.id = random.randint(1, 10**100)
@@ -19,8 +18,6 @@ class Personnage:
         self.xp_requis = 400  # xp requis pour le lvl suivant
         self.xp_requis_lvl_precedent = 400  # xp requis au lvl d'avant
         self.xp_multiplier = 10
-
-
 
 
         if self.classe == "Guerrier":
@@ -46,10 +43,11 @@ class Personnage:
         #if classe == "Guerrier":
 
         self.orientation = "Face"
-        self.x = 960
-        self.y = 540
-        self.rect = pygame.Rect(0, 0, 105, 217)
+        self.rect = Image.CHARACTER_POSTURES[self.orientation].get_rect()
+        self.x = WINDOW_WIDTH / 2
+        self.y = WINDOW_HEIGHT / 2 + self.rect.height / 2
         self.rect.midbottom = (self.x, self.y)
+        self.offset = pygame.Vector2(self.x - WINDOW_WIDTH / 2, self.y - (WINDOW_HEIGHT / 2 + self.rect.height / 2))
         self.zone = "Desert"  # nom de la zone dans laquelle le joueur se trouve, par défaut, il est au spawn
 
         self.equipment = {
@@ -77,8 +75,10 @@ class Personnage:
         self.passive_regen_timer = None
 
     def draw(self, surface):
-        surface.blit(Image.CHARACTER_POSTURES[self.orientation], self.rect.topleft)
-        # pygame.draw.rect(surface, "black", self.rect, 2)
+        surface.blit(Image.CHARACTER_POSTURES[self.orientation], self.rect.topleft - self.offset)
+        # pygame.draw.rect(surface, Color.BLACK, pygame.Rect((self.rect.topleft - self.offset), self.rect.size), 2)
+        # pygame.draw.rect(surface, Color.BLACK, self.rect, 2)
+        # pygame.draw.rect(surface, Color.BLACK, pygame.Rect(self.x, self.y, 2, 2), 1)
 
         # circle reach of first spell of the character
         # pygame.draw.circle(surface, Color.BLACK, self.rect.center, self.spells[0].reach, 2)
@@ -119,6 +119,8 @@ class Personnage:
                 if "Droite" in deplacements_possibles:
                     self.deplacement_droite()
                 self.rect.midbottom = (self.x, self.y)
+            self.x, self.y = round(self.x), round(self.y)
+            self.offset.update(self.x - WINDOW_WIDTH / 2, self.y - (WINDOW_HEIGHT / 2 + self.rect.height / 2))
 
             # if character is not dead we regen 1 % of its
             # max hp every 2 seconds
@@ -177,7 +179,7 @@ class Personnage:
         mob_found = False
         for i in range(len(mobs_list)):
             if not mob_found:
-                if mobs_list[i].rect.collidepoint(mouse_pos):
+                if pygame.Rect(mobs_list[i].rect.topleft - self.offset, mobs_list[i].rect.size).collidepoint(mouse_pos):
                     self.selected_mob = mobs_list[i]
                     self.selected_mob.selected = True
                     mob_found = True
@@ -299,48 +301,39 @@ class Personnage:
 
     def deplacement_haut(self):
         self.orientation = "Dos"
-        if self.y - self.rect.height > 5:
-            self.y -= self.movement_speed
+        self.y -= self.movement_speed
 
     def deplacement_gauche(self):
         self.orientation = "Gauche"
-        if self.x - self.rect.width / 2 > 5:
-            self.x -= self.movement_speed
+        self.x -= self.movement_speed
 
     def deplacement_bas(self):
         self.orientation = "Face"
-        if self.y < 1075:
-            self.y += self.movement_speed
+        self.y += self.movement_speed
 
     def deplacement_droite(self):
         self.orientation = "Droite"
-        if self.x + self.rect.width / 2 < 1915:
-            self.x += self.movement_speed
+        self.x += self.movement_speed
 
     def deplacement_haut_gauche(self):
         self.orientation = "Gauche"
-        if self.x - self.rect.width / 2 > 5 and self.y - self.rect.height > 5:
-
-            self.y -= math.sqrt(2 * (self.movement_speed**2)) / 2
-            self.x -= math.sqrt(2 * (self.movement_speed**2)) / 2
+        self.y -= math.sqrt(2 * (self.movement_speed**2)) / 2
+        self.x -= math.sqrt(2 * (self.movement_speed**2)) / 2
 
     def deplacement_haut_droite(self):
         self.orientation = "Droite"
-        if self.x + self.rect.width / 2 < 1915 and self.y - self.rect.height > 5:
-            self.y -= math.sqrt(2 * (self.movement_speed**2)) / 2
-            self.x += math.sqrt(2 * (self.movement_speed**2)) / 2
+        self.y -= math.sqrt(2 * (self.movement_speed**2)) / 2
+        self.x += math.sqrt(2 * (self.movement_speed**2)) / 2
 
     def deplacement_bas_gauche(self):
         self.orientation = "Gauche"
-        if self.y < 1075 and self.x - self.rect.width / 2 > 5:
-            self.y += math.sqrt(2 * (self.movement_speed**2)) / 2
-            self.x -= math.sqrt(2 * (self.movement_speed**2)) / 2
+        self.y += math.sqrt(2 * (self.movement_speed**2)) / 2
+        self.x -= math.sqrt(2 * (self.movement_speed**2)) / 2
 
     def deplacement_bas_droite(self):
         self.orientation = "Droite"
-        if self.y < 1075 and self.x + self.rect.width / 2 < 1915:
-            self.y += math.sqrt(2 * (self.movement_speed**2)) / 2
-            self.x += math.sqrt(2 * (self.movement_speed**2)) / 2
+        self.y += math.sqrt(2 * (self.movement_speed**2)) / 2
+        self.x += math.sqrt(2 * (self.movement_speed**2)) / 2
 
     def verifier_personnage_obstacles(self, obstacles):
         """

@@ -1,6 +1,6 @@
 # Cyril-RPG
 
-Merci à tous ces cracs pour les images / animations / sons :
+Merci à tous ces cracks pour les images / animations / sons :
 
 http://opengameart.org/content/dungeon-crawl-32x32-tiles
 http://code.google.com/p/crawl-tiles/

@@ -1,6 +1,6 @@
 # Cyril-RPG
 
-Thanks to all the open game art assets creators, links down below :
+Merci à tous les cracs pour les images / animations / sons :
 
 http://opengameart.org/content/dungeon-crawl-32x32-tiles
 http://code.google.com/p/crawl-tiles/

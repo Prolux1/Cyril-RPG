@@ -30,7 +30,6 @@ def charger_sauvegarde() -> Sauvegarde:
             with open("save/save.pkl", "rb") as save_file:
                 save: Sauvegarde = pickle.load(save_file)
     else:
-        os.mkdir(os.path.join("save"))
         save = Sauvegarde(None)
     return save
 

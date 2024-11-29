@@ -28,9 +28,9 @@ class CyrilRpg:
             self.joueur = joueur.Joueur(utils.nom_joueur_random())  # Création d'un joueur de test
 
             # Ajout d'un personnage de test (un joueur peu avoir plusieurs personnages)
-            self.joueur.add_character(personnage.Personnage(utils.nom_personnage_rp_random(), "Guerrier"))
+            self.joueur.add_character(personnage.Personnage(self, utils.nom_personnage_rp_random(), "Guerrier"))
 
-        self.lac_sud = obstacle.Obstacle(pygame.image.load("./assets/obstacles/lac_sud.png").convert_alpha())
+        self.lac_sud = obstacle.Obstacle(pygame.image.load("./assets/obstacles/lac.png").convert_alpha())
         self.zones = {
             "Spawn": zone.Zone("Spawn", 15),
             "Desert": zone.Zone("Desert", 15),
@@ -96,7 +96,7 @@ class CyrilRpg:
             c.draw(self.window)
 
     def quit(self):
-        sauvegarde.ecrire_sauvegarde(self)
+        # sauvegarde.ecrire_sauvegarde(self)
         pygame.quit()
         exit()
 
@@ -142,7 +142,7 @@ class CyrilRpg:
         ]
 
         # Adding all the characters to a list to select one of them
-        for i, c in enumerate(self.player.characters):
+        for i, c in enumerate(self.joueur.characters):
             self.components.append(
                 interface.CharacterSelectionButton(Image.SILVER_WOOD_BUTTONS[0], WINDOW_WIDTH / 2, 200 + (100 * (i+1)), c, Font.ARIAL_23, Color.GREY)
             )
@@ -161,7 +161,7 @@ class CyrilRpg:
         if SHOW_FPS:
             self.components.append(interface.FpsViewer(self.clock.get_fps(), WINDOW_WIDTH, 0))
 
-    def enter_world(self, character):
+    def entrer_dans_le_monde(self, character):
         self.zones[character.zone].add_character(character)
         self.components = [
             self.zones[character.zone],
@@ -372,7 +372,7 @@ class CyrilRpg:
                             #     # print("Le nom du personnage est " + nom_personnage.value + " et sa classe est " + classe_select)
                             #     # nouveau_personnage = Personnage(nom_personnage.value, classe_select)
                             #     # self.joueur.personnages.append(nouveau_personnage)
-                            #     self.joueur.nouveau_personnage(src.personnage.Personnage(nom_personnage.value, classe_select))
+                            #     self.joueur.nouveau_personnage(src.personnage.Personnage(self, nom_personnage.value, classe_select))
                             #     execution = False
 
             if classe_select == 'Guerrier':
@@ -584,6 +584,5 @@ if __name__ == "__main__":
 
         pygame.quit()
     else:
-        print("Entering game")
         jeu = CyrilRpg()
         jeu.run()

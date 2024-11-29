@@ -3,13 +3,18 @@ import math
 import random
 import copy
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from main import CyrilRpg
+
 from data import Image, Color, Sound
 from src import sorts, inventory, item, utils
 from config import WINDOW_WIDTH, WINDOW_HEIGHT
 
 
 class Personnage:
-    def __init__(self, nom, classe):
+    def __init__(self, jeu: "CyrilRpg", nom: str, classe: str):
+        self.jeu = jeu
         self.nom = nom
         self.id = random.randint(1, 10**100)
         self.classe = classe
@@ -43,12 +48,27 @@ class Personnage:
         #if classe == "Guerrier":
 
         self.orientation = "Face"
-        self.rect = Image.CHARACTER_POSTURES[self.orientation].get_rect()
+        self.etat = "Lidle"  # L'état dans lequel se trouve le personnage par exemple "Courir", s'il ne fait rien "Lidle"
+        self.frame_courante = 0
+        self.nombre_frames_total_lidle = 5
+        self.nombre_frames_total_courir = 8
+        self.vitesse_de_deplacement = 1
+        self.temps_prochain_changement_frame = jeu.time + 1.7 / self.nombre_frames_total_lidle
+
+        self.rect = Image.GUERRIER_LIDLE_FRAMES[self.orientation].subsurface(
+            (
+                0,
+                0,
+                Image.GUERRIER_LIDLE_FRAMES[self.orientation].get_width() / self.nombre_frames_total_lidle,
+                Image.GUERRIER_LIDLE_FRAMES[self.orientation].get_height()
+            )
+        ).get_rect()
+
         self.x = WINDOW_WIDTH / 2
         self.y = WINDOW_HEIGHT / 2 + self.rect.height / 2
         self.rect.midbottom = (self.x, self.y)
         self.offset = pygame.Vector2(self.x - WINDOW_WIDTH / 2, self.y - (WINDOW_HEIGHT / 2 + self.rect.height / 2))
-        self.zone = "Desert"  # nom de la zone dans laquelle le joueur se trouve, par défaut, il est au spawn
+        self.zone = "Desert"  # nom de la zone dans laquelle le joueur se trouve, par défaut, il est dans le désert
 
         self.equipment = {
             "Casque": None,
@@ -75,7 +95,38 @@ class Personnage:
         self.passive_regen_timer = None
 
     def draw(self, surface):
-        surface.blit(Image.CHARACTER_POSTURES[self.orientation], self.rect.topleft - self.offset)
+        # surface.blit(Image.CHARACTER_POSTURES[self.orientation], self.rect.topleft - self.offset)
+
+        if self.etat == "Lidle":  # Ne fait rien
+            indice_frame = (self.frame_courante % self.nombre_frames_total_lidle) / self.nombre_frames_total_lidle
+            rect_frame_courante = pygame.Rect(
+                Image.GUERRIER_LIDLE_FRAMES[self.orientation].get_width() * indice_frame,
+                0,
+                Image.GUERRIER_LIDLE_FRAMES[self.orientation].get_width() / self.nombre_frames_total_lidle,
+                Image.GUERRIER_LIDLE_FRAMES[self.orientation].get_height()
+            )
+
+            img_courante = Image.GUERRIER_LIDLE_FRAMES[self.orientation].subsurface(rect_frame_courante)
+
+
+        elif self.etat == "Courir":
+            indice_frame = (self.frame_courante % self.nombre_frames_total_courir) / self.nombre_frames_total_courir
+            rect_frame_courante = pygame.Rect(
+                Image.GUERRIER_COURIR_FRAMES[self.orientation].get_width() * indice_frame,
+                0,
+                Image.GUERRIER_COURIR_FRAMES[self.orientation].get_width() / self.nombre_frames_total_courir,
+                Image.GUERRIER_COURIR_FRAMES[self.orientation].get_height()
+            )
+
+            img_courante = Image.GUERRIER_COURIR_FRAMES[self.orientation].subsurface(rect_frame_courante)
+
+
+        surface.blit(
+            img_courante,
+            self.rect.topleft - self.offset
+        )
+
+
         # pygame.draw.rect(surface, Color.BLACK, pygame.Rect((self.rect.topleft - self.offset), self.rect.size), 2)
         # pygame.draw.rect(surface, Color.BLACK, self.rect, 2)
         # pygame.draw.rect(surface, Color.BLACK, pygame.Rect(self.x, self.y, 2, 2), 1)
@@ -83,12 +134,13 @@ class Personnage:
         # circle reach of first spell of the character
         # pygame.draw.circle(surface, Color.BLACK, self.rect.center, self.spells[0].reach, 2)
 
-    def update(self, game, zone):
+    def update(self, game: "CyrilRpg", zone):
         self.update_stats()
 
         if not self.est_mort():
             key_pressed = pygame.key.get_pressed()
             deplacements_possibles = self.verifier_personnage_obstacles(zone.obstacles)
+            self.etat = "Lidle"
             if key_pressed[pygame.K_z]:
                 if key_pressed[pygame.K_d]:
                     if "Haut" in deplacements_possibles and "Droite" in deplacements_possibles:
@@ -100,6 +152,7 @@ class Personnage:
                     if "Haut" in deplacements_possibles:
                         self.deplacement_haut()
                 self.rect.midbottom = (self.x, self.y)
+                self.etat = "Courir"
             elif key_pressed[pygame.K_s]:
                 if key_pressed[pygame.K_q]:
                     if "Bas" in deplacements_possibles and "Gauche" in deplacements_possibles:
@@ -111,14 +164,17 @@ class Personnage:
                     if "Bas" in deplacements_possibles:
                         self.deplacement_bas()
                 self.rect.midbottom = (self.x, self.y)
+                self.etat = "Courir"
             elif key_pressed[pygame.K_q]:
                 if "Gauche" in deplacements_possibles:
                     self.deplacement_gauche()
                 self.rect.midbottom = (self.x, self.y)
+                self.etat = "Courir"
             elif key_pressed[pygame.K_d]:
                 if "Droite" in deplacements_possibles:
                     self.deplacement_droite()
                 self.rect.midbottom = (self.x, self.y)
+                self.etat = "Courir"
             self.x, self.y = round(self.x), round(self.y)
             self.offset.update(self.x - WINDOW_WIDTH / 2, self.y - (WINDOW_HEIGHT / 2 + self.rect.height / 2))
 
@@ -134,6 +190,11 @@ class Personnage:
                         self.passive_regen_timer = game.time + 2
             else:
                 self.passive_regen_timer = None
+
+        # On update la frame courante
+        if self.temps_prochain_changement_frame < game.time:
+            self.frame_courante += 1
+            self.temps_prochain_changement_frame = self.jeu.time + 1 / self.vitesse_de_deplacement / self.nombre_frames_total_courir
 
     def handle_event(self, game, event):
         if not self.est_mort():

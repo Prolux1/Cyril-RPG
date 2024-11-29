@@ -263,7 +263,8 @@ def conversion_format_imgs():
             Image.FRAMES_MOB_DOTUM[p][i] = Image.FRAMES_MOB_DOTUM[p][i].convert_alpha()
         for i in range(len(Image.FRAMES_MOB_FENRIR[p])):
             Image.FRAMES_MOB_FENRIR[p][i] = Image.FRAMES_MOB_FENRIR[p][i].convert_alpha()
-        Image.CHARACTER_POSTURES[p] = Image.CHARACTER_POSTURES[p].convert_alpha()
+
+        Image.GUERRIER_COURIR_FRAMES[p] = Image.GUERRIER_COURIR_FRAMES[p].convert_alpha()
 
     for s in Image.SPELL_ICONS:
         Image.SPELL_ICONS[s] = Image.SPELL_ICONS[s].convert_alpha()

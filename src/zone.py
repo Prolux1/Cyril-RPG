@@ -1,5 +1,7 @@
 import random
 
+import pygame
+
 from data import Image
 
 from src import mobs, personnage
@@ -18,9 +20,12 @@ class Zone:
         self.time_last_respawn = 0
         self.mob_respawn_timer = 1
 
-    def draw(self, surface):
-        surface.blit(Image.DESERT, (0, 0))
+    def draw(self, surface: pygame.Surface):
+        # surface.blit(Image.DESERT, (0, 0))
+        surface.fill((198, 146, 73))
 
+        # On affiche les entitées présente dans la zone de manière
+        # horizontale pour avoir une sensation de dimension
         for entity in sorted(self.entities_in_zone, key=lambda mob_i: mob_i.y):
             entity.draw(surface)
 

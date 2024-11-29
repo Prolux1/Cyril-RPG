@@ -62,6 +62,7 @@ MARAIS_CORROMPU = pygame.image.load("./assets/map/marais corrompu.png")
 
 # On enregistre les frames d'un mob sous la forme d'un dictionnaire où les clés sont les positions du mob et les valeurs les différentes animations dans la position souhaiter
 POSITIONS = ["Face", "Gauche", "Droite", "Dos"]
+POSITIONS_IN_ENGLISH = ["Down", "Left", "Right", "UP"]
 
 FRAMES_MOB_RAT = {}
 FRAMES_MOB_BOSS_RAT = {}
@@ -79,14 +80,18 @@ FRAMES_MOB_LOUP_HUMAIN = utils.frame(pygame.image.load(f"./assets/mobs/Loup huma
 FRAMES_MOB_DOTUM = utils.frame(pygame.image.load("./assets/mobs/Dotum/Walk.png"), 64, 70, 8, 9, Color.BLACK)
 FRAMES_MOB_FENRIR = utils.frame(pygame.image.load("./assets/mobs/Fenrir/Walk.png"), 64, 70, 12, 9, Color.BLACK)
 
-# Images of the character depending on its orientation
+# Charge les différentes frames pour les images quand le guerrier cours en fonction de la direction également
+GUERRIER_COURIR_FRAMES = {}
+GUERRIER_LIDLE_FRAMES = {}
+for i,p in enumerate(POSITIONS_IN_ENGLISH):
+    GUERRIER_COURIR_FRAMES[POSITIONS[i]] = pygame.transform.scale_by(
+        pygame.image.load(f"assets/personnage/guerrier/{p}/Png/Warrior{p}Walk.png"), 4
+    )
 
-CHARACTER_POSTURES = {
-    "Face": pygame.image.load("./assets/personnage/guerrier_devant.png"),
-    "Droite": pygame.image.load("./assets/personnage/guerrier_droite.png"),
-    "Gauche": pygame.image.load("./assets/personnage/guerrier_gauche.png"),
-    "Dos": pygame.image.load("./assets/personnage/guerrier_retourné.png")
-}
+    GUERRIER_LIDLE_FRAMES[POSITIONS[i]] = pygame.transform.scale_by(
+        pygame.image.load(f"assets/personnage/guerrier/{p}/Png/Warrior{p}Idle.png"), 4
+    )
+
 
 # Spells Icons
 SPELL_ICONS = {

@@ -46,7 +46,7 @@ class CharacterSelectionButton(interfaceClasses.ButtonImage):
 
 
     def get_clicked(self, game):
-        game.enter_world(self.character)
+        game.entrer_dans_le_monde(self.character)
 
 
 

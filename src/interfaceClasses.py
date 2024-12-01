@@ -1,5 +1,10 @@
 import pygame
-from data import Color
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from main import CyrilRpg
+
+from data import Color, Font
 
 
 class BasicInterfaceElement:
@@ -8,7 +13,7 @@ class BasicInterfaceElement:
         self.x = x
         self.y = y
         self.center = center
-        self.rect = self.surface.get_rect()
+        self.rect: pygame.Rect = self.surface.get_rect()
 
         if self.center:
             self.rect.center = (x, y)
@@ -37,11 +42,11 @@ class BasicInterfaceElement:
         pass
 
 
-class BasicInterfaceTextElement(BasicInterfaceElement):
-    def __init__(self, x, y, text, text_font, text_color, center=False):
+class Label(BasicInterfaceElement):
+    def __init__(self, text: str, text_font, text_color, x, y, center=False):
         super().__init__(x, y, text_font.render(text, True, text_color), center)
         self.text = text
-        self.text_font = text_font
+        self.text_font: pygame.font.Font = text_font
         self.text_color = text_color
 
     def update_text(self, new_text):
@@ -68,9 +73,9 @@ class BackgroundColor(BackgroundImage):
         self.surface.fill(color)
 
 
-class Button(BasicInterfaceTextElement):
+class Button(Label):
     def __init__(self, x, y, text, text_font, color, border_radius, center=False):
-        super().__init__(x, y, text, text_font, color, center)
+        super().__init__(text, text_font, color, x, y, center)
         self.border_radius = border_radius
 
         text_surf = self.surface.copy()
@@ -164,87 +169,69 @@ class ButtonImage(Button):
 
 
 class InputField(BasicInterfaceElement):
-    def __init__(self, x, y, text_font, text_color, border_color=Color.BLACK, border_radius=2, center=False):
-        char_name_surf = text_font.render("Character name", True, Color.GREY)
+    def __init__(self, jeu:"CyrilRpg", x: float, y: float, largeur: float, hauteur: float, police_input_text=Font.ARIAL_23, couleur_input_text=Color.BLACK, couleur_input_rect=Color.BLACK, largeur_bordure_input_rect=2, rayon_bordure_input_rect=1, center=False):
+        self.jeu = jeu
 
-        initial_surf = pygame.Surface((max(char_name_surf.get_width(), 200), char_name_surf.get_height() + 50), pygame.SRCALPHA)
-        initial_surf.blit(char_name_surf, [initial_surf.get_width() / 2 - char_name_surf.get_width() / 2, 0])
-
-        self.x = x - initial_surf.get_width() / 2
-        self.y = y - initial_surf.get_height() - 40
-
-        self.input_field_rect = pygame.Rect(0, char_name_surf.get_height(), 200, 50)
-        self.input_field_window_rect = pygame.Rect(x + self.input_field_rect.x, y + self.input_field_rect.y, self.input_field_rect.width, self.input_field_rect.height)
-        self.input_field_rect_border_width = 3
-        pygame.draw.rect(initial_surf, border_color, self.input_field_rect, self.input_field_rect_border_width, 4)
-
-        initial_surf.convert_alpha()
+        self.input_field_sans_texte = pygame.Surface((largeur, hauteur), pygame.SRCALPHA)
+        pygame.draw.rect(self.input_field_sans_texte, couleur_input_rect, self.input_field_sans_texte.get_rect(), largeur_bordure_input_rect, rayon_bordure_input_rect)
+        super().__init__(x, y, self.input_field_sans_texte.copy(), center)
 
         self.text = ""
-        self.text_surface = BasicInterfaceTextElement(0, 0, "", text_font, text_color)
-        # self.text_surface = self.text_font.render(self.text, True, border_color)
-        self.initial_surf_with_text = initial_surf.copy()
+        self.text_surface = Label(self.text, police_input_text, couleur_input_text, self.rect.w / 2, self.rect.h / 2, center=True)
+        self.text_surface.draw(self.surface)
 
-        super().__init__(x, y, self.initial_surf_with_text, center)
-
-        self.pressed = False
-        self.last_time_blink = None
+        self.focused = False
+        self.next_time_blink = 0
         self.cooldown = False
 
         self.blink_surf = pygame.Surface((3, 30))
 
     def update(self, game):
-        surf_with_text = self.initial_surf_with_text.copy()
-        self.text_surface.draw(surf_with_text)
-        # surf_with_text.blit(self.text_surface, self.text_surface.get_rect(center=self.input_field_rect.center))
-        self.update_surf(surf_with_text)  # reset surf
-
         # make a blinking bar that indicates that the input field has been pressed
-        if self.pressed:
-            if self.last_time_blink is None:
-                self.last_time_blink = game.time
-
-            if self.cooldown:
-                if self.last_time_blink + 1 < game.time:
-                    self.cooldown = False
-                    self.last_time_blink = None
-
-            elif self.last_time_blink + 0.5 > game.time:
-                self.surface.blit(self.blink_surf, self.blink_surf.get_rect(center=(self.input_field_rect.centerx + self.text_surface.rect.width / 2, self.input_field_rect.centery)))
-            else:
-                self.cooldown = True
-
+        if self.focused:
+            if self.jeu.time >= self.next_time_blink:
+                self.update_input_surface()
+            elif self.jeu.time + 0.5 >= self.next_time_blink:
+                self.remove_blink()
         else:
-            self.last_time_blink = None
-            self.cooldown = False
+            self.remove_blink()
 
     def handle_event(self, game, event):
         if event.type == pygame.MOUSEBUTTONDOWN:  # on click pressure
-            if event.button == 1:  # left click
-                if self.input_field_window_rect.collidepoint(game.mouse_pos):
-                    self.pressed = True
-                else:
-                    self.pressed = False
+            if event.button == pygame.BUTTON_LEFT:  # left click
+                self.focused = self.rect.collidepoint(game.mouse_pos)
 
         # handle key inputs only if pressed
-        if self.pressed:
+        if self.focused:
             if event.type == pygame.KEYDOWN:
                 # event.key from 97 -> 'a' to 122 -> 'z'
                 if pygame.K_a <= event.key <= pygame.K_z:
-                    if self.text_surface.rect.width + 24 < self.input_field_rect.width:
-                        if pygame.key.get_pressed()[pygame.K_LSHIFT]:
-                            self.text += chr(event.key - 32)
-                        else:
-                            self.text += chr(event.key)
-                        self.update_text_surface()
+                    lettre = chr(event.key - 32) if pygame.key.get_pressed()[pygame.K_LSHIFT] else chr(event.key)
+                    if self.text_surface.rect.width + self.text_surface.text_font.size(lettre)[0] < self.rect.width:
+                        self.text += lettre
+                        self.update_input_surface()
                 elif event.key == pygame.K_BACKSPACE:
                     self.text = self.text[:-1]  # remove last character
-                    self.update_text_surface()
+                    self.update_input_surface()
 
-    def update_text_surface(self):
-        self.last_time_blink = None
-        self.cooldown = False
+    def update_input_surface(self):
         self.text_surface.update_text(self.text)
+        self.reset_input_field()
+        self.text_surface.draw(self.surface)
+        self.blink()
+
+    def blink(self):
+        self.surface.blit(self.blink_surf, self.blink_surf.get_rect(
+            center=(self.rect.w / 2 + self.text_surface.rect.width / 2, self.rect.h / 2)))
+        self.next_time_blink = self.jeu.time + 1
+
+    def remove_blink(self):
+        self.text_surface.update_text(self.text)
+        self.reset_input_field()
+        self.text_surface.draw(self.surface)
+
+    def reset_input_field(self):
+        self.update_surf(self.input_field_sans_texte.copy())
 
 
 

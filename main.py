@@ -114,7 +114,7 @@ class CyrilRpg:
             interfaceClasses.BackgroundImage(Image.BACKGROUND_MENU),
             interfaceClasses.StaticImage(WINDOW_WIDTH / 2, 110, Image.FOND_MARBRE_TITRE, center=True),
             interfaceClasses.StaticImage(WINDOW_WIDTH / 2 + 135, 110, Image.OEIL_BLEU),
-            interfaceClasses.BasicInterfaceTextElement(WINDOW_WIDTH / 2, 110, "Cyril RPG", Font.TITLE, Color.BLACK, center=True),
+            interfaceClasses.Label("Cyril RPG", Font.TITLE, Color.BLACK, WINDOW_WIDTH / 2, 110, center=True),
             interface.PlayButton(Image.SILVER_WOOD_BUTTONS[2], WINDOW_WIDTH / 2, WINDOW_HEIGHT / 3, "Play", Font.ARIAL_40, Color.GREY),
             interface.SettingsButton(Image.SILVER_WOOD_BUTTONS[1], WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2.25, "Settings", Font.ARIAL_40, Color.GREY, center=True),
             interface.QuitButton(Image.SILVER_WOOD_BUTTONS[0], WINDOW_WIDTH / 2, WINDOW_HEIGHT / 1.8, "Quit", Font.ARIAL_40, Color.GREY, center=True)
@@ -130,7 +130,9 @@ class CyrilRpg:
     def character_creation_menu(self):
         self.components = [
             interfaceClasses.BackgroundColor((WINDOW_WIDTH, WINDOW_HEIGHT), Color.DARK_GREY),
-            interface.CharacterNameInput(WINDOW_WIDTH / 2, WINDOW_HEIGHT - 100, Font.ARIAL_23, Color.WHITE)
+            interfaceClasses.Label("Character name", Font.ARIAL_23, "white", WINDOW_WIDTH / 2, WINDOW_HEIGHT - 100, center=True),
+            interfaceClasses.InputField(self, WINDOW_WIDTH / 2, WINDOW_HEIGHT - 75 + Font.ARIAL_23.get_height(), 250, 50, center=True),
+            interface.FlecheRetour(self.character_selection_menu, 15, 15)
         ]
 
         if SHOW_FPS:
@@ -138,7 +140,8 @@ class CyrilRpg:
 
     def character_selection_menu(self):
         self.components = [
-            interfaceClasses.BackgroundColor((WINDOW_WIDTH, WINDOW_HEIGHT), Color.DARK_GREY)
+            interfaceClasses.BackgroundColor((WINDOW_WIDTH, WINDOW_HEIGHT), Color.DARK_GREY),
+            interface.FlecheRetour(self.main_menu, 15, 15)
         ]
 
         # Adding all the characters to a list to select one of them
@@ -155,7 +158,8 @@ class CyrilRpg:
 
     def settings_menu(self):
         self.components = [
-            interfaceClasses.BackgroundColor((WINDOW_WIDTH, WINDOW_HEIGHT), Color.DARK_GREY)
+            interfaceClasses.BackgroundColor((WINDOW_WIDTH, WINDOW_HEIGHT), Color.DARK_GREY),
+            interface.FlecheRetour(self.main_menu, 15, 15)
         ]
 
         if SHOW_FPS:

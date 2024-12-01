@@ -1,14 +1,18 @@
 import pygame
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from main import CyrilRpg
+
 from data import Font, Color, Image
 from src import interfaceClasses, utils
 from src.item import *
 from config import WINDOW_WIDTH, WINDOW_HEIGHT
 
 
-class FpsViewer(interfaceClasses.BasicInterfaceTextElement):
+class FpsViewer(interfaceClasses.Label):
     def __init__(self, fps: float, x, y):
-        super().__init__(x, y, str(round(fps)), Font.ARIAL_30, Color.BLACK)
+        super().__init__(str(round(fps)), Font.ARIAL_30, Color.BLACK, x, y)
 
     def update(self, game):
         self.update_text(str(round(game.clock.get_fps())))
@@ -69,12 +73,12 @@ class CharacterXpBar(interfaceClasses.BasicInterfaceElement):
         super().__init__(x, y, self.empty_surface.copy(), center)
         self.character = character
 
-        self.char_xp_text = interfaceClasses.BasicInterfaceTextElement(
-            self.rect.width / 2,
-            self.rect.height / 2,
+        self.char_xp_text = interfaceClasses.Label(
             utils.convert_number(self.character.xp) + " / " + utils.convert_number(self.character.xp_requis),
             text_font,
             text_color,
+            self.rect.width / 2,
+            self.rect.height / 2,
             True
         )
 
@@ -410,39 +414,39 @@ class GUIEquipmentMenu(interfaceClasses.StaticImage):
         super().__init__(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, Image.MENU_EQUIPEMENT_PERSONNAGE, center=True)
         self.origin_surface = self.surface.copy()
 
-        self.char_strength_surf = interfaceClasses.BasicInterfaceTextElement(
-            10,
-            self.rect.height,
+        self.char_strength_surf = interfaceClasses.Label(
             "Strength : " + str(self.character.force),
             Font.ARIAL_23,
-            Color.WHITE
+            Color.WHITE,
+            10,
+            self.rect.height
         )
         self.char_strength_surf.y -= self.char_strength_surf.rect.height + 5
 
-        self.char_armor_surf = interfaceClasses.BasicInterfaceTextElement(
-            10,
-            self.rect.height,
+        self.char_armor_surf = interfaceClasses.Label(
             "Armor : " + str(self.character.armure),
             Font.ARIAL_23,
-            Color.WHITE
+            Color.WHITE,
+            10,
+            self.rect.height
         )
         self.char_armor_surf.y -= self.char_strength_surf.rect.height + self.char_armor_surf.rect.height + 5
 
-        self.char_max_hp_surf = interfaceClasses.BasicInterfaceTextElement(
-            10,
-            self.rect.height,
+        self.char_max_hp_surf = interfaceClasses.Label(
             "Hp : " + str(self.character.PV_max),
             Font.ARIAL_23,
-            Color.WHITE
+            Color.WHITE,
+            10,
+            self.rect.height
         )
         self.char_max_hp_surf.y -= self.char_strength_surf.rect.height + self.char_armor_surf.rect.height + self.char_max_hp_surf.rect.height + 5
 
-        self.char_name_and_level_surf = interfaceClasses.BasicInterfaceTextElement(
-            self.rect.width / 2,
-            0,
+        self.char_name_and_level_surf = interfaceClasses.Label(
             self.character.nom + " level " + str(self.character.lvl),
             Font.ARIAL_16,
             Color.WHITE,
+            self.rect.width / 2,
+            0,
             True
         )
         self.char_name_and_level_surf.y += self.char_name_and_level_surf.rect.height
@@ -641,12 +645,12 @@ class CharacterFrame(interfaceClasses.BasicInterfaceElement):
             80
         )
 
-        self.char_hp_text = interfaceClasses.BasicInterfaceTextElement(
-            self.char_hp_rect.width / 2,
-            self.char_hp_rect.height / 2,
+        self.char_hp_text = interfaceClasses.Label(
             utils.convert_number(self.character.PV) + " / " + utils.convert_number(self.character.PV_max),
             text_font,
             text_color,
+            self.char_hp_rect.width / 2,
+            self.char_hp_rect.height / 2,
             True
         )
 
@@ -654,12 +658,12 @@ class CharacterFrame(interfaceClasses.BasicInterfaceElement):
         pygame.draw.ellipse(self.char_level_frame_surf, Color.BACKGROUND_SHADOW, pygame.Rect(0, 0, self.char_level_frame_surf.get_width(), self.char_level_frame_surf.get_height()))
         pygame.draw.ellipse(self.char_level_frame_surf, Color.BLACK, pygame.Rect(0, 0, self.char_level_frame_surf.get_width(), self.char_level_frame_surf.get_height()), 2)
 
-        self.char_lvl_text = interfaceClasses.BasicInterfaceTextElement(
-            self.char_hp_rect.right + self.char_level_frame_surf.get_width() / 2,
-            self.char_level_frame_surf.get_height() / 2.5 + self.char_hp_rect.height,
+        self.char_lvl_text = interfaceClasses.Label(
             str(self.character.lvl),
             Font.CHARACTER_LEVEL,
             Color.YELLOW_ORANGE,
+            self.char_hp_rect.right + self.char_level_frame_surf.get_width() / 2,
+            self.char_level_frame_surf.get_height() / 2.5 + self.char_hp_rect.height,
             True
         )
 
@@ -707,12 +711,12 @@ class CharacterDead(interfaceClasses.BackgroundColor):
 
         self.respawn_button = CharacterRespawnButton(character, Image.SILVER_WOOD_BUTTONS[3], self.rect.width / 2, self.rect.height / 2, "Respawn", Font.ARIAL_23, Color.GREY)
 
-        self.character_is_dead_text = interfaceClasses.BasicInterfaceTextElement(
-            self.rect.width / 2,
-            self.rect.height / 2 - self.respawn_button.rect.height,
+        self.character_is_dead_text = interfaceClasses.Label(
             "You died",
             Font.ARIAL_40,
             Color.RED,
+            self.rect.width / 2,
+            self.rect.height / 2 - self.respawn_button.rect.height,
             True
         )
 
@@ -736,6 +740,26 @@ class CharacterDead(interfaceClasses.BackgroundColor):
 
 
 
+class FlecheRetour(interfaceClasses.BasicInterfaceElement):
+    def __init__(self, on_click_func, x, y, center=False):
+        self.on_click_func = on_click_func
+        super().__init__(x, y, Image.FLECHE_RETOUR, center)
+
+        self.survolee_par_souris = False
+
+    def update(self, game: "CyrilRpg"):
+        self.survolee_par_souris = self.rect.collidepoint(game.mouse_pos)
+
+        if self.survolee_par_souris:
+            self.update_surf(Image.FLECHE_RETOUR_FOCUS)
+        else:
+            self.update_surf(Image.FLECHE_RETOUR)
+
+    def handle_event(self, game, event):
+        if event.type == pygame.MOUSEBUTTONUP:
+            if event.button == pygame.BUTTON_LEFT:
+                if self.rect.collidepoint(game.mouse_pos):
+                    self.on_click_func()
 
 
 

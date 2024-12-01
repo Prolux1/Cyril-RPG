@@ -33,7 +33,7 @@ class CyrilRpg:
         self.lac_sud = obstacle.Obstacle(pygame.image.load("./assets/obstacles/lac.png").convert_alpha())
         self.zones = {
             "Spawn": zone.Zone("Spawn", 15),
-            "Desert": zone.Zone("Desert", 15),
+            "Desert": zone.Zone("Desert", 250),
             "Marais": zone.Zone("Marais", 15),
             "Marais corrompu": zone.Zone("Marais corrompu", 1)
         }

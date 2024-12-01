@@ -8,13 +8,13 @@ from src import utils
 
 
 class Monstre:
-    def __init__(self, lvl, PV, degat, nom, image, frames, x, y, xp, offset, est_boss=False, est_world_boss=False):
+    def __init__(self, lvl, PV, degat, nom, orientation, frames, x, y, xp, offset, est_boss=False, est_world_boss=False):
         self.lvl = lvl
         self.PV = PV
         self.PV_max = PV
         self.degat = degat
         self.nom = nom
-        self.image = image
+        self.image = frames[orientation][0]
         self.x = x
         self.y = y
         self.rect = self.image.get_rect()

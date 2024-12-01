@@ -194,7 +194,12 @@ class Personnage:
         # On update la frame courante
         if self.temps_prochain_changement_frame < game.time:
             self.frame_courante += 1
-            self.temps_prochain_changement_frame = self.jeu.time + 1 / self.vitesse_de_deplacement / self.nombre_frames_total_courir
+
+            if self.etat == "Courir":
+                self.temps_prochain_changement_frame = self.jeu.time + 0.7 / self.vitesse_de_deplacement / self.nombre_frames_total_courir
+            else:  # Lidle
+                self.temps_prochain_changement_frame = self.jeu.time + 1.7 / self.nombre_frames_total_lidle
+
 
     def handle_event(self, game, event):
         if not self.est_mort():

@@ -1,4 +1,4 @@
-# Cyril-RPG
+# Cyril-RPG v0.0.1
 
 Merci à tous ces cracks pour les images / animations / sons :
 

@@ -1,3 +1,5 @@
+import timeit
+
 import pygame
 import os
 import pickle
@@ -19,7 +21,8 @@ class CyrilRpg:
         self.components = []
         self.clock = pygame.time.Clock()
         self.time = pygame.time.get_ticks() / 1000
-        self.fps_max = 60
+        self.fps_max = 0  # 60 par défaut, 0 -> pas de limite
+        self.fps = 1
 
         save: sauvegarde.Sauvegarde = sauvegarde.charger_sauvegarde()
         self.joueur: joueur.Joueur = save.joueur
@@ -32,10 +35,10 @@ class CyrilRpg:
 
         self.lac_sud = obstacle.Obstacle(pygame.image.load("./assets/obstacles/lac.png").convert_alpha())
         self.zones = {
-            "Spawn": zone.Zone("Spawn", 15),
-            "Desert": zone.Zone("Desert", 250),
-            "Marais": zone.Zone("Marais", 15),
-            "Marais corrompu": zone.Zone("Marais corrompu", 1)
+            "Spawn": zone.Zone(self, "Spawn", 15),
+            "Desert": zone.Zone(self, "Desert", 250),
+            "Marais": zone.Zone(self, "Marais", 15),
+            "Marais corrompu": zone.Zone(self, "Marais corrompu", 1)
         }
         self.monde = ["Marais corrompu", "Marais", "Desert"]
 
@@ -57,6 +60,9 @@ class CyrilRpg:
             pygame.Rect(0, 940, 1920, 140)
         ])
 
+        # constantes internes
+        self.interval_spawn_mobs = 0.01  # gère le taux d'apparition des mobs 1 par défaut. Une valeur plus petite -> + de mobs
+
     def run(self):
         # self.load_data()
         utils.conversion_format_imgs()
@@ -65,6 +71,7 @@ class CyrilRpg:
 
         while 1:  # C'est extrêmement insolent de faire ça en python
             self.clock.tick(self.fps_max)
+            self.fps = max(self.clock.get_fps(), 1)
             self.time = pygame.time.get_ticks() / 1000
             self.mouse_pos = pygame.mouse.get_pos()
 

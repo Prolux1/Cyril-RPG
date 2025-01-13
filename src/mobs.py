@@ -1,3 +1,7 @@
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from main import CyrilRpg
+
 import random
 import pygame
 
@@ -26,13 +30,13 @@ class Monstre:
         self.orientation = "Face"
         self.frames = frames  # Frames d'un mob sous forme de dico
         self.direction = None
+        self.vitesse_de_base = 2  # 2 par défaut
+        self.vitesse = self.vitesse_de_base
         self.dist_parcouru = 0
         self.temps_attendre_depla = 0
         self.frame_courante = 0
         self.est_boss = est_boss  # Booléen indiquant si le mob est un boss ou pas (False de base)
         self.est_world_boss = est_world_boss
-
-        self.movement_speed = 1
 
         self.selected = False
         self.hovered_by_mouse = False
@@ -84,7 +88,8 @@ class Monstre:
         if self.is_dead():
             zone.entities_in_zone.remove(self)
         else:
-            self.deplacement(self.movement_speed / 10)
+            self.vitesse = self.vitesse_de_base * 60 / game.fps
+            self.deplacement(game)
             self.rect = self.image.get_rect()
             self.rect.midbottom = (self.x, self.y)
 
@@ -105,57 +110,42 @@ class Monstre:
             return True
         return False
 
-    def deplacement(self, vitesse):
+    def deplacement(self, game: "CyrilRpg"):
         """
         Déplace un mob d'une position (x, y) à une autre position aléatoire.
         :return:
         """
-        if self.direction is None and self.temps_attendre_depla == 120:
-            direction_alea = [-2, -1, 1, 2]
+        if self.direction is None and game.time >= self.temps_attendre_depla:
+            direction_alea = ["Gauche", "Droite", "Dos", "Face"]  # [-2, -1, 1, 2]
             if self.x - 200 < 0:
-                direction_alea.remove(-1)
+                direction_alea.remove("Gauche")
             if self.y - self.rect.height - 200 < 0:
-                direction_alea.remove(-2)
+                direction_alea.remove("Dos")
             if self.x + 200 > 1920:
-                direction_alea.remove(1)
+                direction_alea.remove("Droite")
             if self.y + 200 > 1080:
-                direction_alea.remove(2)
+                direction_alea.remove("Face")
             self.direction = random.choice(direction_alea)
             self.dist_parcouru = 0
-            self.temps_attendre_depla = 0
+            self.temps_attendre_depla = game.time + 2
         elif self.direction is not None:
             if self.dist_parcouru <= 200:
-                if self.direction == -1:
-                    self.orientation = "Gauche"
-                    self.x -= 2
-                    self.dist_parcouru += 2
-                elif self.direction == 1:
-                    self.orientation = "Droite"
-                    self.x += 2
-                    self.dist_parcouru += 2
-                elif self.direction == -2:
-                    self.orientation = "Dos"
-                    self.y -= 2
-                    self.dist_parcouru += 2
-                elif self.direction == 2:
-                    self.orientation = "Face"
-                    self.y += 2
-                    self.dist_parcouru += 2
-                self.animation(vitesse)
+                self.orientation = self.direction
+                if self.direction == "Gauche":
+                    self.x -= self.vitesse
+                elif self.direction == "Droite":
+                    self.x += self.vitesse
+                elif self.direction == "Dos":
+                    self.y -= self.vitesse
+                elif self.direction == "Face":
+                    self.y += self.vitesse
+                self.dist_parcouru += self.vitesse
+                self.animation(self.vitesse)
             else:
                 self.direction = None
         else:
             if self.est_world_boss:
-                if self.orientation == "Gauche":
-                    self.image = self.frames["Gauche"][0]
-                elif self.orientation == "Droite":
-                    self.image = self.frames["Droite"][0]
-                elif self.orientation == "Face":
-                    self.image = self.frames["Face"][0]
-                elif self.orientation == "Dos":
-                    self.image = self.frames["Dos"][0]
-
-            self.temps_attendre_depla += 1
+                self.image = self.frames[self.orientation][0]
 
     def animation(self, vitesse):
         """

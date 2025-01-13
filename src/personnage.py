@@ -1,11 +1,11 @@
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from main import CyrilRpg
+
 import pygame
 import math
 import random
 import copy
-
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from main import CyrilRpg
 
 from data import Image, Color, Sound
 from src import sorts, inventory, item, utils
@@ -88,6 +88,7 @@ class Personnage:
         self.inventory = inventory.Inventory(8, 8)
 
         self.arme = None
+        self.vitesse_de_deplacement_de_base = 7
         self.movement_speed = 7
 
         self.selected_mob = None
@@ -137,6 +138,7 @@ class Personnage:
     def update(self, game: "CyrilRpg", zone):
         self.update_stats()
 
+        self.movement_speed = self.vitesse_de_deplacement_de_base * 60 / game.fps
         if not self.est_mort():
             key_pressed = pygame.key.get_pressed()
             deplacements_possibles = self.verifier_personnage_obstacles(zone.obstacles)

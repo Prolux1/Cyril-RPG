@@ -1,3 +1,7 @@
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from main import CyrilRpg
+
 import random
 
 import pygame
@@ -10,7 +14,8 @@ from config import WINDOW_WIDTH, WINDOW_HEIGHT
 
 
 class Zone:
-    def __init__(self, nom, nb_max_monstres):
+    def __init__(self, rpg: "CyrilRpg", nom, nb_max_monstres):
+        self.rpg = rpg
         self.nom = nom  # nom de la zone
         self.entities_in_zone = []  # contains both mobs and characters
         self.player_character = None
@@ -26,11 +31,12 @@ class Zone:
 
         # On affiche les entitées présente dans la zone de manière
         # horizontale pour avoir une sensation de dimension
-        for entity in sorted(self.entities_in_zone, key=lambda mob_i: mob_i.y):
+        self.entities_in_zone.sort(key=lambda mob_i: mob_i.y)
+        for entity in self.entities_in_zone:
             entity.draw(surface)
 
     def update(self, game):
-        if game.time >= self.time_last_respawn + self.mob_respawn_timer:
+        if game.time >= self.time_last_respawn + (self.mob_respawn_timer * self.rpg.interval_spawn_mobs):
             if self.get_nb_mobs() < self.nb_max_monstres:
                 self.generate_random_mob(game)
             else:

@@ -50,17 +50,16 @@ class Personnage:
         self.orientation = "Face"
         self.etat = "Lidle"  # L'état dans lequel se trouve le personnage par exemple "Courir", s'il ne fait rien "Lidle"
         self.frame_courante = 0
-        self.nombre_frames_total_lidle = 5
-        self.nombre_frames_total_courir = 8
+        self.nb_frames_etats = {"Lidle": 5, "Courir": 8}
         self.vitesse_de_deplacement = 1
-        self.temps_prochain_changement_frame = jeu.time + 1.7 / self.nombre_frames_total_lidle
+        self.temps_prochain_changement_frame = jeu.time + 1.7 / self.nb_frames_etats["Lidle"]
 
-        self.rect = Image.GUERRIER_LIDLE_FRAMES[self.orientation].subsurface(
+        self.rect = Image.GUERRIER_FRAMES["Lidle"][self.orientation].subsurface(
             (
                 0,
                 0,
-                Image.GUERRIER_LIDLE_FRAMES[self.orientation].get_width() / self.nombre_frames_total_lidle,
-                Image.GUERRIER_LIDLE_FRAMES[self.orientation].get_height()
+                Image.GUERRIER_FRAMES["Lidle"][self.orientation].get_width() / self.nb_frames_etats["Lidle"],
+                Image.GUERRIER_FRAMES["Lidle"][self.orientation].get_height()
             )
         ).get_rect()
 
@@ -98,35 +97,20 @@ class Personnage:
     def draw(self, surface):
         # surface.blit(Image.CHARACTER_POSTURES[self.orientation], self.rect.topleft - self.offset)
 
-        if self.etat == "Lidle":  # Ne fait rien
-            indice_frame = (self.frame_courante % self.nombre_frames_total_lidle) / self.nombre_frames_total_lidle
-            rect_frame_courante = pygame.Rect(
-                Image.GUERRIER_LIDLE_FRAMES[self.orientation].get_width() * indice_frame,
-                0,
-                Image.GUERRIER_LIDLE_FRAMES[self.orientation].get_width() / self.nombre_frames_total_lidle,
-                Image.GUERRIER_LIDLE_FRAMES[self.orientation].get_height()
-            )
-
-            img_courante = Image.GUERRIER_LIDLE_FRAMES[self.orientation].subsurface(rect_frame_courante)
-
-
-        elif self.etat == "Courir":
-            indice_frame = (self.frame_courante % self.nombre_frames_total_courir) / self.nombre_frames_total_courir
-            rect_frame_courante = pygame.Rect(
-                Image.GUERRIER_COURIR_FRAMES[self.orientation].get_width() * indice_frame,
-                0,
-                Image.GUERRIER_COURIR_FRAMES[self.orientation].get_width() / self.nombre_frames_total_courir,
-                Image.GUERRIER_COURIR_FRAMES[self.orientation].get_height()
-            )
-
-            img_courante = Image.GUERRIER_COURIR_FRAMES[self.orientation].subsurface(rect_frame_courante)
+        indice_frame = (self.frame_courante % self.nb_frames_etats[self.etat]) / self.nb_frames_etats[self.etat]
+        rect_frame_courante = pygame.Rect(
+            Image.GUERRIER_FRAMES[self.etat][self.orientation].get_width() * indice_frame,
+            0,
+            Image.GUERRIER_FRAMES[self.etat][self.orientation].get_width() / self.nb_frames_etats[self.etat],
+            Image.GUERRIER_FRAMES[self.etat][self.orientation].get_height()
+        )
+        img_courante = Image.GUERRIER_FRAMES[self.etat][self.orientation].subsurface(rect_frame_courante)
 
 
         surface.blit(
             img_courante,
             self.rect.topleft - self.offset
         )
-
 
         # pygame.draw.rect(surface, Color.BLACK, pygame.Rect((self.rect.topleft - self.offset), self.rect.size), 2)
         # pygame.draw.rect(surface, Color.BLACK, self.rect, 2)
@@ -197,11 +181,11 @@ class Personnage:
         if self.temps_prochain_changement_frame < game.time:
             self.frame_courante += 1
 
-            if self.etat == "Courir":
-                self.temps_prochain_changement_frame = self.jeu.time + 0.7 / self.vitesse_de_deplacement / self.nombre_frames_total_courir
-            else:  # Lidle
-                self.temps_prochain_changement_frame = self.jeu.time + 1.7 / self.nombre_frames_total_lidle
-
+            temps_prochains_changements_frames = {
+                "Lidle": 1.7,
+                "Courir": 0.7 / self.vitesse_de_deplacement
+            }
+            self.temps_prochain_changement_frame = self.jeu.time + (temps_prochains_changements_frames[self.etat] / self.nb_frames_etats[self.etat])
 
     def handle_event(self, game, event):
         if not self.est_mort():
@@ -260,29 +244,23 @@ class Personnage:
             self.selected_mob = None
 
     def get_damage(self):
-        total = 0
-        if self.arme:
-            total += self.arme.damage
-
-        total += self.force
-
-        return total
+        return self.arme.damage + self.force if self.arme is not None else self.force
 
     def update_stats(self):
         """
         Met à jour les stats du joueur en fonction de l'équipement équipée
         """
         armure_total = 0
-        PV_max_total = self.PV_de_base
+        pv_max_total = self.PV_de_base
         force_total = self.force_de_base
 
         if self.arme:
-            PV_max_total += self.arme.bonus_hp
+            pv_max_total += self.arme.bonus_hp
             force_total += self.arme.bonus_strength
         for eq in self.equipment.values():
             if eq:
                 armure_total += eq.armor
-                PV_max_total += eq.bonus_hp
+                pv_max_total += eq.bonus_hp
                 force_total += eq.bonus_strength
         self.armure = armure_total
         if self.armure <= 500:
@@ -291,12 +269,11 @@ class Personnage:
             self.reduction_degats = (self.armure / ((self.armure + 1000) + (self.armure / 2)))
         else:
             self.reduction_degats = (self.armure / ((self.armure + 1000) + (self.armure / 4)))
-        self.PV_max = PV_max_total
+        self.PV_max = pv_max_total
         self.force = force_total
 
-        # Si les PV sont supérieurs aux PV max, on change cela
-        if self.PV > self.PV_max:
-            self.PV = self.PV_max
+        # Si les PV ne peuvent pas dépassé les PV max
+        self.PV = min(self.PV, self.PV_max)
 
     def equip(self, equipment_piece):
         if isinstance(equipment_piece, item.Weapon):
@@ -446,6 +423,7 @@ class Personnage:
 
     def attaquer(self, mobs, sort, attaques_multiples=False):
         """
+        Attaque le mob sélectionné
 
         :param mobs: liste de mobs
         :param sort: sort avec lequel il faut attaquer les mobs
@@ -454,7 +432,7 @@ class Personnage:
         """
         if self.selected_mob:
             if sort.check_reach(self.rect.center, self.selected_mob.rect.center):
-                self.selected_mob.take_damage(self, round(self.get_damage() * sort.perc_char_dmg / 100))
+                self.selected_mob.prendre_cher(self, round(self.get_damage() * sort.perc_char_dmg / 100))
 
 
 

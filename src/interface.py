@@ -63,8 +63,8 @@ class CharacterCreationButton(interfaceClasses.ButtonImage):
 
 
 class CharacterNameInput(interfaceClasses.InputField):
-    def __init__(self, x, y, text_font, text_color, border_color=Color.BLACK, border_radius=2, center=True):
-        super().__init__(x, y, text_font, text_color, border_color, border_radius, center)
+    def __init__(self, jeu, x, y, text_font, text_color, border_color=Color.BLACK, border_radius=2, center=True):
+        super().__init__(jeu, x, y, text_font, text_color, border_color, border_radius, center)
 
 
 class CharacterXpBar(interfaceClasses.BasicInterfaceElement):

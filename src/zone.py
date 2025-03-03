@@ -49,9 +49,9 @@ class Zone:
         for entity in self.entities_in_zone:
             entity.handle_event(game, event)
 
-    def add_character(self, character):
-        self.player_character = character
-        self.entities_in_zone.append(character)
+    def add_personnage(self, pers: "personnage.Personnage"):
+        self.player_character = pers
+        self.entities_in_zone.append(pers)
 
     def get_all_mobs(self):
         return [entity for entity in self.entities_in_zone if isinstance(entity, mobs.Monstre)]

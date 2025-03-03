@@ -33,6 +33,8 @@ class Npc:
         self.info_surf_hp_text = None
         self.info_surf_name_lvl = None
 
+        self.dx_dy_directions = {"Gauche": (-1, 0), "Droite": (1, 0), "Dos": (0, -1), "Face": (0, 1)}
+
     def get_current_frame(self) -> pygame.Surface:
         return Image.FRAMES_NPCS[self.frames_name][self.facing][self.num_current_frame]
 

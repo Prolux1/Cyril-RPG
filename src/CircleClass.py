@@ -2,7 +2,7 @@ import pygame
 from math import hypot
 
 
-class Circle:
+class Cercle:
     def __init__(self, center: tuple, radius: int or float):
         self.center = center
         self.centerx = center[0]

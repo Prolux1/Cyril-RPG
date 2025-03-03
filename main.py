@@ -21,7 +21,7 @@ class CyrilRpg:
         self.components = []
         self.clock = pygame.time.Clock()
         self.time = pygame.time.get_ticks() / 1000
-        self.fps_max = 0  # 60 par défaut, 0 -> pas de limite
+        self.fps_max = 60  # 60 par défaut, 0 -> pas de limite
         self.fps = 1
 
         save: sauvegarde.Sauvegarde = sauvegarde.charger_sauvegarde()
@@ -173,7 +173,7 @@ class CyrilRpg:
             self.components.append(interface.FpsViewer(self.clock.get_fps(), WINDOW_WIDTH, 0))
 
     def entrer_dans_le_monde(self, character):
-        self.zones[character.zone].add_character(character)
+        self.zones[character.zone].add_personnage(character)
         self.components = [
             self.zones[character.zone],
             gui.GameUserInterface(character)

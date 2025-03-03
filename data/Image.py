@@ -76,22 +76,19 @@ for p in POSITIONS:
     FRAMES_MOB_BOSS_CERF[p] = [pygame.image.load(f"./assets/mobs/boss_cerf/cerf_{p}/cerf_{p}_frame_{i}.png") for i in range(1, 5)]
     FRAMES_MOB_ORC[p] = [pygame.image.load(f"./assets/mobs/Orc/Orc_{p}/Orc_{p}_frame_{i}.png") for i in range(1, 3)]
 
-FRAMES_MOB_LOUP_HUMAIN = utils.frame(pygame.image.load(f"./assets/mobs/Loup humain/Loup humain_{p}/Loup humain_frames_{p}.png"), 30, 44, 4, 9, Color.BLACK)
+FRAMES_MOB_LOUP_HUMAIN = utils.frame(pygame.image.load(f"./assets/mobs/Loup humain/Walk.png"), 30, 44, 4, 9, Color.BLACK)
 FRAMES_MOB_DOTUM = utils.frame(pygame.image.load("./assets/mobs/Dotum/Walk.png"), 64, 70, 8, 9, Color.BLACK)
 FRAMES_MOB_FENRIR = utils.frame(pygame.image.load("./assets/mobs/Fenrir/Walk.png"), 64, 70, 12, 9, Color.BLACK)
 
 # Charge les différentes frames pour les images quand le guerrier cours en fonction de la direction également
-GUERRIER_COURIR_FRAMES = {}
-GUERRIER_LIDLE_FRAMES = {}
-for i,p in enumerate(POSITIONS_IN_ENGLISH):
-    GUERRIER_COURIR_FRAMES[POSITIONS[i]] = pygame.transform.scale_by(
-        pygame.image.load(f"assets/personnage/guerrier/{p}/Png/Warrior{p}Walk.png"), 4
-    )
-
-    GUERRIER_LIDLE_FRAMES[POSITIONS[i]] = pygame.transform.scale_by(
-        pygame.image.load(f"assets/personnage/guerrier/{p}/Png/Warrior{p}Idle.png"), 4
-    )
-
+TRADUCTIONS_ETATS = {"Lidle": {"EN": "Idle"}, "Courir": {"EN": "Walk"}}
+GUERRIER_FRAMES = {}
+for etat in TRADUCTIONS_ETATS:
+    GUERRIER_FRAMES[etat] = {}
+    for i, p in enumerate(POSITIONS_IN_ENGLISH):
+        GUERRIER_FRAMES[etat][POSITIONS[i]] = pygame.transform.scale_by(
+            pygame.image.load(f"assets/personnage/guerrier/{p}/Png/Warrior{p}{TRADUCTIONS_ETATS[etat]["EN"]}.png"), 4
+        )
 
 # Spells Icons
 SPELL_ICONS = {

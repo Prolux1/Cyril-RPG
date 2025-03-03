@@ -10,8 +10,6 @@ class Quete:
         self.recompenses = recompenses
         self.objectifs = objectifs
 
-    def
-
 
 
 

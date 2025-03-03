@@ -1,5 +1,3 @@
-import pprint
-
 from src.item import Item
 
 
@@ -7,7 +5,7 @@ class Inventory:
     def __init__(self, rows, cols):
         self.rows = rows
         self.cols = cols
-        self.items = [[None for i in range(self.rows)] for j in range(self.cols)]
+        self.items = [[None for _ in range(self.rows)] for _ in range(self.cols)]
 
     def __getitem__(self, index):
         i = index // self.cols

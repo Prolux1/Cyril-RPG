@@ -264,7 +264,8 @@ def conversion_format_imgs():
         for i in range(len(Image.FRAMES_MOB_FENRIR[p])):
             Image.FRAMES_MOB_FENRIR[p][i] = Image.FRAMES_MOB_FENRIR[p][i].convert_alpha()
 
-        Image.GUERRIER_COURIR_FRAMES[p] = Image.GUERRIER_COURIR_FRAMES[p].convert_alpha()
+        for etat in Image.TRADUCTIONS_ETATS:
+            Image.GUERRIER_FRAMES[etat][p] = Image.GUERRIER_FRAMES[etat][p].convert_alpha()
 
     for s in Image.SPELL_ICONS:
         Image.SPELL_ICONS[s] = Image.SPELL_ICONS[s].convert_alpha()

@@ -1,11 +1,4 @@
-import timeit
-
-import pygame
-import os
-import pickle
-import random
-import math
-import datetime
+import os, pygame, datetime
 
 from config import *
 from src import *
@@ -33,35 +26,8 @@ class CyrilRpg:
             # Ajout d'un personnage de test (un joueur peu avoir plusieurs personnages)
             self.joueur.add_character(personnage.Personnage(self, utils.nom_personnage_rp_random(), "Guerrier"))
 
-        self.lac_sud = obstacle.Obstacle(pygame.image.load("./assets/obstacles/lac.png").convert_alpha())
-        self.zones = {
-            "Spawn": zone.Zone(self, "Spawn", 15),
-            "Desert": zone.Zone(self, "Desert", 250),
-            "Marais": zone.Zone(self, "Marais", 15),
-            "Marais corrompu": zone.Zone(self, "Marais corrompu", 1)
-        }
-        self.monde = ["Marais corrompu", "Marais", "Desert"]
-
-        # Ajout des différents obstacles des zones
-        self.zones["Marais"].ajouter_obstacles([
-            pygame.Rect(640, 325, 640, 240),
-            pygame.Rect(0, 0, 394, 417),
-            pygame.Rect(0, 710, 411, 370),
-            pygame.Rect(786, 876, 163, 155),
-            pygame.Rect(1054, 23, 154, 158),
-            pygame.Rect(1410, 50, 163, 155),
-            pygame.Rect(1587, 278, 163, 155),
-            pygame.Rect(1465, 658, 154, 158)
-        ])
-
-        self.zones["Marais corrompu"].ajouter_obstacles([
-            pygame.Rect(0, 0, 1920, 140),
-            pygame.Rect(0, 140, 175, 800),
-            pygame.Rect(0, 940, 1920, 140)
-        ])
-
         # constantes internes
-        self.interval_spawn_mobs = 0.01  # gère le taux d'apparition des mobs 1 par défaut. Une valeur plus petite -> + de mobs
+        self.interval_spawn_mobs = 0.01  # gère le taux d'apparition des pnjs 1 par défaut. Une valeur plus petite -> + de pnjs
 
     def run(self):
         # self.load_data()
@@ -157,7 +123,7 @@ class CyrilRpg:
                 interface.CharacterSelectionButton(Image.SILVER_WOOD_BUTTONS[0], WINDOW_WIDTH / 2, 200 + (100 * (i+1)), c, Font.ARIAL_23, Color.GREY)
             )
 
-        # Adding a button to create new character
+        # Ajout d'un bouton pour créer un nouveau personnage
         self.components.append(interface.CharacterCreationButton(Image.SILVER_WOOD_BUTTONS[1], WINDOW_WIDTH / 2, WINDOW_HEIGHT - Image.SILVER_WOOD_BUTTONS[1].get_height(),"Create character", Font.ARIAL_23, Color.GREY))
 
         if SHOW_FPS:
@@ -172,11 +138,10 @@ class CyrilRpg:
         if SHOW_FPS:
             self.components.append(interface.FpsViewer(self.clock.get_fps(), WINDOW_WIDTH, 0))
 
-    def entrer_dans_le_monde(self, character):
-        self.zones[character.zone].add_personnage(character)
+    def entrer_dans_le_monde(self, perso: "personnage.Personnage"):
         self.components = [
-            self.zones[character.zone],
-            gui.GameUserInterface(character)
+            monde.Monde(self, perso),
+            gui.GameUserInterface(perso)
         ]
 
         if SHOW_FPS:
@@ -185,19 +150,19 @@ class CyrilRpg:
 
     def info_classe_guerrier(self):
         # affichage des différentes informations de la classe guerrier
-        affiche_info_nom_classe = self.police.render("Guerrier lvl 1", True, self.Noir)
+        affiche_info_nom_classe = Font.ARIAL_23.render("Guerrier lvl 1", True, Color.BLACK)
         self.window.blit(affiche_info_nom_classe, [900, 300])
 
-        affiche_info_hp = self.police.render("150 PV", True, self.Noir)
+        affiche_info_hp = Font.ARIAL_23.render("150 PV", True, Color.BLACK)
         self.window.blit(affiche_info_hp, [750, 400])
 
-        affiche_info_style_combat = self.police.render("Style de combat au corps à corps", True, self.Noir)
+        affiche_info_style_combat = Font.ARIAL_23.render("Style de combat au corps à corps", True, Color.BLACK)
         self.window.blit(affiche_info_style_combat, [750, 500])
 
-        affiche_info_classe_l1 = self.police_description.render("Le guerrier est un combattant hors pair", True, self.Noir)
-        affiche_info_classe_l2 = self.police_description.render("équipée d'une armure lourde et d'une grande", True, self.Noir)
-        affiche_info_classe_l3 = self.police_description.render("épée. Il utilise sa rage pour pourfendre", True, self.Noir)
-        affiche_info_classe_l4 = self.police_description.render("les adversaires les plus coriaces.", True, self.Noir)
+        affiche_info_classe_l1 = Font.ARIAL_16.render("Le guerrier est un combattant hors pair", True, Color.BLACK)
+        affiche_info_classe_l2 = Font.ARIAL_16.render("équipée d'une armure lourde et d'une grande", True, Color.BLACK)
+        affiche_info_classe_l3 = Font.ARIAL_16.render("épée. Il utilise sa rage pour pourfendre", True, Color.BLACK)
+        affiche_info_classe_l4 = Font.ARIAL_16.render("les adversaires les plus coriaces.", True, Color.BLACK)
         self.window.blit(affiche_info_classe_l1, [1300, 400])
         self.window.blit(affiche_info_classe_l2, [1300, 430])
         self.window.blit(affiche_info_classe_l3, [1300, 460])
@@ -207,19 +172,19 @@ class CyrilRpg:
 
     def info_classe_chasseur(self):
         # affichage des différentes informations de la classe chasseur
-        affiche_info_nom_classe = self.police.render("Chasseur lvl 1", True, self.Noir)
+        affiche_info_nom_classe = Font.ARIAL_23.render("Chasseur lvl 1", True, Color.BLACK)
         self.window.blit(affiche_info_nom_classe, [900, 300])
 
-        affiche_info_hp = self.police.render("137 PV", True, self.Noir)
+        affiche_info_hp = Font.ARIAL_23.render("137 PV", True, Color.BLACK)
         self.window.blit(affiche_info_hp, [750, 400])
 
-        affiche_info_style_combat = self.police.render("Style de combat à distance", True, self.Noir)
+        affiche_info_style_combat = Font.ARIAL_23.render("Style de combat à distance", True, Color.BLACK)
         self.window.blit(affiche_info_style_combat, [750, 500])
 
-        affiche_info_classe_l1 = self.police_description.render("Le guerrier est un combattant hors pair", True, self.Noir)
-        affiche_info_classe_l2 = self.police_description.render("équipée d'une armure lourde et d'une grande", True, self.Noir)
-        affiche_info_classe_l3 = self.police_description.render("épée. Il utilise sa rage pour pourfendre", True, self.Noir)
-        affiche_info_classe_l4 = self.police_description.render("les adversaires les plus coriaces.", True, self.Noir)
+        affiche_info_classe_l1 = Font.ARIAL_16.render("Le guerrier est un combattant hors pair", True, Color.BLACK)
+        affiche_info_classe_l2 = Font.ARIAL_16.render("équipée d'une armure lourde et d'une grande", True, Color.BLACK)
+        affiche_info_classe_l3 = Font.ARIAL_16.render("épée. Il utilise sa rage pour pourfendre", True, Color.BLACK)
+        affiche_info_classe_l4 = Font.ARIAL_16.render("les adversaires les plus coriaces.", True, Color.BLACK)
         self.window.blit(affiche_info_classe_l1, [1300, 400])
         self.window.blit(affiche_info_classe_l2, [1300, 430])
         self.window.blit(affiche_info_classe_l3, [1300, 460])
@@ -229,19 +194,19 @@ class CyrilRpg:
 
     def info_classe_mage(self):
         # affichage des différentes informations de la classe mage
-        affiche_info_nom_classe = self.police.render("Mage lvl 1", True, self.Noir)
+        affiche_info_nom_classe = Font.ARIAL_23.render("Mage lvl 1", True, Color.BLACK)
         self.window.blit(affiche_info_nom_classe, [900, 300])
 
-        affiche_info_hp = self.police.render("124 PV", True, self.Noir)
+        affiche_info_hp = Font.ARIAL_23.render("124 PV", True, Color.BLACK)
         self.window.blit(affiche_info_hp, [750, 400])
 
-        affiche_info_style_combat = self.police.render("Style de combat à distance", True, self.Noir)
+        affiche_info_style_combat = Font.ARIAL_23.render("Style de combat à distance", True, Color.BLACK)
         self.window.blit(affiche_info_style_combat, [750, 500])
 
-        affiche_info_classe_l1 = self.police_description.render("Le guerrier est un combattant hors pair", True, self.Noir)
-        affiche_info_classe_l2 = self.police_description.render("équipée d'une armure lourde et d'une grande", True, self.Noir)
-        affiche_info_classe_l3 = self.police_description.render("épée. Il utilise sa rage pour pourfendre", True, self.Noir)
-        affiche_info_classe_l4 = self.police_description.render("les adversaires les plus coriaces.", True, self.Noir)
+        affiche_info_classe_l1 = Font.ARIAL_16.render("Le guerrier est un combattant hors pair", True, Color.BLACK)
+        affiche_info_classe_l2 = Font.ARIAL_16.render("équipée d'une armure lourde et d'une grande", True, Color.BLACK)
+        affiche_info_classe_l3 = Font.ARIAL_16.render("épée. Il utilise sa rage pour pourfendre", True, Color.BLACK)
+        affiche_info_classe_l4 = Font.ARIAL_16.render("les adversaires les plus coriaces.", True, Color.BLACK)
         self.window.blit(affiche_info_classe_l1, [1300, 400])
         self.window.blit(affiche_info_classe_l2, [1300, 430])
         self.window.blit(affiche_info_classe_l3, [1300, 460])
@@ -257,8 +222,8 @@ class CyrilRpg:
             self.window.blit(self.fleche, [10, 10])
 
         # affiche un message d'aide indiquant qu'il faut utiliser les fleches du clavier pour parcourir les différents perso
-        affiche_info_fleches = self.police.render("Utilise les flèches haut et bas du clavier", True, self.Noir)
-        affiche_info_fleches2 = self.police.render("pour parcourir tes différents personnage", True, self.Noir)
+        affiche_info_fleches = Font.ARIAL_23.render("Utilise les flèches haut et bas du clavier", True, Color.BLACK)
+        affiche_info_fleches2 = Font.ARIAL_23.render("pour parcourir tes différents personnage", True, Color.BLACK)
         self.window.blit(affiche_info_fleches, [100, 500])
         self.window.blit(affiche_info_fleches2, [100, 530])
 
@@ -267,7 +232,7 @@ class CyrilRpg:
         self.window.blit(self.bouton_fleche_bas, [200, 632])
 
         # affichage du nombre de perso du joueur (max 3 persos)
-        affiche_nombre_persos = self.police.render("Nombre de personnages : " + str(len(self.joueur.personnages)) + " / 3", True, self.Noir)
+        affiche_nombre_persos = Font.ARIAL_23.render("Nombre de personnages : " + str(len(self.joueur.personnages)) + " / 3", True, Color.BLACK)
         self.window.blit(affiche_nombre_persos, [750, 300])
 
         # affichage du tableau (image) où va apparaître les différents personnages
@@ -282,55 +247,55 @@ class CyrilRpg:
                 self.window.blit(self.arbalete_logo, [670, 350 + espacement])
             else:
                 self.window.blit(self.baton_logo, [700, 360 + espacement])
-            affiche_perso_courant = self.police.render(personnage.nom + " lvl " + str(personnage.lvl), True, self.Noir)
+            affiche_perso_courant = Font.ARIAL_23.render(personnage.nom + " lvl " + str(personnage.lvl), True, Color.BLACK)
             self.window.blit(affiche_perso_courant, [750, 400 + espacement])
             espacement += 150
 
         # affichage du bouton pour entrer dans le jeu
         if 1475 < self.mouse_pos[0] < 1760 and 785 < self.mouse_pos[1] < 850:
-            pygame.draw.rect(self.window, self.Gris_clair, [1477, 787, 281, 61])  # le background du bouton
+            pygame.draw.rect(self.window, Color.GREY_LIGHTEN, [1477, 787, 281, 61])  # le background du bouton
         else:
-            pygame.draw.rect(self.window, self.Gris, [1477, 787, 281, 61])
-        pygame.draw.rect(self.window, self.Noir, [1475, 785, 285, 65], 3)
-        affiche_entrer_jeu = self.police.render("Entrer dans le jeu", True, self.Noir)
+            pygame.draw.rect(self.window, Color.GREY, [1477, 787, 281, 61])
+        pygame.draw.rect(self.window, Color.BLACK, [1475, 785, 285, 65], 3)
+        affiche_entrer_jeu = Font.ARIAL_23.render("Entrer dans le jeu", True, Color.BLACK)
         self.window.blit(affiche_entrer_jeu, [1500, 800])
 
 
     def affichage_menu_parametre(self):
         # Titre
-        affiche_titre = self.police.render("Paramètres", True, self.Noir)
+        affiche_titre = Font.ARIAL_23.render("Paramètres", True, Color.BLACK)
         self.window.blit(affiche_titre, [WINDOW_WIDTH / 2, WINDOW_HEIGHT / 10])
 
     def affichage_menu_creation_perso(self):
         # affichage classe guerrier
         if 400 < self.mouse_pos[0] < 510 and 483 < self.mouse_pos[1] < 510:
-            affiche_classe_guerrier = self.police_2.render("Guerrier", True, self.Noir)
+            affiche_classe_guerrier = Font.ARIAL_23_2.render("Guerrier", True, Color.BLACK)
         else:
-            affiche_classe_guerrier = self.police.render("Guerrier", True, self.Noir)
+            affiche_classe_guerrier = Font.ARIAL_23.render("Guerrier", True, Color.BLACK)
         self.window.blit(affiche_classe_guerrier, [400, 480])
 
         # affichage classe chasseur
         if 400 < self.mouse_pos[0] < 530 and 583 < self.mouse_pos[1] < 610:
-            affiche_classe_chasseur = self.police_2.render("Chasseur", True, self.Noir)
+            affiche_classe_chasseur = Font.ARIAL_23_2.render("Chasseur", True, Color.BLACK)
         else:
-            affiche_classe_chasseur = self.police.render("Chasseur", True, self.Noir)
+            affiche_classe_chasseur = Font.ARIAL_23.render("Chasseur", True, Color.BLACK)
         self.window.blit(affiche_classe_chasseur, [400, 580])
 
         # affichage classe mage
         if 400 < self.mouse_pos[0] < 475 and 683 < self.mouse_pos[1] < 710:
-            affiche_classe_mage = self.police_2.render("Mage", True, self.Noir)
+            affiche_classe_mage = Font.ARIAL_23_2.render("Mage", True, Color.BLACK)
         else:
-            affiche_classe_mage = self.police.render("Mage", True, self.Noir)
+            affiche_classe_mage = Font.ARIAL_23.render("Mage", True, Color.BLACK)
         self.window.blit(affiche_classe_mage, [400, 680])
 
         # affiche une case où l'on peut rentrer le nom de son personnage
-        affiche_texte_nom = self.police.render("Nom :", True, self.Noir)
+        affiche_texte_nom = Font.ARIAL_23.render("Nom :", True, Color.BLACK)
         self.window.blit(affiche_texte_nom, [950, 800])
 
-        affiche_creer = self.police.render("Créer le personnage", True, self.Noir)
+        affiche_creer = Font.ARIAL_23.render("Créer le personnage", True, Color.BLACK)
         self.window.blit(affiche_creer, [880, 920])
 
-        pygame.draw.rect(self.window, self.Noir, [900, 850, 200, 50], 2)
+        pygame.draw.rect(self.window, Color.BLACK, [900, 850, 200, 50], 2)
 
         # affichage d'une flèche si on veut retourner au menu principal
         if 10 < self.mouse_pos[0] < 110 and 10 < self.mouse_pos[1] < 75:
@@ -339,9 +304,9 @@ class CyrilRpg:
             self.window.blit(self.fleche, [10, 10])
 
         # affichage d'aide pour le nom
-        affiche_nom_info = self.police.render("Le nom du personnage ne doit pas contenir d'espaces", True, self.Rouge)
-        affiche_nom_info_2 = self.police.render("Les espaces présents seront automatiquement", True, self.Rouge)
-        affiche_nom_info_3 = self.police.render("supprimés lors de la création du personnage", True, self.Rouge)
+        affiche_nom_info = Font.ARIAL_23.render("Le nom du personnage ne doit pas contenir d'espaces", True, Color.RED)
+        affiche_nom_info_2 = Font.ARIAL_23.render("Les espaces présents seront automatiquement", True, Color.RED)
+        affiche_nom_info_3 = Font.ARIAL_23.render("supprimés lors de la création du personnage", True, Color.RED)
         self.window.blit(affiche_nom_info, [1150, 700])
         self.window.blit(affiche_nom_info_2, [1150, 730])
         self.window.blit(affiche_nom_info_3, [1150, 760])
@@ -350,10 +315,10 @@ class CyrilRpg:
         classe_select = 'Guerrier'
         execution = True
         while execution:
-            self.horloge.tick(60)
+            self.clock.tick(60)
             self.mouse_pos = pygame.mouse.get_pos()  # récupère la position de la souris
             self.temps = pygame.time.get_ticks() / 1000
-            self.window.fill(self.Blanc)
+            self.window.fill(Color.WHITE)
             evenements = pygame.event.get()
             for event in evenements:  # à chaque événement provoqué par l'utilisateur
                 if event.type == pygame.QUIT:  # si un des événements évoque la fermeture d'une fenêtre (par exemple cliquez sur la croix rouge en haut a droite ou appuyez alt+F4) ferme le jeu
@@ -404,9 +369,9 @@ class CyrilRpg:
         background_decalage_sens_inverse = False
         self.music_menu.play(-1)
         while execution:
-            self.horloge.tick(60)
+            self.clock.tick(60)
             self.mouse_pos = pygame.mouse.get_pos()  # récupère la position de la souris
-            self.window.fill(self.Blanc)
+            self.window.fill(Color.WHITE)
             for event in pygame.event.get():  # à chaque événement provoqué par l'utilisateur
                 if event.type == pygame.QUIT:  # si un des événements évoque la fermeture d'une fenêtre (par exemple cliquez sur la croix rouge en haut a droite ou appuyez alt+F4) ferme le jeu
                     execution = False
@@ -443,9 +408,9 @@ class CyrilRpg:
         espacement = 0
         execution = True
         while execution:
-            self.horloge.tick(60)
+            self.clock.tick(60)
             self.mouse_pos = pygame.mouse.get_pos()  # récupère la position de la souris
-            self.window.fill(self.Blanc)
+            self.window.fill(Color.WHITE)
             for event in pygame.event.get():  # à chaque événement provoqué par l'utilisateur
                 if event.type == pygame.QUIT: # si un des événements évoque la fermeture d'une fenêtre (par exemple cliquez sur la croix rouge en haut a droite ou appuyez alt+F4) ferme le jeu
                     pygame.quit()  # on ferme le module pygame
@@ -460,7 +425,7 @@ class CyrilRpg:
                         if len(self.joueur.personnages) > 0:
                             perso_select = self.joueur.personnages[espacement // 150]
                             self.music_zone1.play(-1)
-                            self.zones[perso_select.zone].personnages_zone.append(perso_select)
+                            self.monde.set_personnage(perso_select)
                             #donnees_perso = {"nom": perso_select.nom, "id": perso_select.id, "classe": perso_select.classe, "lvl": perso_select.lvl, "PV": perso_select.PV, "PV_max": perso_select.PV_max, "orientation": perso_select.orientation, "x": perso_select.x, "y": perso_select.y}
                             #envoyer_donnees_perso = pickle.dumps(donnees_perso)
                             #envoyer_donnees_perso = bytes(f'{len(envoyer_donnees_perso)}', "utf-8") + envoyer_donnees_perso
@@ -483,12 +448,12 @@ class CyrilRpg:
 
             if len(self.joueur.personnages) > 0:
                 # affiche une fleche qui indique quel perso est sélectionné
-                affiche_bouton_select = self.police_2.render("→", True, self.Noir)
+                affiche_bouton_select = Font.ARIAL_23_2.render("→", True, Color.BLACK)
                 self.window.blit(affiche_bouton_select, [600, 386 + espacement])
 
                 # affichage du nom du perso sélectionner
                 perso_select = self.joueur.personnages[espacement // 150]
-                affiche_perso_select = self.police.render(perso_select.nom + " lvl " + str(perso_select.lvl), True, self.Noir)
+                affiche_perso_select = Font.ARIAL_23.render(perso_select.nom + " lvl " + str(perso_select.lvl), True, Color.BLACK)
                 self.window.blit(affiche_perso_select, [1500, 750])
 
             self.affichage_menu_jouer_perso()
@@ -518,11 +483,11 @@ class CyrilRpg:
         #    perso.ajouter_item_inventaire(generation_equipement_alea(22, True))
         #perso.ajouter_item_inventaire(generation_arme_alea(22, True))
         while execution:
-            self.horloge.tick(60)
+            self.clock.tick(60)
             self.mouse_pos = pygame.mouse.get_pos()  # récupère la position de la souris
             self.temps = pygame.time.get_ticks() / 1000
-            self.window.fill(self.Blanc)
-            mobs_zone = self.zones[perso.zone].monstres_zone
+            self.window.fill(Color.WHITE)
+            mobs_zone = self.monde.get_monstres_zone_courante()
 
             self.affichage_jeu(perso)
             self.affichage_interface_jeu(perso, dic_menu)
@@ -536,7 +501,7 @@ class CyrilRpg:
             # affiche l'xp obtenu suite aux monstres tués
             if xp_obtenu != 0:
                 if temps_affiche_xp + 2 > self.temps.__round__():
-                    affiche_xp_obtenu = self.police.render("+ " + str(xp_obtenu) + " XP", True, self.Violet)
+                    affiche_xp_obtenu = Font.ARIAL_23.render(f"+ {xp_obtenu} XP", True, Color.PURPLE)
                     self.window.blit(affiche_xp_obtenu, [perso.x + 100, perso.y + 50])
                 else:
                     xp_obtenu = 0
@@ -552,23 +517,6 @@ class CyrilRpg:
             #     else:
             #         level_up = False
             #         level_up_alpha = 51
-
-            # Si le personnage s'approche des bordures d'une zone, il change de zone
-            if perso.x <= 20 and self.monde.index(perso.zone) != 0:
-                self.zones[perso.zone].personnages_zone.remove(perso)
-                perso.zone = self.monde[self.monde.index(perso.zone) - 1]
-                self.zones[perso.zone].personnages_zone.append(perso)
-                perso.x = 1750
-            elif perso.x >= 1800 and self.monde.index(perso.zone) != len(self.monde) - 1:
-                zone_quitte = perso.zone
-                self.zones[perso.zone].personnages_zone.remove(perso)
-                perso.zone = self.monde[self.monde.index(perso.zone) + 1]
-                self.zones[perso.zone].personnages_zone.append(perso)
-                if zone_quitte == "Marais corrompu":
-                    perso.x = 50
-                    perso.y = 450
-                else:
-                    perso.x = 50
 
             pygame.display.flip()  # Permet de mettre à jour la fenêtre
 

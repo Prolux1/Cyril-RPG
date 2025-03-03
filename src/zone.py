@@ -8,19 +8,22 @@ import pygame
 
 from data import Image
 
-from src import mobs, personnage
+from src import personnage, pnjs, monde
 from config import WINDOW_WIDTH, WINDOW_HEIGHT
 
 
 
 class Zone:
-    def __init__(self, rpg: "CyrilRpg", nom, nb_max_monstres):
+    def __init__(self, rpg: "CyrilRpg", perso: personnage.Personnage, nom, nb_max_monstres):
         self.rpg = rpg
+        self.personnage = perso
         self.nom = nom  # nom de la zone
-        self.entities_in_zone = []  # contains both mobs and characters
-        self.player_character = None
-        self.obstacles = []  # liste de rect
         self.nb_max_monstres = nb_max_monstres
+
+
+        self.pnjs = [perso]  # contains both pnjs and characters
+        self.obstacles = []  # liste de rect
+
 
         self.time_last_respawn = 0
         self.mob_respawn_timer = 1
@@ -31,8 +34,8 @@ class Zone:
 
         # On affiche les entitées présente dans la zone de manière
         # horizontale pour avoir une sensation de dimension
-        self.entities_in_zone.sort(key=lambda mob_i: mob_i.y)
-        for entity in self.entities_in_zone:
+        self.pnjs.sort(key=lambda mob_i: mob_i.y)
+        for entity in self.pnjs:
             entity.draw(surface)
 
     def update(self, game):
@@ -42,25 +45,21 @@ class Zone:
             else:
                 self.time_last_respawn = game.time
 
-        for entity in self.entities_in_zone:
+        for entity in self.pnjs:
             entity.update(game, self)
 
     def handle_event(self, game, event):
-        for entity in self.entities_in_zone:
+        for entity in self.pnjs:
             entity.handle_event(game, event)
 
-    def add_personnage(self, pers: "personnage.Personnage"):
-        self.player_character = pers
-        self.entities_in_zone.append(pers)
+    def get_pnjs_hostiles(self):
+        return [pnj for pnj in self.pnjs if isinstance(pnj, pnjs.PnjHostile)]
 
-    def get_all_mobs(self):
-        return [entity for entity in self.entities_in_zone if isinstance(entity, mobs.Monstre)]
-
-    def get_player_character(self):
-        return self.player_character
+    def get_personnage(self) -> personnage.Personnage:
+        return self.personnage
 
     def get_nb_mobs(self):
-        return len(self.get_all_mobs())
+        return len(self.get_pnjs_hostiles())
 
     def generate_random_mob(self, game):
         """
@@ -77,13 +76,13 @@ class Zone:
             if proba_boss == 1:
                 lvl_mob = 8
 
-                mob = mobs.Monstre(lvl_mob, 623, 24, "Boss Rat", orientation,
+                mob = pnjs.PnjHostile(self.rpg, lvl_mob, 623, 24, "Boss Rat", orientation,
                                    Image.FRAMES_MOB_BOSS_RAT, mob_x, mob_y, random.randint(800, 900),
-                                   self.get_player_character().offset, True)
+                                   self.personnage.offset, True)
             else:
                 lvl_mob = random.randint(1, 5)
-                mob = mobs.Monstre(lvl_mob, 59 + 9 * lvl_mob, 3 + lvl_mob, "Rat", orientation,
-                                   Image.FRAMES_MOB_RAT, mob_x, mob_y, random.randint(40, 60), self.get_player_character().offset)
+                mob = pnjs.PnjHostile(self.rpg, lvl_mob, 59 + 9 * lvl_mob, 3 + lvl_mob, "Rat", orientation,
+                                   Image.FRAMES_MOB_RAT, mob_x, mob_y, random.randint(40, 60), self.personnage.offset)
                 # mob = Monstre(lvl_mob, 59 + 9 * lvl_mob, 3 + lvl_mob, "Loup humain", self.frames_mob_loup_humain["Face"][0], self.frames_mob_loup_humain, mob_x, mob_y, randint(40, 60) * xp_multiplier, [mob_x, mob_y + 40, 35 * 4, 44 * 4])
 
 
@@ -96,19 +95,19 @@ class Zone:
         #     if proba_boss == 1:
         #         lvl_mob = 20
         #         mob_x, mob_y = random.randint(300, 1800), random.randint(200, 900)
-        #         mob = mobs.Monstre(lvl_mob, 27138, 107, "Boss Cerf", Image.FRAMES_MOB_BOSS_CERF["Face"][0],
+        #         mob = pnjs.Monstre(lvl_mob, 27138, 107, "Boss Cerf", Image.FRAMES_MOB_BOSS_CERF["Face"][0],
         #                            Image.FRAMES_MOB_BOSS_CERF, mob_x, mob_y, random.randint(800, 900) * lvl_mob,
         #                            self.get_player_character().offset, True)
         #     else:
         #         lvl_mob = random.randint(11, 18)
         #         mob_x, mob_y = random.randint(300, 1800), random.randint(200, 900)
-        #         mob = mobs.Monstre(lvl_mob, 47 + 111 * lvl_mob, 6 * lvl_mob, "Cerf", Image.FRAMES_MOB_CERF["Face"][0],
+        #         mob = pnjs.Monstre(lvl_mob, 47 + 111 * lvl_mob, 6 * lvl_mob, "Cerf", Image.FRAMES_MOB_CERF["Face"][0],
         #                            Image.FRAMES_MOB_CERF, mob_x, mob_y, random.randint(40, 60) * lvl_mob,
         #                            self.get_player_character().offset)
         # elif self.nom == "Marais corrompu":
         #     lvl_mob = 25
         #     mob_x, mob_y = random.randint(300, 1800), random.randint(200, 900)
-        #     mob = mobs.Monstre(lvl_mob, 120000, 250, "Orc", Image.frames_mob_orc["Face"][0], Image.frames_mob_orc, mob_x,
+        #     mob = pnjs.Monstre(lvl_mob, 120000, 250, "Orc", Image.frames_mob_orc["Face"][0], Image.frames_mob_orc, mob_x,
         #                        mob_y, random.randint(1500, 1700) * lvl_mob, self.get_player_character().offset, False, True)
 
         # lvl_mob = 30
@@ -119,7 +118,7 @@ class Zone:
         # mob_x, mob_y = 399, 399
         # mob = Monstre(lvl_mob, 897 * 10 ** 3, 1250, "Fenrir", self.frames_mob_fenrir["Face"][0], self.frames_mob_fenrir, mob_x, mob_y, randint(90000, 110000), [mob_x - 40, mob_y + 20, 25 * 12, 42 * 12], False, True)
 
-        self.entities_in_zone.append(mob)
+        self.pnjs.append(mob)
         self.time_last_respawn = game.time
 
     def ajouter_obstacles(self, liste_obstacle):
@@ -133,5 +132,15 @@ class Zone:
 
 
 
+class Desert(Zone):
+    def __init__(self, rpg: "CyrilRpg", perso: personnage.Personnage):
+        super().__init__(rpg, perso, "Desert", 250)
+
+        # Ajout des pnjs amicaux de la zone Desert
+        # self.pnjs.extend(
+        #     [
+        #         pnjs.PnjAmical(20, 1361, 78, "Maréchal McBride", "Face", Image.GUERRIER_FRAMES, 100, 100, 0, self.get_personnage().offset)
+        #     ]
+        # )
 
 

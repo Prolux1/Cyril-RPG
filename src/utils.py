@@ -247,10 +247,10 @@ def conversion_format_imgs():
     Image.MARAIS = Image.MARAIS.convert_alpha()
     Image.MARAIS_CORROMPU = Image.MARAIS_CORROMPU.convert_alpha()
     for p in Image.POSITIONS:
-        for i in range(len(Image.FRAMES_MOB_RAT[p])):
-            Image.FRAMES_MOB_RAT[p][i] = Image.FRAMES_MOB_RAT[p][i].convert_alpha()
-        for i in range(len(Image.FRAMES_MOB_BOSS_RAT[p])):
-            Image.FRAMES_MOB_BOSS_RAT[p][i] = Image.FRAMES_MOB_BOSS_RAT[p][i].convert_alpha()
+        for etat in Image.FRAMES_MOB_RAT:
+            Image.FRAMES_MOB_RAT[etat][p] = Image.FRAMES_MOB_RAT[etat][p].convert_alpha()
+            Image.FRAMES_MOB_BOSS_RAT[etat][p] = Image.FRAMES_MOB_BOSS_RAT[etat][p].convert_alpha()
+
         for i in range(len(Image.FRAMES_MOB_CERF[p])):
             Image.FRAMES_MOB_CERF[p][i] = Image.FRAMES_MOB_CERF[p][i].convert_alpha()
         for i in range(len(Image.FRAMES_MOB_BOSS_CERF[p])):
@@ -283,6 +283,46 @@ def conversion_format_imgs():
 
 
 
+
+
+def images_to_sprite_sheet(dossier_contenant_les_images: str, nom_sprite_sheet: str):
+    from PIL import Image
+    import os
+
+    # Load all images from a folder
+    image_folder = dossier_contenant_les_images  # ex : "assets/pnjs/rat/rat_Dos"
+    output_file = f"{dossier_contenant_les_images}/{nom_sprite_sheet}"  # ex "assets/pnjs/rat/rat_Dos/rat_Dos.png"
+
+    images = [Image.open(os.path.join(image_folder, img)) for img in os.listdir(image_folder) if
+              img.endswith((".png", ".jpg"))]
+
+    # Determine max sprite size
+    max_width = max(img.width for img in images)
+    max_height = max(img.height for img in images)
+
+    # Standardize size by padding
+    def pad_image(img, target_width, target_height):
+        padded = Image.new("RGBA", (target_width, target_height), (0, 0, 0, 0))  # Transparent background
+        x_offset = (target_width - img.width) // 2
+        y_offset = (target_height - img.height) // 2
+        padded.paste(img, (x_offset, y_offset))
+        return padded
+
+    padded_images = [pad_image(img, max_width, max_height) for img in images]
+
+    # Arrange into a sprite sheet (1 row)
+    sprite_sheet_width = max_width * len(padded_images)
+    sprite_sheet_height = max_height
+
+    sprite_sheet = Image.new("RGBA", (sprite_sheet_width, sprite_sheet_height), (0, 0, 0, 0))
+
+    # Paste images
+    for index, img in enumerate(padded_images):
+        sprite_sheet.paste(img, (index * max_width, 0))
+
+    # Save sprite sheet
+    sprite_sheet.save(output_file)
+    print(f"Sprite sheet saved as {output_file}")
 
 
 

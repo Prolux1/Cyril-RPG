@@ -1,6 +1,5 @@
 __all__ = [
     "joueur",
-    "mobs",
     "monde",
     "obstacle",
     "personnage",
@@ -10,5 +9,6 @@ __all__ = [
     "interface",
     "interfaceClasses",
     "gui",
-    "sauvegarde"
+    "sauvegarde",
+    "pnjs"
 ]

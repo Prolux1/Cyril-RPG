@@ -13,8 +13,9 @@ from config import WINDOW_WIDTH, WINDOW_HEIGHT
 
 
 class Personnage:
-    def __init__(self, jeu: "CyrilRpg", nom: str, classe: str):
-        self.jeu = jeu
+    def __init__(self, rpg: "CyrilRpg", nom: str, classe: str):
+        self.rpg = rpg
+        self.monde = None
         self.nom = nom
         self.id = random.randint(1, 10**100)
         self.classe = classe
@@ -52,7 +53,7 @@ class Personnage:
         self.frame_courante = 0
         self.nb_frames_etats = {"Lidle": 5, "Courir": 8}
         self.vitesse_de_deplacement = 1
-        self.temps_prochain_changement_frame = jeu.time + 1.7 / self.nb_frames_etats["Lidle"]
+        self.temps_prochain_changement_frame = rpg.time + 1.7 / self.nb_frames_etats["Lidle"]
 
         self.rect = Image.GUERRIER_FRAMES["Lidle"][self.orientation].subsurface(
             (
@@ -122,7 +123,7 @@ class Personnage:
     def update(self, game: "CyrilRpg", zone):
         self.update_stats()
 
-        self.movement_speed = self.vitesse_de_deplacement_de_base * 60 / game.fps
+        self.movement_speed = self.vitesse_de_deplacement_de_base * 60 / self.rpg.fps
         if not self.est_mort():
             key_pressed = pygame.key.get_pressed()
             deplacements_possibles = self.verifier_personnage_obstacles(zone.obstacles)
@@ -169,36 +170,36 @@ class Personnage:
 
             if self.PV < self.PV_max:
                 if self.passive_regen_timer is None:
-                    self.passive_regen_timer = game.time + 2
+                    self.passive_regen_timer = self.rpg.time + 2
                 else:
-                    if game.time >= self.passive_regen_timer:
+                    if self.rpg.time >= self.passive_regen_timer:
                         self.regen()
-                        self.passive_regen_timer = game.time + 2
+                        self.passive_regen_timer = self.rpg.time + 2
             else:
                 self.passive_regen_timer = None
 
         # On update la frame courante
-        if self.temps_prochain_changement_frame < game.time:
+        if self.rpg.time >= self.temps_prochain_changement_frame:
             self.frame_courante += 1
 
             temps_prochains_changements_frames = {
                 "Lidle": 1.7,
                 "Courir": 0.7 / self.vitesse_de_deplacement
             }
-            self.temps_prochain_changement_frame = self.jeu.time + (temps_prochains_changements_frames[self.etat] / self.nb_frames_etats[self.etat])
+            self.temps_prochain_changement_frame = self.rpg.time + (temps_prochains_changements_frames[self.etat] / self.nb_frames_etats[self.etat])
 
-    def handle_event(self, game, event):
+    def handle_event(self, game: "CyrilRpg", event: pygame.event.Event):
         if not self.est_mort():
             if event.type == pygame.MOUSEBUTTONUP:
-                self.select_mob(game.zones[self.zone].get_all_mobs(), game.mouse_pos)
+                self.select_mob(self.monde.get_monstres_zone_courante(), self.rpg.mouse_pos)
 
             # Character spells casting
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_1:
-                    if self.spells[0].ready(game.time):
+                    if self.spells[0].ready(self.rpg.time):
                         Sound.SONS_ATTAQUE_PERSO[random.randint(0, len(Sound.SONS_ATTAQUE_PERSO) - 1)].play()
-                        self.attaquer(game.zones[self.zone].get_all_mobs(), self.spells[0])
-                        self.spells[0].set_timer(game.time)
+                        self.attaquer(self.monde.get_monstres_zone_courante(), self.spells[0])
+                        self.spells[0].set_timer(self.rpg.time)
                         # affiche_zone_effet_s1 = True
         #
         # # Si le personnage lance le sort 2
@@ -425,8 +426,8 @@ class Personnage:
         """
         Attaque le mob sélectionné
 
-        :param mobs: liste de mobs
-        :param sort: sort avec lequel il faut attaquer les mobs
+        :param mobs: liste de pnjs
+        :param sort: sort avec lequel il faut attaquer les pnjs
         :param attaques_multiples: si le sort attaque en plusieurs les ennemis n'attaques qu'une fois
         :return:
         """
@@ -437,7 +438,7 @@ class Personnage:
 
 
 
-        # for mob in mobs:
+        # for mob in pnjs:
         #     mob_toucher = False
         #     rect_hit_box_mob = pygame.Rect(mob.hit_box)
         #     if sort.nom == "Trancher":

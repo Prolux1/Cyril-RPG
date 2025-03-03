@@ -2,23 +2,23 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from main import CyrilRpg
 
-import random
-import pygame
+import pygame, random
+
+from data import Image, Color, Font
+
+from src import utils, interfaceClasses, personnage
 
 
-from data import Color, Font
-
-from src import utils, personnage
-
-
-class Monstre:
-    def __init__(self, lvl, pv, degat, nom, orientation, frames, x, y, xp, offset, est_boss=False, est_world_boss=False):
+class Pnj:
+    def __init__(self, rpg: "CyrilRpg", lvl, pv, degat, nom, orientation, frames: dict[str, dict[str, pygame.Surface]], x, y, xp, offset, est_boss=False, est_world_boss=False):
+        self.rpg = rpg
         self.lvl = lvl
         self.PV = pv
         self.PV_max = pv
         self.degat = degat
         self.nom = nom
-        self.image = frames[orientation][0]
+        etat = "Lidle"
+        self.image = frames[etat][orientation]
         self.x = x
         self.y = y
         self.rect = self.image.get_rect()
@@ -27,7 +27,8 @@ class Monstre:
 
         self.xp = xp
 
-        self.orientation = "Face"
+        self.etat = etat
+        self.orientation = orientation
         self.frames = frames  # Frames d'un mob sous forme de dico
         self.direction = None
         self.vitesse_de_base = 2  # 2 par défaut
@@ -42,6 +43,10 @@ class Monstre:
         self.hovered_by_mouse = False
 
         self.dx_dy_directions = {"Gauche": (-1, 0), "Droite": (1, 0), "Dos": (0, -1), "Face": (0, 1)}
+        self.nb_frames_etats = {"Lidle": 1, "Marcher": 4}
+        self.temps_prochains_changements_frames = {"Lidle": 1.7, "Marcher": 0.7 / self.vitesse}
+        self.temps_prochain_changement_frame = (rpg.time + self.temps_prochains_changements_frames[self.etat]) / self.nb_frames_etats[self.etat]
+
 
     def draw(self, surface):
         surface.blit(self.image, self.rect.topleft - self.offset)
@@ -70,33 +75,35 @@ class Monstre:
 
             mob_frame_rect = pygame.Rect(0, mob_info_surf_rect.height / 2 - 40 / 2, mob_info_surf_rect.width, 40)
 
-
             perc_hp_left = self.PV / self.PV_max
             if perc_hp_left >= 0.5:
                 color_mob_hp_bar_rect = (24 + 216 * (1 - perc_hp_left ** 2), 240, 10)
             else:
                 color_mob_hp_bar_rect = (240, 240 * (2 * perc_hp_left), 10)
 
-            pygame.draw.rect(mob_info_surf, color_mob_hp_bar_rect, pygame.Rect(0, mob_frame_rect.y, mob_frame_rect.width * perc_hp_left, mob_frame_rect.height))
+            pygame.draw.rect(mob_info_surf, color_mob_hp_bar_rect,
+                             pygame.Rect(0, mob_frame_rect.y, mob_frame_rect.width * perc_hp_left,
+                                         mob_frame_rect.height))
             pygame.draw.rect(mob_info_surf, Color.BLACK, mob_frame_rect, 2)  # Draws the border
 
-
-            hp_hp_max_surf = Font.ARIAL_23.render(f"{utils.convert_number(self.PV)} / {utils.convert_number(self.PV_max)}", True, Color.BLACK)
-            mob_info_surf.blit(hp_hp_max_surf, (mob_info_surf_rect.width / 2 - hp_hp_max_surf.get_width() / 2, mob_info_surf_rect.height / 2 - hp_hp_max_surf.get_height() / 2))
-
+            hp_hp_max_surf = Font.ARIAL_23.render(
+                f"{utils.convert_number(self.PV)} / {utils.convert_number(self.PV_max)}", True, Color.BLACK)
+            mob_info_surf.blit(hp_hp_max_surf, (mob_info_surf_rect.width / 2 - hp_hp_max_surf.get_width() / 2,
+                                                mob_info_surf_rect.height / 2 - hp_hp_max_surf.get_height() / 2))
 
             surface.blit(mob_info_surf, mob_info_surf_rect.topleft - self.offset)
 
     def update(self, game, zone):
         if self.est_mort():
-            zone.entities_in_zone.remove(self)
+            zone.pnjs.remove(self)
         else:
             self.vitesse = self.vitesse_de_base * 60 / max(game.fps, 1)
             self.deplacement(game)
             self.rect = self.image.get_rect()
             self.rect.midbottom = (self.x, self.y)
 
-            self.hovered_by_mouse = pygame.Rect(self.rect.topleft - self.offset, self.rect.size).collidepoint(game.mouse_pos)
+            self.hovered_by_mouse = pygame.Rect(self.rect.topleft - self.offset, self.rect.size).collidepoint(
+                game.mouse_pos)
 
         # if self.rect.collidepoint(game.mouse_pos):
         #     pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
@@ -107,13 +114,12 @@ class Monstre:
     def handle_event(self, game, event):
         pass
 
-
     def est_mort(self):
         return self.PV <= 0
 
     def deplacement(self, game: "CyrilRpg"):
         """
-        Déplace un mob d'une position vers sa direction petit à petit par son facteur vitesse.
+        Déplace un pnj d'une position vers sa direction petit à petit par son facteur vitesse.
         """
         if self.direction is None and game.time >= self.temps_attendre_depla:
             # choisi une direction aléatoire vers où se déplacer
@@ -121,6 +127,8 @@ class Monstre:
 
             self.dist_parcouru = 0
             self.temps_attendre_depla = game.time + 4
+            self.etat = "Marcher"
+            self.temps_prochain_changement_frame = 0
             self.frame_courante = 0
         elif self.direction is not None and self.dist_parcouru <= 200:
             self.orientation = self.direction
@@ -132,7 +140,11 @@ class Monstre:
             self.dist_parcouru += self.vitesse
             self.animation()
         elif self.direction is not None:
+            self.etat = "Lidle"
             self.direction = None
+            self.temps_prochain_changement_frame = 0
+            self.frame_courante = 0
+            self.animation()
         else:
             if self.est_world_boss:
                 self.image = self.frames[self.orientation][0]
@@ -145,8 +157,22 @@ class Monstre:
             - sa frame courante
         :return:
         """
-        self.image = self.frames[self.orientation][int(self.frame_courante)]
-        self.frame_courante = (self.frame_courante + self.vitesse / 20) % len(self.frames)
+        if self.rpg.time >= self.temps_prochain_changement_frame:
+            self.frame_courante = (self.frame_courante + 1) % self.nb_frames_etats[self.etat]
+
+            indice_frame = self.frame_courante / self.nb_frames_etats[self.etat]
+            rect_frame_courante = pygame.Rect(
+                self.frames[self.etat][self.orientation].get_width() * indice_frame,
+                0,
+                self.frames[self.etat][self.orientation].get_width() / self.nb_frames_etats[self.etat],
+                self.frames[self.etat][self.orientation].get_height()
+            )
+
+            self.image = self.frames[self.etat][self.orientation].subsurface(rect_frame_courante)
+            # self.frame_courante = (self.frame_courante + self.vitesse / 20) % len(self.frames[self.etat])
+
+            self.temps_prochain_changement_frame = self.rpg.time + (self.temps_prochains_changements_frames[self.etat] / self.nb_frames_etats[self.etat])
+
 
     def est_attaquer(self) -> bool:
         return self.PV != self.PV_max
@@ -192,3 +218,58 @@ class Monstre:
         # for i in range(souffrance):
         #     self.attaquer(character)
         self.attaquer(character)
+
+
+
+class PnjHostile(Pnj):
+    def __init__(self, rpg: "CyrilRpg", lvl: int, pv: int, degats: int, nom: str, orientation: str,
+                 frames: dict[str, dict[str, pygame.Surface]], x: int | float, y: int | float, xp, offset, est_boss=False,
+                 est_world_boss=False):
+        super().__init__(rpg, lvl, pv, degats, nom, orientation, frames, x, y, xp, offset, est_boss, est_world_boss)
+
+
+class PnjNeutre(Pnj):
+    pass
+
+
+class PnjAmical(Pnj):
+    def __init__(self, rpg: "CyrilRpg", lvl: int, pv: int, degats: int, nom: str, orientation: str,
+                 frames: dict[str, dict[str, pygame.Surface]], x: int | float, y: int | float, xp, offset, est_boss=False,
+                 est_world_boss=False):
+        super().__init__(rpg, lvl, pv, degats, nom, orientation, frames, x, y, xp, offset, est_boss, est_world_boss)
+
+
+class PnjCompanion(PnjAmical):
+    """
+    Un companion loup pour un personnage de classe chasseur par exemple.
+    """
+
+
+
+
+class Rat(PnjHostile):
+    pass
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

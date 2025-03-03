@@ -64,21 +64,25 @@ MARAIS_CORROMPU = pygame.image.load("./assets/map/marais corrompu.png")
 POSITIONS = ["Face", "Gauche", "Droite", "Dos"]
 POSITIONS_IN_ENGLISH = ["Down", "Left", "Right", "UP"]
 
-FRAMES_MOB_RAT = {}
-FRAMES_MOB_BOSS_RAT = {}
+FRAMES_MOB_RAT = {"Lidle": {}, "Marcher": {}}
+FRAMES_MOB_BOSS_RAT = {"Lidle": {}, "Marcher": {}}
+
+for etat in FRAMES_MOB_RAT:
+    for p in POSITIONS:
+        FRAMES_MOB_RAT[etat][p] = pygame.image.load(f"./assets/pnjs/rat/{etat}/rat_{p}.png")
+        FRAMES_MOB_BOSS_RAT[etat][p] = pygame.image.load(f"./assets/pnjs/boss_rat/{etat}/rat_{p}.png")
+
 FRAMES_MOB_CERF = {}
 FRAMES_MOB_BOSS_CERF = {}
 FRAMES_MOB_ORC = {}
 for p in POSITIONS:
-    FRAMES_MOB_RAT[p] = [pygame.image.load(f"./assets/mobs/rat/rat_{p}/rat_{p}_frame_{i}.png") for i in range(1, 5)]
-    FRAMES_MOB_BOSS_RAT[p] = [pygame.image.load(f"./assets/mobs/boss_rat/rat_{p}/rat_{p}_frame_{i}.png") for i in range(1, 5)]
-    FRAMES_MOB_CERF[p] = [pygame.image.load(f"./assets/mobs/cerf/cerf_{p}/cerf_{p}_frame_{i}.png") for i in range(1, 5)]
-    FRAMES_MOB_BOSS_CERF[p] = [pygame.image.load(f"./assets/mobs/boss_cerf/cerf_{p}/cerf_{p}_frame_{i}.png") for i in range(1, 5)]
-    FRAMES_MOB_ORC[p] = [pygame.image.load(f"./assets/mobs/Orc/Orc_{p}/Orc_{p}_frame_{i}.png") for i in range(1, 3)]
+    FRAMES_MOB_CERF[p] = [pygame.image.load(f"./assets/pnjs/cerf/cerf_{p}/cerf_{p}_frame_{i}.png") for i in range(1, 5)]
+    FRAMES_MOB_BOSS_CERF[p] = [pygame.image.load(f"./assets/pnjs/boss_cerf/cerf_{p}/cerf_{p}_frame_{i}.png") for i in range(1, 5)]
+    FRAMES_MOB_ORC[p] = [pygame.image.load(f"./assets/pnjs/Orc/Orc_{p}/Orc_{p}_frame_{i}.png") for i in range(1, 3)]
 
-FRAMES_MOB_LOUP_HUMAIN = utils.frame(pygame.image.load(f"./assets/mobs/Loup humain/Walk.png"), 30, 44, 4, 9, Color.BLACK)
-FRAMES_MOB_DOTUM = utils.frame(pygame.image.load("./assets/mobs/Dotum/Walk.png"), 64, 70, 8, 9, Color.BLACK)
-FRAMES_MOB_FENRIR = utils.frame(pygame.image.load("./assets/mobs/Fenrir/Walk.png"), 64, 70, 12, 9, Color.BLACK)
+FRAMES_MOB_LOUP_HUMAIN = utils.frame(pygame.image.load(f"./assets/pnjs/Loup humain/Walk.png"), 30, 44, 4, 9, Color.BLACK)
+FRAMES_MOB_DOTUM = utils.frame(pygame.image.load("./assets/pnjs/Dotum/Walk.png"), 64, 70, 8, 9, Color.BLACK)
+FRAMES_MOB_FENRIR = utils.frame(pygame.image.load("./assets/pnjs/Fenrir/Walk.png"), 64, 70, 12, 9, Color.BLACK)
 
 # Charge les différentes frames pour les images quand le guerrier cours en fonction de la direction également
 TRADUCTIONS_ETATS = {"Lidle": {"EN": "Idle"}, "Courir": {"EN": "Walk"}}
@@ -89,6 +93,8 @@ for etat in TRADUCTIONS_ETATS:
         GUERRIER_FRAMES[etat][POSITIONS[i]] = pygame.transform.scale_by(
             pygame.image.load(f"assets/personnage/guerrier/{p}/Png/Warrior{p}{TRADUCTIONS_ETATS[etat]["EN"]}.png"), 4
         )
+
+# breakpoint()  # p GUERRIER_FRAMES
 
 # Spells Icons
 SPELL_ICONS = {

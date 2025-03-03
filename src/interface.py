@@ -259,23 +259,24 @@ class GUIMenusItem(interfaceClasses.ButtonImage):
             self.menu.draw(surface)
 
     def handle_event(self, game, event):
-        if event.type == pygame.MOUSEBUTTONDOWN:  # on click pressure
-            if event.button == 1:  # left click
-                self.pressed = self.collide_with_point(game.mouse_pos)
+        if not self.character.est_mort():
+            if event.type == pygame.MOUSEBUTTONDOWN:  # on click pressure
+                if event.button == pygame.BUTTON_LEFT:  # left click
+                    self.pressed = self.collide_with_point(game.mouse_pos)
 
-        if event.type == pygame.MOUSEBUTTONUP:  # on click release
-            if event.button == 1:
-                if self.pressed:
-                    self.pressed = False
-                    if self.collide_with_point(game.mouse_pos):
-                        self.get_clicked(game)
+            if event.type == pygame.MOUSEBUTTONUP:  # on click release
+                if event.button == pygame.BUTTON_LEFT:
+                    if self.pressed:
+                        self.pressed = False
+                        if self.collide_with_point(game.mouse_pos):
+                            self.get_clicked(game)
 
-        if event.type == pygame.KEYDOWN:
-            if event.key == self.key:
-                self.get_clicked(game)
+            if event.type == pygame.KEYDOWN:
+                if event.key == self.key:
+                    self.get_clicked(game)
 
-        if self.show_menu:
-            self.menu.handle_event(game, event)
+            if self.show_menu:
+                self.menu.handle_event(game, event)
 
     def get_clicked(self, game):
         self.show_menu = not self.show_menu
@@ -377,7 +378,7 @@ class GUIInventoryMenu(interfaceClasses.StaticImage):
     def handle_event(self, game, event):
         if not self.character.est_mort():
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 3:
+                if event.button == pygame.BUTTON_RIGHT:
                     # équipe la pièce d'équipement sélectionner si le joueur fait un clique droit dessus depuis l'inventaire
                     for index, item in enumerate(self.character.inventory):
                         if item is not None:

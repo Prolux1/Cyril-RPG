@@ -139,9 +139,10 @@ class CyrilRpg:
             self.components.append(interface.FpsViewer(self.clock.get_fps(), WINDOW_WIDTH, 0))
 
     def entrer_dans_le_monde(self, perso: "personnage.Personnage"):
+        m = monde.Monde(self, perso)
         self.components = [
-            monde.Monde(self, perso),
-            gui.GameUserInterface(perso)
+            m,
+            gui.GameUserInterface(perso, m)
         ]
 
         if SHOW_FPS:
@@ -487,7 +488,7 @@ class CyrilRpg:
             self.mouse_pos = pygame.mouse.get_pos()  # récupère la position de la souris
             self.temps = pygame.time.get_ticks() / 1000
             self.window.fill(Color.WHITE)
-            mobs_zone = self.monde.get_monstres_zone_courante()
+            mobs_zone = self.monde.get_pnjs_attaquables_zone_courante()
 
             self.affichage_jeu(perso)
             self.affichage_interface_jeu(perso, dic_menu)

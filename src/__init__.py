@@ -10,5 +10,7 @@ __all__ = [
     "interfaceClasses",
     "gui",
     "sauvegarde",
-    "pnjs"
+    "pnjs",
+    "interactions",
+    "quetes"
 ]

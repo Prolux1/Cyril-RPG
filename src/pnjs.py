@@ -10,7 +10,10 @@ from src import utils, interfaceClasses, personnage
 
 
 class Pnj:
-    def __init__(self, rpg: "CyrilRpg", lvl, pv, degat, nom, orientation, frames: dict[str, dict[str, pygame.Surface]], x, y, xp, offset, est_boss=False, est_world_boss=False):
+    def __init__(self, rpg: "CyrilRpg", lvl, pv, degat, nom, orientation, frames: dict[str, dict[str, pygame.Surface]],
+                 x, y, xp, offset, est_boss=False, est_world_boss=False, se_deplace_aleatoirement=True, interactions=None):
+        if interactions is None:
+            interactions = []
         self.rpg = rpg
         self.lvl = lvl
         self.PV = pv
@@ -43,9 +46,15 @@ class Pnj:
         self.hovered_by_mouse = False
 
         self.dx_dy_directions = {"Gauche": (-1, 0), "Droite": (1, 0), "Dos": (0, -1), "Face": (0, 1)}
-        self.nb_frames_etats = {"Lidle": 1, "Marcher": 4}
+        if nom == "Maréchal McBride":
+            self.nb_frames_etats = {"Lidle": 5, "Courir": 8}
+        else:
+            self.nb_frames_etats = {"Lidle": 1, "Marcher": 4}
         self.temps_prochains_changements_frames = {"Lidle": 1.7, "Marcher": 0.7 / self.vitesse}
         self.temps_prochain_changement_frame = (rpg.time + self.temps_prochains_changements_frames[self.etat]) / self.nb_frames_etats[self.etat]
+        self.se_deplace_aleatoirement = se_deplace_aleatoirement
+
+        self.interactions = [] if interactions is None else interactions
 
 
     def draw(self, surface):
@@ -53,18 +62,25 @@ class Pnj:
         # pygame.draw.rect(surface, "black", self.rect, 2)
 
         if self.hovered_by_mouse:
-            # regarde si la souris passe sur un monstre, si c'est le cas, on le montre visuellement en le coloriant en
-            # rouge le monstre TODO : mettre plutot un contour rouge autour du monstre aulieu de le colorié en entier
+            # regarde si la souris passe sur un pnj, si c'est le cas, on le montre visuellement en le coloriant en :
+            #   - rouge si c'est un pnj attaquable (Pnj hostile ou Pnj neutre)
+            #   - vert si c'est un pnj amical
+            #   TODO : mettre plutot un contour rouge autour du monstre aulieu de le colorié en entier
             image_copy = self.image.copy()
-            image_copy.fill(Color.RED_HOVER, None, pygame.BLEND_RGB_ADD)
+            image_copy.fill(Color.RED_HOVER if self.est_attaquable() else Color.GREEN_HOVER, None, pygame.BLEND_RGB_ADD)
             surface.blit(image_copy, self.rect.topleft - self.offset)
 
         if self.selected or self.hovered_by_mouse:
-            # si le monstre est sélectionner, on affiche un cadre au dessus de sa tête qui indique :
+            # si le pnj est sélectionner, on affiche un cadre au dessus de sa tête qui indique :
             #   - son nom
             #   - son niveau
             #   - ses points de vies courant / ses points de vies max
-            mob_info_surf = pygame.Surface((200, 100), pygame.SRCALPHA)
+            taille_nom_lvl_x, taille_nom_lvl_y = Font.ARIAL_23.size(f"{self.nom} lvl {self.lvl}")
+            taille_pv_sur_pv_max_x, taille_pv_sur_pv_max_y = Font.ARIAL_23.size(f"{utils.convert_number(self.PV)} / {utils.convert_number(self.PV_max)}")
+            taille_pv_sur_pv_max_x += 10  # un ptit 10
+
+
+            mob_info_surf = pygame.Surface((max(taille_nom_lvl_x, taille_pv_sur_pv_max_x), 100), pygame.SRCALPHA)  # 200, 100
             mob_info_surf_rect = mob_info_surf.get_rect()
             mob_info_surf_rect.midbottom = self.rect.midtop
             # pygame.draw.rect(mob_info_surf, Color.BLACK, pygame.Rect(0, 0, mob_info_surf.get_width(), mob_info_surf.get_height()), 2)
@@ -98,12 +114,13 @@ class Pnj:
             zone.pnjs.remove(self)
         else:
             self.vitesse = self.vitesse_de_base * 60 / max(game.fps, 1)
-            self.deplacement(game)
+            if self.se_deplace_aleatoirement:
+                self.deplacement_aleatoire(game)
+            self.animation()
             self.rect = self.image.get_rect()
             self.rect.midbottom = (self.x, self.y)
 
-            self.hovered_by_mouse = pygame.Rect(self.rect.topleft - self.offset, self.rect.size).collidepoint(
-                game.mouse_pos)
+            self.hovered_by_mouse = pygame.Rect(self.rect.topleft - self.offset, self.rect.size).collidepoint(game.mouse_pos)
 
         # if self.rect.collidepoint(game.mouse_pos):
         #     pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
@@ -111,13 +128,13 @@ class Pnj:
         #     if pygame.mouse.get_cursor() != pygame.SYSTEM_CURSOR_HAND:
         #         pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
 
-    def handle_event(self, game, event):
+    def handle_event(self, game, event: pygame.event.Event):
         pass
 
     def est_mort(self):
         return self.PV <= 0
 
-    def deplacement(self, game: "CyrilRpg"):
+    def deplacement_aleatoire(self, game: "CyrilRpg"):
         """
         Déplace un pnj d'une position vers sa direction petit à petit par son facteur vitesse.
         """
@@ -138,13 +155,11 @@ class Pnj:
             self.x, self.y = self.x + (dx * self.vitesse), self.y + (dy * self.vitesse)
 
             self.dist_parcouru += self.vitesse
-            self.animation()
         elif self.direction is not None:
             self.etat = "Lidle"
             self.direction = None
             self.temps_prochain_changement_frame = 0
             self.frame_courante = 0
-            self.animation()
         else:
             if self.est_world_boss:
                 self.image = self.frames[self.orientation][0]
@@ -219,13 +234,20 @@ class Pnj:
         #     self.attaquer(character)
         self.attaquer(character)
 
+    def est_attaquable(self) -> bool:
+        return isinstance(self, PnjHostile) or isinstance(self, PnjNeutre)
+
+    def est_interactible(self) -> bool:
+        return len(self.interactions) > 0
+
 
 
 class PnjHostile(Pnj):
     def __init__(self, rpg: "CyrilRpg", lvl: int, pv: int, degats: int, nom: str, orientation: str,
                  frames: dict[str, dict[str, pygame.Surface]], x: int | float, y: int | float, xp, offset, est_boss=False,
-                 est_world_boss=False):
-        super().__init__(rpg, lvl, pv, degats, nom, orientation, frames, x, y, xp, offset, est_boss, est_world_boss)
+                 est_world_boss=False, se_deplace_aleatoirement=True):
+
+        super().__init__(rpg, lvl, pv, degats, nom, orientation, frames, x, y, xp, offset, est_boss, est_world_boss, se_deplace_aleatoirement)
 
 
 class PnjNeutre(Pnj):
@@ -235,8 +257,9 @@ class PnjNeutre(Pnj):
 class PnjAmical(Pnj):
     def __init__(self, rpg: "CyrilRpg", lvl: int, pv: int, degats: int, nom: str, orientation: str,
                  frames: dict[str, dict[str, pygame.Surface]], x: int | float, y: int | float, xp, offset, est_boss=False,
-                 est_world_boss=False):
-        super().__init__(rpg, lvl, pv, degats, nom, orientation, frames, x, y, xp, offset, est_boss, est_world_boss)
+                 est_world_boss=False, se_deplace_aleatoirement=True, interactions=None):
+
+        super().__init__(rpg, lvl, pv, degats, nom, orientation, frames, x, y, xp, offset, est_boss, est_world_boss, se_deplace_aleatoirement, interactions)
 
 
 class PnjCompanion(PnjAmical):

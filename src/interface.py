@@ -1,11 +1,11 @@
-import pygame
-
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from main import CyrilRpg
 
+import pygame
+
 from data import Font, Color, Image
-from src import interfaceClasses, utils
+from src import interfaceClasses, utils, personnage, monde, pnjs
 from src.item import *
 from config import WINDOW_WIDTH, WINDOW_HEIGHT
 
@@ -182,10 +182,37 @@ class CharacterSpells(interfaceClasses.BasicInterfaceElement):
 
 
 
+class InteractionsPnj(interfaceClasses.BasicInterfaceElement):
+    def __init__(self, perso: personnage.Personnage, m: monde.Monde, x, y):
+        self.afficher_menu_interactions = False
+        self.monde = m
+
+        surf = pygame.Surface((400, 800))
+
+
+        super().__init__(x, y, surf, center=True)
+
+    def draw(self, surface):
+        if self.afficher_menu_interactions:
+            surface.blit(self.surface, self.rect.topleft)
+
+    def handle_event(self, game: "CyrilRpg", event):
+        if event.type == pygame.MOUSEBUTTONUP:
+            if event.button == pygame.BUTTON_RIGHT:
+                pnj = self.trouver_pnj_avec_qui_interagir()
+                if pnj is not None:
+                    self.afficher_menu_interactions = True
 
 
 
 
+
+    def trouver_pnj_avec_qui_interagir(self) -> pnjs.Pnj | None:
+        for pnj in self.monde.get_pnjs_interactibles_zone_courante():
+            if pygame.Rect(pnj.rect.topleft - pnj.offset, pnj.rect.size).collidepoint(pnj.rpg.mouse_pos):
+                if not self.afficher_menu_interactions or not self.rect.collidepoint(pnj.rpg.mouse_pos):
+                    return pnj
+        return None
 
 
 class GUIMenusPanel(interfaceClasses.BasicInterfaceElement):

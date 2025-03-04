@@ -32,12 +32,6 @@ class Monde:
         #     pygame.Rect(0, 940, 1920, 140)
         # ])
 
-    def get_zone_courante(self) -> zone.Zone:
-        return self.zones[self.personnage_courant.zone]
-
-    def get_monstres_zone_courante(self) -> list[pnjs.Pnj]:
-        return self.zones[self.personnage_courant.zone].get_pnjs_hostiles()
-
     def draw(self, surface):
         self.zones[self.personnage_courant.zone].draw(surface)
 
@@ -46,3 +40,15 @@ class Monde:
 
     def handle_event(self, game, event):
         self.zones[self.personnage_courant.zone].handle_event(game, event)
+
+    def get_zone_courante(self) -> zone.Zone:
+        return self.zones[self.personnage_courant.zone]
+
+    def get_pnjs_attaquables_zone_courante(self) -> list[pnjs.PnjHostile | pnjs.PnjNeutre]:
+        return self.zones[self.personnage_courant.zone].get_pnjs_attaquables()
+
+    def get_pnjs_zone_courante(self) -> list[pnjs.Pnj]:
+        return self.zones[self.personnage_courant.zone].get_pnjs()
+
+    def get_pnjs_interactibles_zone_courante(self) -> list[pnjs.Pnj]:
+        return self.zones[self.personnage_courant.zone].get_pnjs_interactibles()

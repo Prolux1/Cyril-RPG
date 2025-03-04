@@ -191,14 +191,14 @@ class Personnage:
     def handle_event(self, game: "CyrilRpg", event: pygame.event.Event):
         if not self.est_mort():
             if event.type == pygame.MOUSEBUTTONUP:
-                self.select_mob(self.monde.get_monstres_zone_courante(), self.rpg.mouse_pos)
+                self.select_pnj(self.monde.get_pnjs_zone_courante(), self.rpg.mouse_pos)
 
             # Character spells casting
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_1:
                     if self.spells[0].ready(self.rpg.time):
                         Sound.SONS_ATTAQUE_PERSO[random.randint(0, len(Sound.SONS_ATTAQUE_PERSO) - 1)].play()
-                        self.attaquer(self.monde.get_monstres_zone_courante(), self.spells[0])
+                        self.attaquer(self.monde.get_pnjs_attaquables_zone_courante(), self.spells[0])
                         self.spells[0].set_timer(self.rpg.time)
                         # affiche_zone_effet_s1 = True
         #
@@ -228,7 +228,7 @@ class Personnage:
         #                         self.mouse_pos[1] < 533 + 52 * i + 39:
         #                     self.inventaire[i][j] = None
 
-    def select_mob(self, mobs_list, mouse_pos):
+    def select_pnj(self, mobs_list, mouse_pos):
         mob_found = False
         for i in range(len(mobs_list)):
             if not mob_found:
@@ -431,9 +431,10 @@ class Personnage:
         :param attaques_multiples: si le sort attaque en plusieurs les ennemis n'attaques qu'une fois
         :return:
         """
-        if self.selected_mob:
-            if sort.check_reach(self.rect.center, self.selected_mob.rect.center):
-                self.selected_mob.prendre_cher(self, round(self.get_damage() * sort.perc_char_dmg / 100))
+        if self.selected_mob is not None:
+            if self.selected_mob.est_attaquable():
+                if sort.check_reach(self.rect.center, self.selected_mob.rect.center):
+                    self.selected_mob.prendre_cher(self, round(self.get_damage() * sort.perc_char_dmg / 100))
 
 
 

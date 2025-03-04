@@ -8,7 +8,7 @@ import pygame
 
 from data import Image
 
-from src import personnage, pnjs, monde
+from src import personnage, pnjs, monde, interactions, quetes
 from config import WINDOW_WIDTH, WINDOW_HEIGHT
 
 
@@ -21,7 +21,7 @@ class Zone:
         self.nb_max_monstres = nb_max_monstres
 
 
-        self.pnjs = [perso]  # contains both pnjs and characters
+        self.pnjs: list[pnjs.Pnj] = []  # contains both pnjs and characters
         self.obstacles = []  # liste de rect
 
 
@@ -34,32 +34,34 @@ class Zone:
 
         # On affiche les entitées présente dans la zone de manière
         # horizontale pour avoir une sensation de dimension
-        self.pnjs.sort(key=lambda mob_i: mob_i.y)
-        for entity in self.pnjs:
-            entity.draw(surface)
+        for entite in sorted(self.pnjs + [self.personnage], key=lambda entite_i: entite_i.y):
+            entite.draw(surface)
 
     def update(self, game):
         if game.time >= self.time_last_respawn + (self.mob_respawn_timer * self.rpg.interval_spawn_mobs):
-            if self.get_nb_mobs() < self.nb_max_monstres:
+            if len(self.get_pnjs_attaquables()) < self.nb_max_monstres:
                 self.generate_random_mob(game)
             else:
                 self.time_last_respawn = game.time
 
-        for entity in self.pnjs:
-            entity.update(game, self)
+        for entite in self.pnjs + [self.personnage]:
+            entite.update(game, self)
 
     def handle_event(self, game, event):
-        for entity in self.pnjs:
-            entity.handle_event(game, event)
+        for entite in self.pnjs + [self.personnage]:
+            entite.handle_event(game, event)
 
-    def get_pnjs_hostiles(self):
-        return [pnj for pnj in self.pnjs if isinstance(pnj, pnjs.PnjHostile)]
+    def get_pnjs_attaquables(self):
+        return [pnj for pnj in self.pnjs if isinstance(pnj, pnjs.PnjHostile) or isinstance(pnj, pnjs.PnjNeutre)]
+
+    def get_pnjs_interactibles(self):
+        return [pnj for pnj in self.pnjs if pnj.est_interactible()]
+
+    def get_pnjs(self):
+        return self.pnjs
 
     def get_personnage(self) -> personnage.Personnage:
         return self.personnage
-
-    def get_nb_mobs(self):
-        return len(self.get_pnjs_hostiles())
 
     def generate_random_mob(self, game):
         """
@@ -137,10 +139,34 @@ class Desert(Zone):
         super().__init__(rpg, perso, "Desert", 250)
 
         # Ajout des pnjs amicaux de la zone Desert
-        # self.pnjs.extend(
-        #     [
-        #         pnjs.PnjAmical(20, 1361, 78, "Maréchal McBride", "Face", Image.GUERRIER_FRAMES, 100, 100, 0, self.get_personnage().offset)
-        #     ]
-        # )
+        self.pnjs.extend(
+            [
+                pnjs.PnjAmical(
+                    rpg,
+                    20,
+                    1361,
+                    78,
+                    "Maréchal McBride",
+                    "Face",
+                    Image.GUERRIER_FRAMES,
+                    WINDOW_WIDTH / 1.5,
+                    WINDOW_HEIGHT / 1.5,
+                    0,
+                    self.get_personnage().offset,
+                    se_deplace_aleatoirement=False,
+                    interactions=[
+                        interactions.Interaction(interactions.QUETE, quetes.Quete(
+                            "Le Fléau des Champs",
+                            f"Salutations {perso.nom}, le desert est infesté de rats génants, il faut réduire leurs nombres au plus vite"
+                            f"avant qu'il nous submergent !",
+
+                            f"Ca c'est ce qu'on appelle faire du ménage ! Votre contribution ne sera pas oublié soldat."
+
+                            )
+                        )
+                    ]
+                )
+            ]
+        )
 
 

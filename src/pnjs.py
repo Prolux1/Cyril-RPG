@@ -7,6 +7,7 @@ import pygame, random
 from data import Image, Color, Font
 
 from src import utils, interfaceClasses, personnage
+from config import WINDOW_WIDTH, WINDOW_HEIGHT
 
 
 class Pnj:
@@ -240,6 +241,9 @@ class Pnj:
     def est_interactible(self) -> bool:
         return len(self.interactions) > 0
 
+    @staticmethod
+    def get_nom() -> str:
+        return "?"
 
 
 class PnjHostile(Pnj):
@@ -271,10 +275,25 @@ class PnjCompanion(PnjAmical):
 
 
 class Rat(PnjHostile):
-    pass
+    def __init__(self, rpg: "CyrilRpg", perso: "personnage.Personnage"):
+        lvl_mob = random.randint(1, 5)
+        mob_x = random.choice((random.randint(-WINDOW_WIDTH, 0), random.randint(WINDOW_WIDTH, WINDOW_WIDTH * 2)))
+        mob_y = random.choice((random.randint(-WINDOW_HEIGHT, 0), random.randint(WINDOW_HEIGHT, WINDOW_HEIGHT * 2)))
+        super().__init__(
+            rpg,
+            lvl_mob,
+            59 + 9 * lvl_mob,
+            3 + lvl_mob,
+            self.get_nom(),
+            random.choice(Image.POSITIONS),
+            Image.FRAMES_MOB_RAT, mob_x, mob_y,
+            random.randint(40, 60),
+            perso.offset
+        )
 
-
-
+    @staticmethod
+    def get_nom() -> str:
+        return "Rat"
 
 
 

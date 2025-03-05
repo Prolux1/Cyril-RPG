@@ -184,6 +184,7 @@ class CharacterSpells(interfaceClasses.BasicInterfaceElement):
 
 class InteractionsPnj(interfaceClasses.BasicInterfaceElement):
     def __init__(self, perso: personnage.Personnage, m: monde.Monde, x, y):
+        self.personnage = perso
         self.monde = m
 
         # self.pnj_selectionnee gère le pnj avec qui on est entrain d'intéragir mais c'est aussi avec lui qu'on va
@@ -207,8 +208,17 @@ class InteractionsPnj(interfaceClasses.BasicInterfaceElement):
 
 
         # Un rectangle qui défini la zone (en haut à droite du menu d'intéractions) qui permet de fermer le menu d'intéractions
+        # Le rectangle avec "dans_surf" à la fin est utilisé pour le dessiner plus facilement dans la surface tandis
+        # que l'autre est utilisé pour les collisions.
         self.rect_fermeture_menu_dans_surf = pygame.Rect(largeur_origin_surface - 30, 0, 30, 30)
         self.rect_fermeture_menu = self.rect_fermeture_menu_dans_surf.copy().move(self.rect.x, self.rect.y)
+
+        # Un rectangle qui défini la zone (en bas à gauche du menu d'intéractions) qui permet d'accepter une quete
+        self.rect_accepter_quete_dans_surf = pygame.Rect(0, hauteur_origin_surface - 30, 100, 30)
+        self.rect_accepter_quete = self.rect_accepter_quete_dans_surf.copy().move(self.rect.x, self.rect.y)
+
+        self.bouton_accepter_quete = interfaceClasses.Button(0, hauteur_origin_surface, "Accepter", Font.ARIAL_23, Color.WHITE, 2)
+        self.bouton_accepter_quete.rect.move_ip(self.rect.x, -self.bouton_accepter_quete.rect.h + self.rect.y)
 
     def draw(self, surface):
         new_surf = self.origin_surface.copy()
@@ -219,24 +229,68 @@ class InteractionsPnj(interfaceClasses.BasicInterfaceElement):
             # Dessine le fond du bouton pour tout fermer
             pygame.draw.rect(new_surf, Color.RED, self.rect_fermeture_menu_dans_surf)
 
+            # TODO : Dessiner une croix en plus
+
             # Dessine le contour du bouton pour tout fermer
             pygame.draw.rect(new_surf, Color.BLACK, self.rect_fermeture_menu_dans_surf, 2)
-
-            # Dessine une crois blanche simple pour fermer le menu
-            # pygame.draw.aalines()
-            # new_surf.blit()
 
 
         if self.interaction_selectionnee is not None:
 
+
             if isinstance(self.interaction_selectionnee, quetes.Quete):
+                espacement_titre = 10
+                espacement_cote_droit = espacement_titre
+                x_courant = espacement_titre
+                y_courant = espacement_titre
+
                 texte_nom_quete = Font.NOM_QUETE.render(self.interaction_selectionnee.nom, True, Color.BLACK)
+                new_surf.blit(texte_nom_quete, (x_courant, y_courant))
+                y_courant += texte_nom_quete.get_height() + espacement_titre
 
-                new_surf.blit(texte_nom_quete, (10, 10))
+                # Affichage de la description de la quete en fonction de si :
+                #   - elle n'a pas encore été accepté
+                #   - elle est active mais les objectifs ne sont pas encore remplis
+                #   - elle est active et les objectifs ont été remplis
+                if self.personnage.peut_quete_etre_terminee(self.interaction_selectionnee):  # si la quete peut etre terminée c'est à dire si tout les objectifs ont été remplis
+                    texte_description_quete = utils.text_surface(self.interaction_selectionnee.description_rendu, Font.ARIAL_16, Color.BLACK, new_surf.get_width() - x_courant - espacement_cote_droit)
+                elif self.personnage.est_quete_active(self.interaction_selectionnee):  # si la quete est active dans le journal de quete du joueur mais que les objectifs n'ont pas encore été remplis
+                    texte_description_quete = utils.text_surface(self.interaction_selectionnee.description_intermediaire, Font.ARIAL_16, Color.BLACK, new_surf.get_width() - x_courant - espacement_cote_droit)
+                else:  # si on arrive ici c'est que la quete n'est pas dans le journal de quete du joueur
+                    texte_description_quete = utils.text_surface(self.interaction_selectionnee.description, Font.ARIAL_16, Color.BLACK, new_surf.get_width() - x_courant - espacement_cote_droit)
+                new_surf.blit(texte_description_quete, (x_courant, y_courant))
+                y_courant += texte_description_quete.get_height() + espacement_titre
 
-                # Affichage de la description de la quete
+                y_courant += 250  # séparation entre la description et les objectifs
+
+                # Affichage des objectifs de la quete. Il existe différents type de quêtes donc faut faire gaffe
+                if isinstance(self.interaction_selectionnee, quetes.QueteTuerPnjs):
+                    espacement_objectifs = 5
+                    # Pour chaque objectif de dézingage de pnjs on affiche :
+                    #   - le nombre de pnjs à tuer pour chaque type
+
+                    texte_objectifs = Font.ARIAL_23.render("Objectifs :", True, Color.BLACK)
+                    new_surf.blit(texte_objectifs, (x_courant, y_courant))
+
+                    y_courant += texte_objectifs.get_height() + espacement_titre
+
+                    for type_pnj_a_tuer, nb_pnjs_a_tuer in self.interaction_selectionnee.pnjs_a_tuers:
+                        if nb_pnjs_a_tuer > 1:
+                            str_objectif_courant = f"- Tuer {nb_pnjs_a_tuer} {type_pnj_a_tuer.get_nom()}"
+                        else:
+                            str_objectif_courant = f"- Tuer {type_pnj_a_tuer.get_nom()}"
+                        texte_objectif_courant = utils.text_surface(str_objectif_courant, Font.ARIAL_16, Color.BLACK, new_surf.get_width() - x_courant - espacement_cote_droit)
+
+                        new_surf.blit(texte_objectif_courant, (x_courant, y_courant))
+                        y_courant += texte_objectif_courant.get_height() + espacement_objectifs
+
+                # Affichage du bouton pour accepter la quete
+                # Il faut bouger le rectangle du bouton pour l'afficher car le rectangle par défaut est celui
+                # dans la fenêtre principale (ce qui permet de gérer "handle_event" et les "update")
+                self.bouton_accepter_quete.draw(new_surf, -self.rect.x, -self.rect.y)
 
 
+                
 
             self.maj_surf_et_draw(surface, new_surf)
         elif self.pnj_selectionnee is not None:
@@ -260,6 +314,11 @@ class InteractionsPnj(interfaceClasses.BasicInterfaceElement):
 
             self.maj_surf_et_draw(surface, new_surf)
 
+    def update(self, game):
+        if self.interaction_selectionnee is not None:
+            if isinstance(self.interaction_selectionnee, quetes.Quete):
+                self.bouton_accepter_quete.update(game)
+
     def handle_event(self, game: "CyrilRpg", event):
         if event.type == pygame.MOUSEBUTTONUP:
             if event.button == pygame.BUTTON_RIGHT:
@@ -275,6 +334,10 @@ class InteractionsPnj(interfaceClasses.BasicInterfaceElement):
                         if rect_interaction.collidepoint(game.mouse_pos):
                             self.interaction_selectionnee = interaction
 
+        if self.interaction_selectionnee is not None:
+            if isinstance(self.interaction_selectionnee, quetes.Quete):
+                self.bouton_accepter_quete.handle_event(game, event)
+
     def charger_infos_pnj(self, pnj_interactible: pnjs.Pnj | None) -> None:
         self.pnj_selectionnee = pnj_interactible
         self.pnj_selectionnee_tuple_interactions_rects = []
@@ -289,9 +352,12 @@ class InteractionsPnj(interfaceClasses.BasicInterfaceElement):
                 # Il y a aussi une petit icone indiquant si l'interaction est une "Quete" / "Marchant" / "Dialogue"
                 # a prendre en compte dans le rectangle
                 if isinstance(interaction, quetes.Quete):
-                    largeur_point_dint, hauteur_point_fint = Font.ARIAL_23.size("!")
-                    largeur_zone_interaction += largeur_point_dint + espacement
-                    hauteur_zone_interaction = max(hauteur_point_fint, hauteur_zone_interaction)
+                    if not self.personnage.est_quete_terminee(interaction):
+                        largeur_point_dint, hauteur_point_fint = Font.ARIAL_23.size("!")
+                        largeur_zone_interaction += largeur_point_dint + espacement
+                        hauteur_zone_interaction = max(hauteur_point_fint, hauteur_zone_interaction)
+                    else:  # si la quete a déjà été terminé, il ne faut pas la compté comme étant une intéraction possible donc -> on skip l'intéraction (tout ce qui a en dessous)
+                        continue
 
 
                 # Toutes les intéractions quelles soient de type "Quete" / "Marchant" / "Dialogue" doivent avoir un

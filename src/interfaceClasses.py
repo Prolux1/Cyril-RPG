@@ -114,21 +114,24 @@ class Button(Label):
     def update(self, game):
         self.mouse_over = self.collide_with_point(game.mouse_pos)
 
-    def draw(self, surface):
+    def draw(self, surface, dx: int = 0, dy: int = 0):
+        """
+        On peut spécifier un décalage en x et en y qui permet d'afficher à la position du rectangle décaler par ces dx, dy.
+        """
         if self.pressed:
-            surface.blit(self.surface_pressed, self.rect.topleft)
+            surface.blit(self.surface_pressed, self.rect.move(dx, dy))
         elif self.mouse_over:
-            surface.blit(self.surface_mouse_over, self.rect.topleft)
+            surface.blit(self.surface_mouse_over, self.rect.move(dx, dy))
         else:
-            surface.blit(self.surface, self.rect.topleft)
+            surface.blit(self.surface, self.rect.move(dx, dy))
 
     def handle_event(self, game, event):
         if event.type == pygame.MOUSEBUTTONDOWN:  # on click pressure
-            if event.button == 1:  # left click
+            if event.button == pygame.BUTTON_LEFT:  # left click
                 self.pressed = self.collide_with_point(game.mouse_pos)
 
         if event.type == pygame.MOUSEBUTTONUP:  # on click release
-            if event.button == 1:
+            if event.button == pygame.BUTTON_LEFT:
                 if self.pressed:
                     self.pressed = False
                     if self.collide_with_point(game.mouse_pos):

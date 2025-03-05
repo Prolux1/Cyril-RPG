@@ -149,23 +149,40 @@ def frame(frame_sheet, largeur, hauteur, taille, nb_frames, couleur=None):
 
 def text_surface(text: str, text_font: pygame.font.Font, text_color: tuple[int, int, int] | pygame.Color, surf_width: int | float) -> pygame.Surface:
     """
-    Return a surface that contains all the text passed in parameter,
-    without exceeding the specified 'surf_width'
+    Renvoie une surface qui contient tout le texte passé en paramètre afficher sur plusieurs lignes (sans dépassé
+    la "surf_width" mentionné).
     """
-    text_surf = text_font.render(text, True, text_color)
-    text_size = text_surf.get_size()
-    lines = int(math.ceil(text_font.size(text)[0] / surf_width))
-    line_height = text_size[1]
 
+    mots = [mot.split(' ') for mot in text.splitlines()]
+    largeur_espace = text_font.size(' ')[0]
+    hauteur_ligne = text_font.get_linesize()
 
-    surf_res = pygame.Surface((surf_width, line_height * lines), pygame.SRCALPHA)
+    x = 0
+    hauteur_total = hauteur_ligne
+    for ligne in mots:
+        for mot in ligne:
+            largeur_mot, hauteur_mot = text_font.size(mot)
+            if x + largeur_mot > surf_width:
+                x = 0
+                hauteur_total += hauteur_ligne
+            x += largeur_mot
 
-    for i in range(lines):
-        width_left = text_size[0] - surf_width * i
-        surf_res.blit(
-            text_surf.subsurface(pygame.Rect(surf_width * i, 0, min(surf_width, width_left), line_height)),
-            (0, line_height * i)
-        )
+    surf_res = pygame.Surface((surf_width, hauteur_total), pygame.SRCALPHA)
+
+    y_courant = 0
+    for ligne in mots:
+        x_courant = 0
+
+        for mot in ligne:
+            largeur_mot, hauteur_mot = text_font.size(mot)
+            if x_courant + largeur_mot > surf_width:
+                x_courant = 0
+                y_courant += hauteur_ligne
+
+            surf_res.blit(text_font.render(mot, True, text_color), (x_courant, y_courant))
+            x_courant += largeur_mot + largeur_espace
+
+        y_courant += hauteur_ligne
 
     return surf_res
 

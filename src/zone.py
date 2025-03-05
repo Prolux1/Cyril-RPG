@@ -60,9 +60,6 @@ class Zone:
     def get_pnjs(self):
         return self.pnjs
 
-    def get_personnage(self) -> personnage.Personnage:
-        return self.personnage
-
     def generate_random_mob(self, game):
         """
         Renvoie un mob en fonction du nom de la zone passé en paramètre
@@ -83,8 +80,7 @@ class Zone:
                                    self.personnage.offset, True)
             else:
                 lvl_mob = random.randint(1, 5)
-                mob = pnjs.PnjHostile(self.rpg, lvl_mob, 59 + 9 * lvl_mob, 3 + lvl_mob, "Rat", orientation,
-                                   Image.FRAMES_MOB_RAT, mob_x, mob_y, random.randint(40, 60), self.personnage.offset)
+                mob = pnjs.Rat(self.rpg, self.personnage)
                 # mob = Monstre(lvl_mob, 59 + 9 * lvl_mob, 3 + lvl_mob, "Loup humain", self.frames_mob_loup_humain["Face"][0], self.frames_mob_loup_humain, mob_x, mob_y, randint(40, 60) * xp_multiplier, [mob_x, mob_y + 40, 35 * 4, 44 * 4])
 
 
@@ -152,15 +148,16 @@ class Desert(Zone):
                     WINDOW_WIDTH / 1.5,
                     WINDOW_HEIGHT / 1.5,
                     0,
-                    self.get_personnage().offset,
+                    perso.offset,
                     se_deplace_aleatoirement=False,
                     interactions=[
-                        quetes.Quete(
+                        quetes.QueteTuerPnjs(
                             "Satanés rongeurs",
                             f"Salutations {perso.nom}, le désert est infesté de rats géants. Il faut réduire "
-                            f"leur nombre au plus vite avant qu'il ne nous submerge !",
+                            f"leur nombre au plus vite avant qu'il ne nous submerge!",
+                            [(pnjs.Rat, 7)],
 
-                            description_rendu="Ça c'est ce qu'on appelle faire du ménage ! Votre contribution ne sera pas oublié soldat."
+                            description_rendu="Ça c'est ce qu'on appelle faire du ménage! Votre contribution ne sera pas oublié soldat."
 
                         )
                     ]

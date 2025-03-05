@@ -8,7 +8,7 @@ import random
 import copy
 
 from data import Image, Color, Sound
-from src import sorts, inventory, item, utils
+from src import sorts, inventory, item, utils, quetes
 from config import WINDOW_WIDTH, WINDOW_HEIGHT
 
 
@@ -94,6 +94,9 @@ class Personnage:
         self.selected_mob = None
 
         self.passive_regen_timer = None
+
+        self.journal_de_quetes: list[quetes.Quete] = []  # Les quêtes actives du personnage
+        self.quetes_terminees: list[quetes.Quete] = []  # Les quêtes terminées par le personnage
 
     def draw(self, surface):
         # surface.blit(Image.CHARACTER_POSTURES[self.orientation], self.rect.topleft - self.offset)
@@ -436,39 +439,13 @@ class Personnage:
                 if sort.check_reach(self.rect.center, self.selected_mob.rect.center):
                     self.selected_mob.prendre_cher(self, round(self.get_damage() * sort.perc_char_dmg / 100))
 
+    def est_quete_terminee(self, quete: quetes.Quete) -> bool:
+        return quete in self.quetes_terminees
+
+    def est_quete_active(self, quete: quetes.Quete) -> bool:
+        return quete in self.journal_de_quetes
+
+    def peut_quete_etre_terminee(self, quete: quetes.Quete) -> bool:
+        return self.est_quete_active(quete) and quete.peut_etre_terminee()
 
 
-
-        # for mob in pnjs:
-        #     mob_toucher = False
-        #     rect_hit_box_mob = pygame.Rect(mob.hit_box)
-        #     if sort.nom == "Trancher":
-        #         if self.orientation == "Face":
-        #             if rect_hit_box_mob.colliderect([self.x - 25, self.y + 220, sort.zone_effet[0], sort.zone_effet[1]]):
-        #                 mob_toucher = True
-        #         elif self.orientation == "Droite":
-        #             if rect_hit_box_mob.colliderect([self.x + 110, self.y + 40, sort.zone_effet[1], sort.zone_effet[0]]):
-        #                 mob_toucher = True
-        #         elif self.orientation == "Gauche":
-        #             if rect_hit_box_mob.colliderect([self.x - 45, self.y + 40, sort.zone_effet[1], sort.zone_effet[0]]):
-        #                 mob_toucher = True
-        #         elif self.orientation == "Dos":
-        #             if rect_hit_box_mob.colliderect([self.x - 25, self.y - 60, sort.zone_effet[0], sort.zone_effet[1]]):
-        #                 mob_toucher = True
-        #     elif sort.nom == "Tourbillon":
-        #         if rect_hit_box_mob.colliderect([self.x - 145, self.y - 50, sort.zone_effet[0], sort.zone_effet[1]]):
-        #             mob_toucher = True
-        #
-        #     if mob_toucher:
-        #         if self.arme:
-        #             mob.PV -= (self.get_damage() * sort.perc_char_dmg / 100) + self.arme.degat
-        #         else:
-        #             mob.PV -= (self.get_damage() * sort.perc_char_dmg / 100)
-        #
-        #         if not attaques_multiples:
-        #             self.PV -= mob.degat - (mob.degat * self.reduction_degats)  # Quand le joueur fait des dégâts à un mob il réplique immédiatement
-        #             if self.PV < 0:
-        #                 self.PV = 0
-        #
-        #         if mob.PV < 0:
-        #             mob.PV = 0

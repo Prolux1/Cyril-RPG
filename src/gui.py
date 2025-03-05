@@ -15,7 +15,7 @@ class GameUserInterface:
             interface.CharacterXpBar(perso, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 1.025, Font.ARIAL_23, Color.DARK_PURPLE),
             interface.CharacterSpells(perso, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 1.1, Font.ARIAL_23, Color.WHITE),
             interface.GUIMenusPanel(perso, WINDOW_WIDTH / 1.075, WINDOW_HEIGHT / 1.055, Font.ARIAL_23, Color.WHITE),
-            interface.InteractionsPnj(perso, m, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2),
+            interface.InteractionsPnj(perso, m, WINDOW_WIDTH / 8, WINDOW_HEIGHT / 2),
             interface.CharacterDead(perso)
         ]
 

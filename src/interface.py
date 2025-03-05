@@ -5,7 +5,7 @@ if TYPE_CHECKING:
 import pygame
 
 from data import Font, Color, Image
-from src import interfaceClasses, utils, personnage, monde, pnjs
+from src import interfaceClasses, utils, personnage, monde, pnjs, quetes
 from src.item import *
 from config import WINDOW_WIDTH, WINDOW_HEIGHT
 
@@ -184,35 +184,144 @@ class CharacterSpells(interfaceClasses.BasicInterfaceElement):
 
 class InteractionsPnj(interfaceClasses.BasicInterfaceElement):
     def __init__(self, perso: personnage.Personnage, m: monde.Monde, x, y):
-        self.afficher_menu_interactions = False
         self.monde = m
 
-        surf = pygame.Surface((400, 800))
+        # self.pnj_selectionnee gère le pnj avec qui on est entrain d'intéragir mais c'est aussi avec lui qu'on va
+        # savoir si on affiche des trucs ou pas. Par exemple s'il est à None, on va pas afficher le menu d'interactions
+        # sinon on va l'afficher avec les interactions qu'il a (ses quetes, ses dialogues, etc...)
+        self.pnj_selectionnee = None
+
+        # liste de tuples du style (interaction, rect_interaction)
+        # qui va contenir pour chaque intéractions son rectangle associé pour qu'on puisse cliqué et affiché le contenu de l'intéraction
+        self.pnj_selectionnee_tuple_interactions_rects = []
+
+        # L'intéraction sélectionnée par le joueur
+        self.interaction_selectionnee = None
+
+        largeur_origin_surface, hauteur_origin_surface = (400, 800)
+        self.origin_surface = pygame.Surface((largeur_origin_surface, hauteur_origin_surface))
+        self.origin_surface.fill(Color.FOND_INTERACTIONS)
 
 
-        super().__init__(x, y, surf, center=True)
+        super().__init__(x, y, self.origin_surface.copy(), center=True)
+
+
+        # Un rectangle qui défini la zone (en haut à droite du menu d'intéractions) qui permet de fermer le menu d'intéractions
+        self.rect_fermeture_menu_dans_surf = pygame.Rect(largeur_origin_surface - 30, 0, 30, 30)
+        self.rect_fermeture_menu = self.rect_fermeture_menu_dans_surf.copy().move(self.rect.x, self.rect.y)
 
     def draw(self, surface):
-        if self.afficher_menu_interactions:
-            surface.blit(self.surface, self.rect.topleft)
+        new_surf = self.origin_surface.copy()
+
+        # Les trucs communs à afficher si on est entrain de consulter les intéractions d'un pnj ou si on est sur
+        # une d'entre elle (typiquement le bouton pour tout fermer)
+        if self.pnj_selectionnee is not None:
+            # Dessine le fond du bouton pour tout fermer
+            pygame.draw.rect(new_surf, Color.RED, self.rect_fermeture_menu_dans_surf)
+
+            # Dessine le contour du bouton pour tout fermer
+            pygame.draw.rect(new_surf, Color.BLACK, self.rect_fermeture_menu_dans_surf, 2)
+
+            # Dessine une crois blanche simple pour fermer le menu
+            # pygame.draw.aalines()
+            # new_surf.blit()
+
+
+        if self.interaction_selectionnee is not None:
+
+            if isinstance(self.interaction_selectionnee, quetes.Quete):
+                texte_nom_quete = Font.NOM_QUETE.render(self.interaction_selectionnee.nom, True, Color.BLACK)
+
+                new_surf.blit(texte_nom_quete, (10, 10))
+
+                # Affichage de la description de la quete
+
+
+
+            self.maj_surf_et_draw(surface, new_surf)
+        elif self.pnj_selectionnee is not None:
+
+            espacement = 5
+            y_courant = espacement
+            for interaction in self.pnj_selectionnee.interactions:
+                x_courant = espacement
+                if isinstance(interaction, quetes.Quete):
+                    texte_point_int = Font.ARIAL_23.render("!", True, Color.YELLOW_ORANGE)
+                    texte_nom_quete = Font.ARIAL_23.render(interaction.nom, True, Color.BLACK)
+
+                    new_surf.blit(texte_point_int, (x_courant, y_courant))
+                    x_courant += texte_point_int.get_width() + espacement
+
+                    new_surf.blit(texte_nom_quete, (x_courant, y_courant))
+
+
+
+
+
+            self.maj_surf_et_draw(surface, new_surf)
 
     def handle_event(self, game: "CyrilRpg", event):
         if event.type == pygame.MOUSEBUTTONUP:
             if event.button == pygame.BUTTON_RIGHT:
-                pnj = self.trouver_pnj_avec_qui_interagir()
-                if pnj is not None:
-                    self.afficher_menu_interactions = True
+                self.charger_infos_pnj(self.trouver_pnj_avec_qui_interagir())
+
+            if event.button == pygame.BUTTON_LEFT:
+                if self.pnj_selectionnee is not None:
+                    if self.rect_fermeture_menu.collidepoint(game.mouse_pos):
+                        self.fermer()
 
 
+                    for interaction, rect_interaction in self.pnj_selectionnee_tuple_interactions_rects:
+                        if rect_interaction.collidepoint(game.mouse_pos):
+                            self.interaction_selectionnee = interaction
+
+    def charger_infos_pnj(self, pnj_interactible: pnjs.Pnj | None) -> None:
+        self.pnj_selectionnee = pnj_interactible
+        self.pnj_selectionnee_tuple_interactions_rects = []
+
+        if pnj_interactible is not None:
+            espacement = 5
+            y_courant = self.rect.y + espacement
+            for interaction in pnj_interactible.interactions:
+                largeur_zone_interaction = 0
+                hauteur_zone_interaction = 0
+
+                # Il y a aussi une petit icone indiquant si l'interaction est une "Quete" / "Marchant" / "Dialogue"
+                # a prendre en compte dans le rectangle
+                if isinstance(interaction, quetes.Quete):
+                    largeur_point_dint, hauteur_point_fint = Font.ARIAL_23.size("!")
+                    largeur_zone_interaction += largeur_point_dint + espacement
+                    hauteur_zone_interaction = max(hauteur_point_fint, hauteur_zone_interaction)
 
 
+                # Toutes les intéractions quelles soient de type "Quete" / "Marchant" / "Dialogue" doivent avoir un
+                # attribut "nom"
+                largeur_nom_interaction, hauteur_nom_interaction = Font.ARIAL_23.size(interaction.nom)
+                largeur_zone_interaction += largeur_nom_interaction
+
+                hauteur_zone_interaction = max(hauteur_nom_interaction, hauteur_zone_interaction)
+
+                self.pnj_selectionnee_tuple_interactions_rects.append(
+                    (interaction, pygame.Rect(self.rect.x + espacement, y_courant, largeur_zone_interaction, hauteur_zone_interaction))
+                )
+
+                y_courant += hauteur_zone_interaction + espacement
 
     def trouver_pnj_avec_qui_interagir(self) -> pnjs.Pnj | None:
         for pnj in self.monde.get_pnjs_interactibles_zone_courante():
             if pygame.Rect(pnj.rect.topleft - pnj.offset, pnj.rect.size).collidepoint(pnj.rpg.mouse_pos):
-                if not self.afficher_menu_interactions or not self.rect.collidepoint(pnj.rpg.mouse_pos):
+                if self.pnj_selectionnee is None or not self.rect.collidepoint(pnj.rpg.mouse_pos):
                     return pnj
         return None
+
+    def fermer(self) -> None:
+        self.pnj_selectionnee = None
+        self.pnj_selectionnee_tuple_interactions_rects = []
+        self.interaction_selectionnee = None
+
+    def maj_surf_et_draw(self, surface_sur_laquelle_afficher: pygame.Surface, new_surf: pygame.Surface) -> None:
+        self.update_surf(new_surf)
+        surface_sur_laquelle_afficher.blit(self.surface, self.rect.topleft)
 
 
 class GUIMenusPanel(interfaceClasses.BasicInterfaceElement):

@@ -155,14 +155,13 @@ class Desert(Zone):
                     self.get_personnage().offset,
                     se_deplace_aleatoirement=False,
                     interactions=[
-                        interactions.Interaction(interactions.QUETE, quetes.Quete(
-                            "Le Fléau des Champs",
-                            f"Salutations {perso.nom}, le desert est infesté de rats génants, il faut réduire leurs nombres au plus vite"
-                            f"avant qu'il nous submergent !",
+                        quetes.Quete(
+                            "Satanés rongeurs",
+                            f"Salutations {perso.nom}, le désert est infesté de rats géants. Il faut réduire "
+                            f"leur nombre au plus vite avant qu'il ne nous submerge !",
 
-                            f"Ca c'est ce qu'on appelle faire du ménage ! Votre contribution ne sera pas oublié soldat."
+                            description_rendu="Ça c'est ce qu'on appelle faire du ménage ! Votre contribution ne sera pas oublié soldat."
 
-                            )
                         )
                     ]
                 )

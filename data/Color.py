@@ -24,5 +24,5 @@ RARITY_COLORS = {
 
 
 
-
+FOND_INTERACTIONS = pygame.color.Color(248, 196, 113)
 

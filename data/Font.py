@@ -12,7 +12,7 @@ ARIAL_23 = pygame.font.SysFont("arial", 23, False, False)
 ARIAL_16 = pygame.font.SysFont("arial", 16, False, False)
 ARIAL_20_ITALIC = pygame.font.SysFont("arial", 20, False, True)
 
-
+NOM_QUETE = pygame.font.SysFont("arial", 36, True, False)
 
 
 

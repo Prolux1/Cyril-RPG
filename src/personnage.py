@@ -95,8 +95,8 @@ class Personnage:
 
         self.passive_regen_timer = None
 
-        self.journal_de_quetes: list[quetes.Quete] = []  # Les quêtes actives du personnage
-        self.quetes_terminees: list[quetes.Quete] = []  # Les quêtes terminées par le personnage
+        self.journal_de_quetes: set[quetes.Quete] = set()  # Les quêtes actives du personnage
+        self.quetes_terminees: set[quetes.Quete] = set()  # Les quêtes terminées par le personnage
 
     def draw(self, surface):
         # surface.blit(Image.CHARACTER_POSTURES[self.orientation], self.rect.topleft - self.offset)
@@ -447,5 +447,29 @@ class Personnage:
 
     def peut_quete_etre_terminee(self, quete: quetes.Quete) -> bool:
         return self.est_quete_active(quete) and quete.peut_etre_terminee()
+
+    def accepter_quete(self, quete: quetes.Quete) -> bool:
+        """
+        Peut renvoyer False si le journal de quetes est plein (pour l'instant pas de limite, c'est pas comme ci
+        y alait avoir 500 000 quetes mdrrr)
+        """
+        self.journal_de_quetes.add(quete)
+        return True
+
+    def abandonner_quete(self, quete: quetes.Quete) -> None:
+        quete.abandonner()
+        self.journal_de_quetes.remove(quete)
+
+    def terminer_quete(self, quete: quetes.Quete) -> None:
+        self.quetes_terminees.add(quete)
+        self.journal_de_quetes.remove(quete)
+
+    def get_quetes_actives_tuer_pnjs(self, toutes: bool = False) -> list[quetes.QueteTuerPnjs]:
+        """
+        Renvoie par défaut toutes les quetes actives dans le journal de quêtes où il faut tuer des pnjs ET dont les
+        objectifs ne sont pas encore remplit.
+        On peut décider de renvoyer également celles dont les objectifs sont remplis en mettant le paramètre "toutes" à True.
+        """
+        return [quete for quete in self.journal_de_quetes if isinstance(quete, quetes.QueteTuerPnjs) and (not quete.peut_etre_terminee() or toutes)]
 
 

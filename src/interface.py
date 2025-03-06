@@ -181,6 +181,56 @@ class CharacterSpells(interfaceClasses.BasicInterfaceElement):
 
 
 
+class BoutonAccepterQuete(interfaceClasses.Button):
+    def __init__(self, menu_interactions_pnj: "InteractionsPnj", x: int, y: int):
+        self.menu_interactions_pnj = menu_interactions_pnj
+        super().__init__(x, y, "Accepter", Font.ARIAL_23, Color.WHITE, 2)
+
+        self.rect.move_ip(self.menu_interactions_pnj.rect.x, -self.rect.h + self.menu_interactions_pnj.rect.y)
+
+    def get_clicked(self, game):
+        self.menu_interactions_pnj.personnage.accepter_quete(self.menu_interactions_pnj.interaction_selectionnee)
+        self.menu_interactions_pnj.retour_liste_interactions()
+
+    def draw(self, surface, dx: int = 0, dy: int = 0):
+        # Il faut bouger le rectangle du bouton en fonction de quand on l'affiche dans le menu d'interactions des pnjs
+        # et quand on veut gérer "handle_event" et les "update" par rapport à la surface de la fenêtre principale.
+        super().draw(surface, -self.menu_interactions_pnj.rect.x, -self.menu_interactions_pnj.rect.y)
+
+
+class BoutonAbandonnerQuete(interfaceClasses.Button):
+    def __init__(self, menu_interactions_pnj: "InteractionsPnj", x: int, y: int):
+        self.menu_interactions_pnj = menu_interactions_pnj
+        super().__init__(x, y, "Abandonner", Font.ARIAL_23, Color.WHITE, 2)
+
+        self.rect.move_ip(self.menu_interactions_pnj.rect.x, -self.rect.h + self.menu_interactions_pnj.rect.y)
+
+    def get_clicked(self, game):
+        self.menu_interactions_pnj.personnage.abandonner_quete(self.menu_interactions_pnj.interaction_selectionnee)
+        self.menu_interactions_pnj.retour_liste_interactions()
+
+    def draw(self, surface, dx: int = 0, dy: int = 0):
+        # Il faut bouger le rectangle du bouton en fonction de quand on l'affiche dans le menu d'interactions des pnjs
+        # et quand on veut gérer "handle_event" et les "update" par rapport à la surface de la fenêtre principale.
+        super().draw(surface, -self.menu_interactions_pnj.rect.x, -self.menu_interactions_pnj.rect.y)
+
+
+class BoutonTerminerQuete(interfaceClasses.Button):
+    def __init__(self, menu_interactions_pnj: "InteractionsPnj", x: int, y: int):
+        self.menu_interactions_pnj = menu_interactions_pnj
+        super().__init__(x, y, "Terminer", Font.ARIAL_23, Color.WHITE, 2)
+
+        self.rect.move_ip(self.menu_interactions_pnj.rect.x, -self.rect.h + self.menu_interactions_pnj.rect.y)
+
+    def get_clicked(self, game):
+        self.menu_interactions_pnj.personnage.terminer_quete(self.menu_interactions_pnj.interaction_selectionnee)
+        self.menu_interactions_pnj.retour_liste_interactions()
+
+    def draw(self, surface, dx: int = 0, dy: int = 0):
+        # Il faut bouger le rectangle du bouton en fonction de quand on l'affiche dans le menu d'interactions des pnjs
+        # et quand on veut gérer "handle_event" et les "update" par rapport à la surface de la fenêtre principale.
+        super().draw(surface, -self.menu_interactions_pnj.rect.x, -self.menu_interactions_pnj.rect.y)
+
 
 class InteractionsPnj(interfaceClasses.BasicInterfaceElement):
     def __init__(self, perso: personnage.Personnage, m: monde.Monde, x, y):
@@ -217,8 +267,9 @@ class InteractionsPnj(interfaceClasses.BasicInterfaceElement):
         self.rect_accepter_quete_dans_surf = pygame.Rect(0, hauteur_origin_surface - 30, 100, 30)
         self.rect_accepter_quete = self.rect_accepter_quete_dans_surf.copy().move(self.rect.x, self.rect.y)
 
-        self.bouton_accepter_quete = interfaceClasses.Button(0, hauteur_origin_surface, "Accepter", Font.ARIAL_23, Color.WHITE, 2)
-        self.bouton_accepter_quete.rect.move_ip(self.rect.x, -self.bouton_accepter_quete.rect.h + self.rect.y)
+        self.bouton_accepter_quete = BoutonAccepterQuete(self, 0, hauteur_origin_surface)
+        self.bouton_abandonner_quete = BoutonAbandonnerQuete(self, 0, hauteur_origin_surface)
+        self.bouton_terminer_quete = BoutonTerminerQuete(self, 0, hauteur_origin_surface)
 
     def draw(self, surface):
         new_surf = self.origin_surface.copy()
@@ -274,20 +325,34 @@ class InteractionsPnj(interfaceClasses.BasicInterfaceElement):
 
                     y_courant += texte_objectifs.get_height() + espacement_titre
 
-                    for type_pnj_a_tuer, nb_pnjs_a_tuer in self.interaction_selectionnee.pnjs_a_tuers:
+                    for i in range(len(self.interaction_selectionnee.pnjs_a_tuers)):
+                        type_pnj_a_tuer, nb_pnjs_a_tuer = self.interaction_selectionnee.pnjs_a_tuers[i]
+
                         if nb_pnjs_a_tuer > 1:
                             str_objectif_courant = f"- Tuer {nb_pnjs_a_tuer} {type_pnj_a_tuer.get_nom()}"
                         else:
                             str_objectif_courant = f"- Tuer {type_pnj_a_tuer.get_nom()}"
+
+                        # Si la quete est active on affiche la progression actuelle pour chaque objectif de pnjs à tuer
+                        if self.personnage.est_quete_active(self.interaction_selectionnee):
+                            str_objectif_courant += f" {self.interaction_selectionnee.pnjs_tuers[i]} / {nb_pnjs_a_tuer}"
+
                         texte_objectif_courant = utils.text_surface(str_objectif_courant, Font.ARIAL_16, Color.BLACK, new_surf.get_width() - x_courant - espacement_cote_droit)
 
                         new_surf.blit(texte_objectif_courant, (x_courant, y_courant))
                         y_courant += texte_objectif_courant.get_height() + espacement_objectifs
 
-                # Affichage du bouton pour accepter la quete
-                # Il faut bouger le rectangle du bouton pour l'afficher car le rectangle par défaut est celui
-                # dans la fenêtre principale (ce qui permet de gérer "handle_event" et les "update")
-                self.bouton_accepter_quete.draw(new_surf, -self.rect.x, -self.rect.y)
+                # Affichage d'un bouton :
+                #   - pour accepter la quete si elle n'est pas déjà dans le journal de quetes du personnage
+                #   - pour terminer la quete si elle est dans le journal de quetes du personnage ET qu'elle peut être terminée
+                #   - pour abandonner sinon
+                if self.personnage.est_quete_active(self.interaction_selectionnee):
+                    if self.interaction_selectionnee.peut_etre_terminee():
+                        self.bouton_terminer_quete.draw(new_surf)
+                    else:
+                        self.bouton_abandonner_quete.draw(new_surf)
+                else:
+                    self.bouton_accepter_quete.draw(new_surf)
 
 
                 
@@ -300,13 +365,21 @@ class InteractionsPnj(interfaceClasses.BasicInterfaceElement):
             for interaction in self.pnj_selectionnee.interactions:
                 x_courant = espacement
                 if isinstance(interaction, quetes.Quete):
-                    texte_point_int = Font.ARIAL_23.render("!", True, Color.YELLOW_ORANGE)
-                    texte_nom_quete = Font.ARIAL_23.render(interaction.nom, True, Color.BLACK)
+                    # On affiche uniquement les quetes qui n'ont pas déjà été terminé par le personnage
+                    if not self.personnage.est_quete_terminee(interaction):
+                        if interaction.peut_etre_terminee():
+                            texte_indicateur_statut_quete = Font.ARIAL_23.render("?", True, Color.YELLOW_ORANGE)
+                        elif self.personnage.est_quete_active(interaction):
+                            texte_indicateur_statut_quete = Font.ARIAL_23.render("?", True, Color.GREY)
+                        else:
+                            texte_indicateur_statut_quete = Font.ARIAL_23.render("!", True, Color.YELLOW_ORANGE)
 
-                    new_surf.blit(texte_point_int, (x_courant, y_courant))
-                    x_courant += texte_point_int.get_width() + espacement
+                        texte_nom_quete = Font.ARIAL_23.render(interaction.nom, True, Color.BLACK)
 
-                    new_surf.blit(texte_nom_quete, (x_courant, y_courant))
+                        new_surf.blit(texte_indicateur_statut_quete, (x_courant, y_courant))
+                        x_courant += texte_indicateur_statut_quete.get_width() + espacement
+
+                        new_surf.blit(texte_nom_quete, (x_courant, y_courant))
 
 
 
@@ -317,7 +390,13 @@ class InteractionsPnj(interfaceClasses.BasicInterfaceElement):
     def update(self, game):
         if self.interaction_selectionnee is not None:
             if isinstance(self.interaction_selectionnee, quetes.Quete):
-                self.bouton_accepter_quete.update(game)
+                if self.personnage.est_quete_active(self.interaction_selectionnee):
+                    if self.interaction_selectionnee.peut_etre_terminee():
+                        self.bouton_terminer_quete.update(game)
+                    else:
+                        self.bouton_abandonner_quete.update(game)
+                else:
+                    self.bouton_accepter_quete.update(game)
 
     def handle_event(self, game: "CyrilRpg", event):
         if event.type == pygame.MOUSEBUTTONUP:
@@ -336,7 +415,13 @@ class InteractionsPnj(interfaceClasses.BasicInterfaceElement):
 
         if self.interaction_selectionnee is not None:
             if isinstance(self.interaction_selectionnee, quetes.Quete):
-                self.bouton_accepter_quete.handle_event(game, event)
+                if self.personnage.est_quete_active(self.interaction_selectionnee):
+                    if self.interaction_selectionnee.peut_etre_terminee():
+                        self.bouton_terminer_quete.handle_event(game, event)
+                    else:
+                        self.bouton_abandonner_quete.handle_event(game, event)
+                else:
+                    self.bouton_accepter_quete.handle_event(game, event)
 
     def charger_infos_pnj(self, pnj_interactible: pnjs.Pnj | None) -> None:
         self.pnj_selectionnee = pnj_interactible
@@ -379,6 +464,10 @@ class InteractionsPnj(interfaceClasses.BasicInterfaceElement):
                 if self.pnj_selectionnee is None or not self.rect.collidepoint(pnj.rpg.mouse_pos):
                     return pnj
         return None
+
+    def retour_liste_interactions(self) -> None:
+        self.interaction_selectionnee = None
+        self.charger_infos_pnj(self.pnj_selectionnee)
 
     def fermer(self) -> None:
         self.pnj_selectionnee = None
@@ -456,7 +545,7 @@ class GUIMenusItem(interfaceClasses.ButtonImage):
         if self.show_menu:
             self.menu.update(game)
 
-    def draw(self, surface):
+    def draw(self, surface, dx: int = 0, dy: int = 0):
         if self.show_menu:
             self.menu.draw(surface)
 

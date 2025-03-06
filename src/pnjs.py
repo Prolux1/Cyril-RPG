@@ -199,15 +199,15 @@ class Pnj:
         """
         pers.receive_damage(self.degat)
 
-    def prendre_cher(self, character: "personnage.Personnage", degats: int):
+    def prendre_cher(self, perso: "personnage.Personnage", degats: int):
         self.PV = max(0, self.PV - degats)
 
         if self.est_mort():
-            xp_given_to_player = int(self.lvl / character.lvl * self.xp * character.xp_multiplier)
+            xp_given_to_player = int(self.lvl / perso.lvl * self.xp * perso.xp_multiplier)
             if xp_given_to_player > 0:
-                character.gain_xp(xp_given_to_player)
+                perso.gain_xp(xp_given_to_player)
 
-            character.selected_mob = None
+            perso.selected_mob = None
 
             # à une chance d'ajouter à l'inventaire du personnage, un équipement de type aléatoire
             # et en adéquation avec le lvl du mob si le mob est un boss,
@@ -215,25 +215,30 @@ class Pnj:
             if self.est_world_boss:
                 weapon_drop_chance = 50  # chance basique : 50 %
                 for i in range(3):
-                    character.inventory.add(utils.generation_equipement_alea(self.lvl, False, True))
+                    perso.inventory.add(utils.generation_equipement_alea(self.lvl, False, True))
             elif self.est_boss:
                 weapon_drop_chance = 100 / 3  # chance basique : 33.3333333333 %
-                character.inventory.add(utils.generation_equipement_alea(self.lvl, True))
+                perso.inventory.add(utils.generation_equipement_alea(self.lvl, True))
             else:
                 equipment_drop_chance = 100  # equipment % drop chance (basic : 20%)
                 weapon_drop_chance = 50  # weapon % drop chance (basic : 10 %)
 
                 if random.random() < equipment_drop_chance / 100:
-                    character.inventory.add(utils.generation_equipement_alea(self.lvl))
+                    perso.inventory.add(utils.generation_equipement_alea(self.lvl))
 
             if random.random() < weapon_drop_chance / 100:
-                character.inventory.add(utils.generation_arme_alea(self.lvl, self.est_boss, self.est_world_boss))
+                perso.inventory.add(utils.generation_arme_alea(self.lvl, self.est_boss, self.est_world_boss))
+
+            # Si le pnj meurt on regarde si le personnage qui l'a tué avait une quete où il devait le buter
+            for quete in perso.get_quetes_actives_tuer_pnjs():
+                if quete.pnj_match(self):
+                    quete.incrementer_objectif_tuer_pnj(self)
 
         # Le monstre attaque automatiquement en retour
         # souffrance = 5
         # for i in range(souffrance):
         #     self.attaquer(character)
-        self.attaquer(character)
+        self.attaquer(perso)
 
     def est_attaquable(self) -> bool:
         return isinstance(self, PnjHostile) or isinstance(self, PnjNeutre)

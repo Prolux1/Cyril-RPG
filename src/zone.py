@@ -154,10 +154,10 @@ class Desert(Zone):
                         quetes.QueteTuerPnjs(
                             "Satanés rongeurs",
                             f"Salutations {perso.nom}, le désert est infesté de rats géants. Il faut réduire "
-                            f"leur nombre au plus vite avant qu'il ne nous submerge!",
+                            f"leur nombre au plus vite avant qu'ils ne nous submerge!",
                             [(pnjs.Rat, 7)],
 
-                            description_rendu="Ça c'est ce qu'on appelle faire du ménage! Votre contribution ne sera pas oublié soldat."
+                            description_rendu="Ça c'est ce qu'on appelle faire du ménage! Votre contribution ne sera pas oublié héros."
 
                         )
                     ]

@@ -14,6 +14,7 @@ class GameUserInterface:
             interface.CharacterFrame(perso, 10, 10, Font.ARIAL_30, Color.BLACK),
             interface.CharacterXpBar(perso, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 1.025, Font.ARIAL_23, Color.DARK_PURPLE),
             interface.CharacterSpells(perso, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 1.1, Font.ARIAL_23, Color.WHITE),
+            interface.JournalDeQuetes(perso, WINDOW_WIDTH / 1.2, WINDOW_HEIGHT / 8),
             interface.GUIMenusPanel(perso, WINDOW_WIDTH / 1.075, WINDOW_HEIGHT / 1.055, Font.ARIAL_23, Color.WHITE),
             interface.InteractionsPnj(perso, m, WINDOW_WIDTH / 8, WINDOW_HEIGHT / 2),
             interface.CharacterDead(perso)

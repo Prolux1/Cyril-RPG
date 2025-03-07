@@ -23,6 +23,12 @@ class BasicInterfaceElement:
     def draw(self, surface):
         surface.blit(self.surface, self.rect.topleft)
 
+    def update(self, game):
+        pass
+
+    def handle_event(self, game, event):
+        pass
+
     def update_surf(self, new_surf):
         self.surface = new_surf
         self.rect.size = self.surface.get_size()
@@ -35,11 +41,9 @@ class BasicInterfaceElement:
         else:
             self.rect.topleft = (self.x, self.y)
 
-    def update(self, game):
-        pass
-
-    def handle_event(self, game, event):
-        pass
+    def maj_surf_et_draw(self, surface_sur_laquelle_afficher: pygame.Surface, new_surf: pygame.Surface) -> None:
+        self.update_surf(new_surf)
+        surface_sur_laquelle_afficher.blit(self.surface, self.rect.topleft)
 
 
 class Label(BasicInterfaceElement):

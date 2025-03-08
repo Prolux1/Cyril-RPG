@@ -1,4 +1,4 @@
-from src.item import Item
+from src.items import Item
 
 
 class Inventory:
@@ -57,7 +57,7 @@ class Inventory:
             i += 1
 
     def is_full(self):
-        return any(o is None for o in self)
+        return not any(o is None for o in self)
 
 
 

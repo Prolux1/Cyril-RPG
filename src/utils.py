@@ -1,7 +1,7 @@
 import pygame
 import random
 import math
-from src import item
+from src import items
 
 
 def bonus_increment(nombre, lvl):
@@ -59,7 +59,7 @@ def generation_equipement_alea(lvl, est_boss=False, est_world_boss=False):
         equipement_drop_armure = bonus_increment(10, lvl)
         equipement_drop_bonus_pv = bonus_increment(3, lvl)
         equipement_drop_bonus_force = bonus_increment(5, lvl)
-    return item.Armor(
+    return items.Armor(
         armor_name,
         equipement_choisi_alea,
         lvl,
@@ -110,7 +110,7 @@ def generation_arme_alea(lvl, est_boss=False, est_world_boss=False):
         arme_drop_bonus_pv = bonus_increment(3, lvl)
         arme_drop_bonus_force = bonus_increment(6, lvl)
 
-    return item.Weapon(
+    return items.Weapon(
         weapon_name,
         weapon_type,
         lvl,

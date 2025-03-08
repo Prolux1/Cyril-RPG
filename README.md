@@ -42,7 +42,7 @@ le but de devenir le plus fort de tous les héros.
 
 ## Trucs à faire (en priorité) :
  - ✅ Laisser le cadavre d'un pnj sur le sol après l'avoir tué pendant un certain temps avant qu'il se décompose
-   et disparaisse. ❌ Pouvoir le looter pendant ce temps la.
+   et disparaisse. ✅ Pouvoir le looter pendant ce temps la.
    au bout d'un certains temps.
  - ❌ Faire en sorte que les pnjs hostiles suivent le personnage automatiquement s'il s'approche trop près (zone d'aggro)
    pour qu'ils puisse l'octogone sans règles.
@@ -54,7 +54,7 @@ le but de devenir le plus fort de tous les héros.
    dans l'inventaire...
 
 ## Trucs moins prioritaires :
- - ❌ Viré les animations pour "Boss Rat" parceque c'est les mêmes que pour les rats faut juste les scales.
+ - ✅ Viré les animations pour "Boss Rat" parceque c'est les mêmes que pour les rats faut juste les scales.
 
 
 

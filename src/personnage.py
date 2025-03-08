@@ -8,7 +8,7 @@ import random
 import copy
 
 from data import Image, Color, Sound
-from src import sorts, inventory, item, utils, quetes
+from src import sorts, inventory, items, utils, quetes
 from config import WINDOW_WIDTH, WINDOW_HEIGHT
 
 
@@ -280,7 +280,7 @@ class Personnage:
         self.PV = min(self.PV, self.PV_max)
 
     def equip(self, equipment_piece):
-        if isinstance(equipment_piece, item.Weapon):
+        if isinstance(equipment_piece, items.Weapon):
             # si la case d'arme est vide, on équipe l'arme
             if not self.arme:
                 self.arme = equipment_piece
@@ -289,7 +289,7 @@ class Personnage:
             else:
                 self.unequip(self.arme)
                 self.equip(equipment_piece)
-        elif isinstance(equipment_piece, item.Armor):
+        elif isinstance(equipment_piece, items.Armor):
             # same for armor
             if not self.equipment[equipment_piece.type]:
                 self.equipment[equipment_piece.type] = equipment_piece
@@ -299,14 +299,24 @@ class Personnage:
             Sound.EQUIPER_ARMURE_LOURDE.play()
 
     def unequip(self, equipment_piece):
-        if isinstance(equipment_piece, item.Weapon):
+        if isinstance(equipment_piece, items.Weapon):
             if self.arme:
                 self.inventory.add(self.arme)
                 self.arme = None
-        elif isinstance(equipment_piece, item.Armor):
+        elif isinstance(equipment_piece, items.Armor):
             if equipment_piece in self.equipment.values():
                 self.inventory.add(self.equipment[equipment_piece.type])
                 self.equipment[equipment_piece.type] = None
+
+    def ajouter_item_inventaire(self, item: items.Item) -> bool:
+        """
+        Renvoie True si l'item à pu être ajouter à l'inventaire, False sinon si l'inventaire est plein.
+        """
+        res = False
+        if not self.inventory.is_full():
+            self.inventory.add(item)
+            res = True
+        return res
 
     def est_mort(self):
         """

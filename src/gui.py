@@ -17,6 +17,7 @@ class GameUserInterface:
             interface.JournalDeQuetes(perso, WINDOW_WIDTH / 1.2, WINDOW_HEIGHT / 8),
             interface.GUIMenusPanel(perso, WINDOW_WIDTH / 1.075, WINDOW_HEIGHT / 1.055, Font.ARIAL_23, Color.WHITE),
             interface.InteractionsPnj(perso, m, WINDOW_WIDTH / 8, WINDOW_HEIGHT / 2),
+            interface.FenetreLoot(perso, m, WINDOW_WIDTH / 1.5, WINDOW_HEIGHT / 1.5),
             interface.CharacterDead(perso)
         ]
 

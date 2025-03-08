@@ -26,7 +26,7 @@ class BasicInterfaceElement:
     def update(self, game):
         pass
 
-    def handle_event(self, game, event):
+    def handle_event(self, game, event: pygame.event.Event):
         pass
 
     def update_surf(self, new_surf):

@@ -47,7 +47,7 @@ class Pnj:
         self.hovered_by_mouse = False
 
         self.dx_dy_directions = {"Gauche": (-1, 0), "Droite": (1, 0), "Dos": (0, -1), "Face": (0, 1)}
-        self.temps_prochains_changements_frames = {"Lidle": 1.7, "Marcher": 0.7 / self.vitesse, "Mourir": 1.7}
+        self.temps_prochains_changements_frames = {"Lidle": 1.7, "Marcher": 0.7 / self.vitesse, "Mourir": 1}
 
         # TODO : Faut refacto ça c'est dégueulasse
         self.temps_prochain_changement_frame = self.rpg.time
@@ -56,8 +56,9 @@ class Pnj:
         self.interactions = [] if interactions is None else interactions
 
         self.temps_decomposition = None
-        self.duree_avant_decomposition = 5  # durée en secondes avant que le corps du pnj ne disparaisse après qu'il soit mort (60 par défaut)
+        self.duree_avant_decomposition = 60  # durée en secondes avant que le corps du pnj ne disparaisse après qu'il soit mort (60 par défaut)
 
+        self.items_lootables = []
 
     def draw(self, surface):
         surface.blit(self.image, self.rect.topleft - self.offset)
@@ -219,6 +220,9 @@ class Pnj:
         pers.receive_damage(self.degat)
 
     def prendre_cher(self, perso: "personnage.Personnage", degats: int):
+        """
+        Cette fonction ne doit pas être appelé si le mob est déjà mort.
+        """
         self.PV = max(0, self.PV - degats)
 
         if self.est_mort():
@@ -236,33 +240,33 @@ class Pnj:
             self.temps_decomposition = self.rpg.time + self.duree_avant_decomposition
             self.changer_etat("Mourir")
 
-            # à une chance d'ajouter à l'inventaire du personnage, un équipement de type aléatoire
-            # et en adéquation avec le lvl du mob si le mob est un boss,
-            # il y a génération d'un équipement à tous les coups
-            # if self.est_world_boss:
-            #     weapon_drop_chance = 50  # chance basique : 50 %
-            #     for i in range(3):
-            #         perso.inventory.add(utils.generation_equipement_alea(self.lvl, False, True))
-            # elif self.est_boss:
-            #     weapon_drop_chance = 100 / 3  # chance basique : 33.3333333333 %
-            #     perso.inventory.add(utils.generation_equipement_alea(self.lvl, True))
-            # else:
-            #     equipment_drop_chance = 100  # equipment % drop chance (basic : 20%)
-            #     weapon_drop_chance = 50  # weapon % drop chance (basic : 10 %)
-            #
-            #     if random.random() < equipment_drop_chance / 100:
-            #         perso.inventory.add(utils.generation_equipement_alea(self.lvl))
-            #
-            # if random.random() < weapon_drop_chance / 100:
-            #     perso.inventory.add(utils.generation_arme_alea(self.lvl, self.est_boss, self.est_world_boss))
+            # Génère du loot
+            self.generer_loot()
 
-
-
-        # Le monstre attaque automatiquement en retour
-        # souffrance = 5
-        # for i in range(souffrance):
-        #     self.attaquer(character)
         self.attaquer(perso)
+
+    def generer_loot(self) -> None:
+        self.items_lootables.clear()
+
+        # à une chance d'ajouter à l'inventaire du personnage, un équipement de type aléatoire
+        # et en adéquation avec le lvl du mob si le mob est un boss,
+        # il y a génération d'un équipement à tous les coups
+        if self.est_world_boss:
+            weapon_drop_chance = 50  # chance basique : 50 %
+            for i in range(3):
+                self.items_lootables.append(utils.generation_equipement_alea(self.lvl, False, True))
+        elif self.est_boss:
+            weapon_drop_chance = 100 / 3  # chance basique : 33.3333333333 %
+            self.items_lootables.append(utils.generation_equipement_alea(self.lvl, True))
+        else:
+            equipment_drop_chance = 100  # equipment % drop chance (basic : 20%)
+            weapon_drop_chance = 50  # weapon % drop chance (basic : 10 %)
+
+            if random.random() < equipment_drop_chance / 100:
+                self.items_lootables.append(utils.generation_equipement_alea(self.lvl))
+
+        if random.random() < weapon_drop_chance / 100:
+            self.items_lootables.append(utils.generation_arme_alea(self.lvl, self.est_boss, self.est_world_boss))
 
     def est_attaquable(self) -> bool:
         return isinstance(self, PnjHostile) or isinstance(self, PnjNeutre)

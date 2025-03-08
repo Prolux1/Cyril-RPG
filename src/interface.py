@@ -5,7 +5,7 @@ if TYPE_CHECKING:
 import pygame
 
 from data import Font, Color, Image
-from src import interfaceClasses, utils, personnage, monde, pnjs, quetes, item
+from src import interfaceClasses, utils, personnage, monde, pnjs, quetes, items
 from config import WINDOW_WIDTH, WINDOW_HEIGHT
 
 
@@ -459,7 +459,7 @@ class InteractionsPnj(interfaceClasses.BasicInterfaceElement):
 
     def trouver_pnj_avec_qui_interagir(self) -> pnjs.Pnj | None:
         for pnj in self.monde.get_pnjs_interactibles_zone_courante():
-            if pygame.Rect(pnj.rect.topleft - pnj.offset, pnj.rect.size).collidepoint(pnj.rpg.mouse_pos):
+            if pnj.hovered_by_mouse:
                 if self.pnj_selectionnee is None or not self.rect.collidepoint(pnj.rpg.mouse_pos):
                     return pnj
         return None
@@ -470,8 +470,114 @@ class InteractionsPnj(interfaceClasses.BasicInterfaceElement):
 
     def fermer(self) -> None:
         self.pnj_selectionnee = None
-        self.pnj_selectionnee_tuple_interactions_rects = []
+        self.pnj_selectionnee_tuple_interactions_rects.clear()
         self.interaction_selectionnee = None
+
+
+
+
+
+
+class FenetreLoot(interfaceClasses.BasicInterfaceElement):
+    def __init__(self, perso: personnage.Personnage, m: monde.Monde, x: int, y: int):
+        self.personnage = perso
+        self.monde = m
+
+        self.origin_surface = pygame.Surface((200, 300))
+
+        super().__init__(x, y, self.origin_surface.copy(), center=True)
+
+        self.espacement_x = 5
+        self.espacement_y = 5
+
+        self.pnj_a_looter = None
+        self.items_lootables = []
+        self.items_lootables_rects = []
+
+    def draw(self, surface):
+        new_surf = self.origin_surface.copy()
+
+        if self.pnj_a_looter is not None:
+
+            x_courant = self.espacement_x
+            y_courant = self.espacement_y
+            for i in range(len(self.items_lootables)):
+                icone_item_courant = Image.ITEMS_ICONS[self.items_lootables[i].icon_name]
+                new_surf.blit(icone_item_courant, (x_courant, y_courant))
+                y_courant += icone_item_courant.get_height() + self.espacement_y
+
+
+
+
+            self.maj_surf_et_draw(surface, new_surf)
+
+    def update(self, game):
+        if self.pnj_a_looter is not None:
+            if self.pnj_a_looter.est_decompose():
+                self.fermer()
+
+    def handle_event(self, game, event: pygame.event.Event):
+        if event.type == pygame.MOUSEBUTTONUP:
+            if event.button == pygame.BUTTON_RIGHT:
+                self.charger_infos_pnj_a_looter(self.trouver_pnj_a_looter())
+
+            if event.button == pygame.BUTTON_LEFT:
+                if self.pnj_a_looter is not None:
+                    item_trouvee = False
+                    i = 0
+                    while not item_trouvee and i < len(self.items_lootables):
+                        if self.items_lootables_rects[i].collidepoint(game.mouse_pos):
+                            item_trouvee = True
+                            item = self.items_lootables[i]
+
+                            item_ajouter_avec_succes = self.personnage.ajouter_item_inventaire(item)
+
+                            if item_ajouter_avec_succes:
+                                self.pnj_a_looter.items_lootables.remove(item)
+
+                                self.charger_infos_pnj_a_looter(self.pnj_a_looter)
+
+                        i += 1
+
+    def trouver_pnj_a_looter(self) -> pnjs.Pnj | None:
+        for pnj in self.monde.get_pnjs_attaquables_zone_courante():
+            if pnj.est_mort() and not pnj.est_decompose() and pnj.hovered_by_mouse:
+                return pnj
+        return None
+
+    def charger_infos_pnj_a_looter(self, pnj_a_looter: pnjs.Pnj | None) -> None:
+        self.pnj_a_looter = pnj_a_looter
+        self.clear_items_lootables_et_rects()
+
+        if pnj_a_looter is not None:
+            self.items_lootables = pnj_a_looter.items_lootables.copy()
+
+            if len(self.items_lootables) > 0:
+                x_courant = self.rect.x + self.espacement_x
+                y_courant = self.rect.y + self.espacement_y
+                for i in range(len(self.items_lootables)):
+                    hauteur_icone_item_courant = Image.ITEMS_ICONS[self.items_lootables[i].icon_name].get_height()
+
+
+                    self.items_lootables_rects.append(pygame.Rect(x_courant, y_courant, self.rect.width - self.espacement_x, hauteur_icone_item_courant))
+
+                    y_courant += hauteur_icone_item_courant + self.espacement_y
+            else:  # S'il n'y a rien à looter, on s'embete meme pas a faire tout ça mdrrrr
+                self.fermer()
+
+
+
+    def fermer(self) -> None:
+        self.pnj_a_looter = None
+        self.clear_items_lootables_et_rects()
+
+    def clear_items_lootables_et_rects(self) -> None:
+        self.items_lootables.clear()
+        self.items_lootables_rects.clear()
+
+
+
+
 
 
 
@@ -703,19 +809,19 @@ class GUIInventoryMenu(interfaceClasses.StaticImage):
 
 
 
-            if isinstance(item_info, item.Equipment):
+            if isinstance(item_info, items.Equipment):
                 # Si c'est un équipement on affiche le type suivi du lvl et la couleur du texte en fonction de sa rareté
                 item_info_surf.blit(Font.ARIAL_23.render(f"{item_info.type} {item_info.rarity} lvl {item_info.lvl}", True, Color.RARITY_COLORS[item_info.rarity]), (5, 5))
 
                 # Si c'est une arme, on affiche les dégâts de celle-ci
-                if isinstance(item_info, item.Weapon):
+                if isinstance(item_info, items.Weapon):
                     couleur_info_stat = self.get_couleur_stat_diff(item_info.damage, self.personnage.arme.damage if self.personnage.arme is not None else None)
                     item_info_surf.blit(Font.ARIAL_23.render(f"{item_info.damage} dégât{'s' if item_info.damage > 1 else ''}", True, couleur_info_stat), (10, 50))
 
                     couleur_info_stat_pv = self.get_couleur_stat_diff(item_info.bonus_hp, self.personnage.arme.bonus_hp if self.personnage.arme is not None else None)
                     couleur_info_stat_force = self.get_couleur_stat_diff(item_info.bonus_strength, self.personnage.arme.bonus_strength if self.personnage.arme is not None else None)
 
-                elif isinstance(item_info, item.Armor):  # L'équipement est une Armure (Si on ajoute des types d'équipements différents il faudras rajouter des branches conditionnelles)
+                elif isinstance(item_info, items.Armor):  # L'équipement est une Armure (Si on ajoute des types d'équipements différents il faudras rajouter des branches conditionnelles)
                     couleur_info_stat = self.get_couleur_stat_diff(item_info.armor, self.personnage.equipment[item_info.type].armor if self.personnage.equipment[item_info.type] is not None else None)
                     item_info_surf.blit(Font.ARIAL_23.render(f"{item_info.armor} armure", True, couleur_info_stat), (10, 50))
 
@@ -807,7 +913,7 @@ class GUIInventoryMenu(interfaceClasses.StaticImage):
                             current_item_real_rect = pygame.Rect(self.rect.x + 4 + 52 * j, self.rect.y + 3 + 52 * i, 48, 48)
 
                             if current_item_real_rect.collidepoint(game.mouse_pos):
-                                if isinstance(item_courant, item.Equipment):
+                                if isinstance(item_courant, items.Equipment):
                                     self.personnage.equip(item_courant)
                                     self.personnage.inventory[index] = None
 
@@ -996,14 +1102,14 @@ class GUIEquipmentMenu(interfaceClasses.StaticImage):
                 True, Color.RARITY_COLORS[item_info.rarity]), (5, 5))
 
             # If it's a weapon we display the damage of the weapon
-            if isinstance(item_info, item.Weapon):
+            if isinstance(item_info, items.Weapon):
                 item_info_surf.blit(Font.ARIAL_23.render(str(item_info.damage) + " Damage", True, Color.WHITE),
                                     (10, 50))
 
-            elif isinstance(item_info, item.Armor):
+            elif isinstance(item_info, items.Armor):
                 item_info_surf.blit(Font.ARIAL_23.render(str(item_info.armor) + " Armor", True, Color.WHITE), (10, 50))
 
-            if isinstance(item_info, item.Equipment):
+            if isinstance(item_info, items.Equipment):
                 item_info_surf.blit(Font.ARIAL_23.render("+ " + str(item_info.bonus_hp) + " HP", True, Color.WHITE), (10, 80))
 
                 item_info_surf.blit(Font.ARIAL_23.render("+ " + str(item_info.bonus_strength) + " Strength", True, Color.WHITE), (10, 110))

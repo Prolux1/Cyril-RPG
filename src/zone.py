@@ -6,10 +6,8 @@ import random
 
 import pygame
 
-from data import Image
 
-from src import personnage, pnjs, monde, interactions, quetes
-from config import WINDOW_WIDTH, WINDOW_HEIGHT
+from src import personnage, pnjs
 
 
 
@@ -68,24 +66,11 @@ class Zone:
 
         if self.nom == "Desert":
             proba_boss = random.randint(1, 20)
-            # on s'assure que le mob spawn en dehors de l'écran car sinon pas très sympa
-            orientation = random.choice(Image.POSITIONS)
-            mob_x = random.choice((random.randint(-WINDOW_WIDTH, 0), random.randint(WINDOW_WIDTH, WINDOW_WIDTH * 2)))
-            mob_y = random.choice((random.randint(-WINDOW_HEIGHT, 0), random.randint(WINDOW_HEIGHT, WINDOW_HEIGHT * 2)))
             if proba_boss == 1:
-                lvl_mob = 8
-
-                mob = pnjs.PnjHostile(self.rpg, lvl_mob, 623, 24, "Boss Rat", orientation,
-                                   Image.FRAMES_MOB_BOSS_RAT, mob_x, mob_y, random.randint(800, 900),
-                                   self.personnage.offset, True)
+                mob = pnjs.Ratcaille(self.rpg, self.personnage)
             else:
-                lvl_mob = random.randint(1, 5)
-                mob = pnjs.Rat(self.rpg, self.personnage)
+                mob = pnjs.RatGeant(self.rpg, self.personnage)
                 # mob = Monstre(lvl_mob, 59 + 9 * lvl_mob, 3 + lvl_mob, "Loup humain", self.frames_mob_loup_humain["Face"][0], self.frames_mob_loup_humain, mob_x, mob_y, randint(40, 60) * xp_multiplier, [mob_x, mob_y + 40, 35 * 4, 44 * 4])
-
-
-
-
 
 
         # elif self.nom == "Marais":
@@ -137,31 +122,7 @@ class Desert(Zone):
         # Ajout des pnjs amicaux de la zone Desert
         self.pnjs.extend(
             [
-                pnjs.PnjAmical(
-                    rpg,
-                    20,
-                    1361,
-                    78,
-                    "Maréchal McBride",
-                    "Face",
-                    Image.GUERRIER_FRAMES,
-                    WINDOW_WIDTH / 1.5,
-                    WINDOW_HEIGHT / 1.5,
-                    0,
-                    perso.offset,
-                    se_deplace_aleatoirement=False,
-                    interactions=[
-                        quetes.QueteTuerPnjs(
-                            "Satanés rongeurs",
-                            f"Salutations {perso.nom}, le désert est infesté de rats géants. Il faut réduire "
-                            f"leur nombre au plus vite avant qu'ils ne nous submerge!",
-                            [(pnjs.Rat, 7)],
-
-                            description_rendu="Ça c'est ce qu'on appelle faire du ménage! Votre contribution ne sera pas oublié héros."
-
-                        )
-                    ]
-                )
+                pnjs.MarechalMcBride(rpg, perso)
             ]
         )
 

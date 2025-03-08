@@ -6,13 +6,13 @@ import pygame, random
 
 from data import Image, Color, Font
 
-from src import utils, interfaceClasses, personnage
+from src import utils, personnage, quetes
 from config import WINDOW_WIDTH, WINDOW_HEIGHT
 
 
 class Pnj:
     def __init__(self, rpg: "CyrilRpg", lvl, pv, degat, nom, orientation, frames: dict[str, dict[str, pygame.Surface]],
-                 x, y, xp, offset, est_boss=False, est_world_boss=False, se_deplace_aleatoirement=True, interactions=None):
+                 x, y, xp: int, offset, est_boss=False, est_world_boss=False, se_deplace_aleatoirement=True, interactions=None):
         if interactions is None:
             interactions = []
         self.rpg = rpg
@@ -47,15 +47,16 @@ class Pnj:
         self.hovered_by_mouse = False
 
         self.dx_dy_directions = {"Gauche": (-1, 0), "Droite": (1, 0), "Dos": (0, -1), "Face": (0, 1)}
-        if nom == "Maréchal McBride":
-            self.nb_frames_etats = {"Lidle": 5, "Courir": 8}
-        else:
-            self.nb_frames_etats = {"Lidle": 1, "Marcher": 4}
-        self.temps_prochains_changements_frames = {"Lidle": 1.7, "Marcher": 0.7 / self.vitesse}
-        self.temps_prochain_changement_frame = (rpg.time + self.temps_prochains_changements_frames[self.etat]) / self.nb_frames_etats[self.etat]
+        self.temps_prochains_changements_frames = {"Lidle": 1.7, "Marcher": 0.7 / self.vitesse, "Mourir": 1.7}
+
+        # TODO : Faut refacto ça c'est dégueulasse
+        self.temps_prochain_changement_frame = self.rpg.time
         self.se_deplace_aleatoirement = se_deplace_aleatoirement
 
         self.interactions = [] if interactions is None else interactions
+
+        self.temps_decomposition = None
+        self.duree_avant_decomposition = 5  # durée en secondes avant que le corps du pnj ne disparaisse après qu'il soit mort (60 par défaut)
 
 
     def draw(self, surface):
@@ -111,12 +112,14 @@ class Pnj:
             surface.blit(mob_info_surf, mob_info_surf_rect.topleft - self.offset)
 
     def update(self, game, zone):
-        if self.est_mort():
+        if self.est_decompose():
             zone.pnjs.remove(self)
         else:
-            self.vitesse = self.vitesse_de_base * 60 / max(game.fps, 1)
-            if self.se_deplace_aleatoirement:
-                self.deplacement_aleatoire(game)
+            if not self.est_mort():
+                self.vitesse = self.vitesse_de_base * 60 / max(game.fps, 1)
+                if self.se_deplace_aleatoirement:
+                    self.deplacement_aleatoire(game)
+
             self.animation()
             self.rect = self.image.get_rect()
             self.rect.midbottom = (self.x, self.y)
@@ -135,6 +138,15 @@ class Pnj:
     def est_mort(self):
         return self.PV <= 0
 
+    def est_decompose(self):
+        """
+        Après que le pnj meurt, il y a un temps où son cadavre reste visible sur le sol, si ce temps atteinte sa limite,
+        cette fonction renvoie True.
+        """
+        if self.temps_decomposition is not None:
+            return self.est_mort() and self.rpg.time >= self.temps_decomposition
+        return False
+
     def deplacement_aleatoire(self, game: "CyrilRpg"):
         """
         Déplace un pnj d'une position vers sa direction petit à petit par son facteur vitesse.
@@ -145,9 +157,7 @@ class Pnj:
 
             self.dist_parcouru = 0
             self.temps_attendre_depla = game.time + 4
-            self.etat = "Marcher"
-            self.temps_prochain_changement_frame = 0
-            self.frame_courante = 0
+            self.changer_etat("Marcher")
         elif self.direction is not None and self.dist_parcouru <= 200:
             self.orientation = self.direction
 
@@ -157,13 +167,11 @@ class Pnj:
 
             self.dist_parcouru += self.vitesse
         elif self.direction is not None:
-            self.etat = "Lidle"
+            self.changer_etat("Lidle")
             self.direction = None
-            self.temps_prochain_changement_frame = 0
-            self.frame_courante = 0
         else:
             if self.est_world_boss:
-                self.image = self.frames[self.orientation][0]
+                self.image = self.frames[self.orientation][0]  # TODO : C'est quoi cette merde
 
     def animation(self):
         """
@@ -174,20 +182,31 @@ class Pnj:
         :return:
         """
         if self.rpg.time >= self.temps_prochain_changement_frame:
-            self.frame_courante = (self.frame_courante + 1) % self.nb_frames_etats[self.etat]
+            nb_frames_etat_courant = self.get_nb_frames_etat(self.etat, self.orientation)
 
-            indice_frame = self.frame_courante / self.nb_frames_etats[self.etat]
-            rect_frame_courante = pygame.Rect(
-                self.frames[self.etat][self.orientation].get_width() * indice_frame,
-                0,
-                self.frames[self.etat][self.orientation].get_width() / self.nb_frames_etats[self.etat],
-                self.frames[self.etat][self.orientation].get_height()
-            )
+            # On ne continue plus à animer si le pnj est mort et que sa dernière frame a été affiché
+            if self.etat != "Mourir" or self.frame_courante != nb_frames_etat_courant - 1:
+                largeur_frame_sheet_courante, hauteur_frame_sheet_courante = self.frames[self.etat][self.orientation].get_size()
 
-            self.image = self.frames[self.etat][self.orientation].subsurface(rect_frame_courante)
-            # self.frame_courante = (self.frame_courante + self.vitesse / 20) % len(self.frames[self.etat])
+                self.frame_courante = (self.frame_courante + 1) % max(1, nb_frames_etat_courant)
 
-            self.temps_prochain_changement_frame = self.rpg.time + (self.temps_prochains_changements_frames[self.etat] / self.nb_frames_etats[self.etat])
+                indice_frame = self.frame_courante / max(1, nb_frames_etat_courant)
+
+                rect_frame_courante = pygame.Rect(
+                    largeur_frame_sheet_courante * indice_frame,
+                    0,
+                    largeur_frame_sheet_courante / max(1, nb_frames_etat_courant),
+                    hauteur_frame_sheet_courante
+                )
+
+                self.image = self.frames[self.etat][self.orientation].subsurface(rect_frame_courante)
+
+                self.temps_prochain_changement_frame = self.rpg.time + (self.temps_prochains_changements_frames[self.etat] / max(1, nb_frames_etat_courant))
+
+    def changer_etat(self, nouvelle_etat: str) -> None:
+        self.etat = nouvelle_etat
+        self.temps_prochain_changement_frame = 0
+        self.frame_courante = 0
 
 
     def est_attaquer(self) -> bool:
@@ -203,36 +222,41 @@ class Pnj:
         self.PV = max(0, self.PV - degats)
 
         if self.est_mort():
-            xp_given_to_player = int(self.lvl / perso.lvl * self.xp * perso.xp_multiplier)
-            if xp_given_to_player > 0:
-                perso.gain_xp(xp_given_to_player)
-
-            perso.selected_mob = None
-
-            # à une chance d'ajouter à l'inventaire du personnage, un équipement de type aléatoire
-            # et en adéquation avec le lvl du mob si le mob est un boss,
-            # il y a génération d'un équipement à tous les coups
-            if self.est_world_boss:
-                weapon_drop_chance = 50  # chance basique : 50 %
-                for i in range(3):
-                    perso.inventory.add(utils.generation_equipement_alea(self.lvl, False, True))
-            elif self.est_boss:
-                weapon_drop_chance = 100 / 3  # chance basique : 33.3333333333 %
-                perso.inventory.add(utils.generation_equipement_alea(self.lvl, True))
-            else:
-                equipment_drop_chance = 100  # equipment % drop chance (basic : 20%)
-                weapon_drop_chance = 50  # weapon % drop chance (basic : 10 %)
-
-                if random.random() < equipment_drop_chance / 100:
-                    perso.inventory.add(utils.generation_equipement_alea(self.lvl))
-
-            if random.random() < weapon_drop_chance / 100:
-                perso.inventory.add(utils.generation_arme_alea(self.lvl, self.est_boss, self.est_world_boss))
+            # Quand le pnj meurt on donne immédiatement l'xp au personnage puis il a un peu de temps pour le looter
+            # avant que le corps disparaisse
+            xp_a_donner_au_personnage = int(self.lvl / perso.lvl * self.xp * perso.xp_multiplier)
+            if xp_a_donner_au_personnage > 0:
+                perso.gain_xp(xp_a_donner_au_personnage)
 
             # Si le pnj meurt on regarde si le personnage qui l'a tué avait une quete où il devait le buter
             for quete in perso.get_quetes_actives_tuer_pnjs():
                 if quete.pnj_match(self):
                     quete.incrementer_objectif_tuer_pnj(self)
+
+            self.temps_decomposition = self.rpg.time + self.duree_avant_decomposition
+            self.changer_etat("Mourir")
+
+            # à une chance d'ajouter à l'inventaire du personnage, un équipement de type aléatoire
+            # et en adéquation avec le lvl du mob si le mob est un boss,
+            # il y a génération d'un équipement à tous les coups
+            # if self.est_world_boss:
+            #     weapon_drop_chance = 50  # chance basique : 50 %
+            #     for i in range(3):
+            #         perso.inventory.add(utils.generation_equipement_alea(self.lvl, False, True))
+            # elif self.est_boss:
+            #     weapon_drop_chance = 100 / 3  # chance basique : 33.3333333333 %
+            #     perso.inventory.add(utils.generation_equipement_alea(self.lvl, True))
+            # else:
+            #     equipment_drop_chance = 100  # equipment % drop chance (basic : 20%)
+            #     weapon_drop_chance = 50  # weapon % drop chance (basic : 10 %)
+            #
+            #     if random.random() < equipment_drop_chance / 100:
+            #         perso.inventory.add(utils.generation_equipement_alea(self.lvl))
+            #
+            # if random.random() < weapon_drop_chance / 100:
+            #     perso.inventory.add(utils.generation_arme_alea(self.lvl, self.est_boss, self.est_world_boss))
+
+
 
         # Le monstre attaque automatiquement en retour
         # souffrance = 5
@@ -249,6 +273,17 @@ class Pnj:
     @staticmethod
     def get_nom() -> str:
         return "?"
+
+    @staticmethod
+    def get_dict_nb_frames_etats() -> dict[str, int | dict[str, int]]:
+        return {"Lidle": 0, "Marcher": 0, "Mourir": 0}
+
+    def get_nb_frames_etat(self, etat: str, orientation: str) -> int:
+        dict_ou_int_nb_frames_etats = self.get_dict_nb_frames_etats()[etat]
+        if isinstance(dict_ou_int_nb_frames_etats, dict):
+            return dict_ou_int_nb_frames_etats[orientation]
+        else:
+            return dict_ou_int_nb_frames_etats
 
 
 class PnjHostile(Pnj):
@@ -275,11 +310,15 @@ class PnjCompanion(PnjAmical):
     """
     Un companion loup pour un personnage de classe chasseur par exemple.
     """
+    pass
 
 
 
 
-class Rat(PnjHostile):
+
+
+
+class RatGeant(PnjHostile):
     def __init__(self, rpg: "CyrilRpg", perso: "personnage.Personnage"):
         lvl_mob = random.randint(1, 5)
         mob_x = random.choice((random.randint(-WINDOW_WIDTH, 0), random.randint(WINDOW_WIDTH, WINDOW_WIDTH * 2)))
@@ -291,19 +330,105 @@ class Rat(PnjHostile):
             3 + lvl_mob,
             self.get_nom(),
             random.choice(Image.POSITIONS),
-            Image.FRAMES_MOB_RAT, mob_x, mob_y,
+            Image.FRAMES_MOB_RAT,
+            mob_x,
+            mob_y,
             random.randint(40, 60),
             perso.offset
         )
 
     @staticmethod
     def get_nom() -> str:
-        return "Rat"
+        return "Rat géant"
+
+    @staticmethod
+    def get_dict_nb_frames_etats() -> dict[str, int | dict[str, int]]:
+        return {"Lidle": 1, "Marcher": 4, "Mourir": {"Face": 3, "Gauche": 4, "Droite": 4, "Dos": 3}}
 
 
 
 
 
+
+
+
+
+
+class Ratcaille(PnjHostile):
+    def __init__(self, rpg: "CyrilRpg", perso: "personnage.Personnage"):
+        lvl_mob = random.randint(1, 5)
+
+        # on s'assure que le mob spawn en dehors de l'écran car sinon pas beau
+        mob_x = random.choice((random.randint(-WINDOW_WIDTH, 0), random.randint(WINDOW_WIDTH, WINDOW_WIDTH * 2)))
+        mob_y = random.choice((random.randint(-WINDOW_HEIGHT, 0), random.randint(WINDOW_HEIGHT, WINDOW_HEIGHT * 2)))
+        super().__init__(
+            rpg,
+            lvl_mob,
+            623,
+            24,
+            self.get_nom(),
+            random.choice(Image.POSITIONS),
+            Image.FRAMES_RATCAILLE,
+            mob_x,
+            mob_y,
+            random.randint(800, 900),
+            perso.offset,
+            True
+        )
+
+    @staticmethod
+    def get_nom() -> str:
+        return "Ratcaille"
+
+    @staticmethod
+    def get_dict_nb_frames_etats() -> dict[str, int | dict[str, int]]:
+        return {"Lidle": 1, "Marcher": 4, "Mourir": {"Face": 3, "Gauche": 4, "Droite": 4, "Dos": 3}}
+
+
+
+
+
+
+
+
+
+
+
+class MarechalMcBride(PnjAmical):
+    def __init__(self, rpg: "CyrilRpg", perso: "personnage.Personnage"):
+        super().__init__(
+            rpg,
+            20,
+            1361,
+            78,
+            "Maréchal McBride",
+            "Face",
+            Image.GUERRIER_FRAMES,
+            WINDOW_WIDTH / 1.5,
+            WINDOW_HEIGHT / 1.5,
+            0,
+            perso.offset,
+            se_deplace_aleatoirement=False,
+            interactions=[
+                quetes.QueteTuerPnjs(
+                    "Satanés rongeurs",
+                    f"Salutations {perso.nom}, le désert est infesté de rats géants. Il faut réduire "
+                    f"leur nombre au plus vite avant qu'ils ne nous submerge!",
+                    [(RatGeant, 7)],
+
+                    description_rendu="Ça c'est ce qu'on appelle faire du ménage! Votre contribution ne sera pas oublié héros."
+
+                )
+            ]
+        )
+
+    @staticmethod
+    def get_nom() -> str:
+        return "Maréchal McBride"
+
+    @staticmethod
+    def get_dict_nb_frames_etats() -> dict[str, int | dict[str, int]]:
+        return {"Lidle": 5, "Marcher": 8, "Mourir": {"Face": 5, "Gauche": 5, "Droite": 5, "Dos": 6}}
 
 
 

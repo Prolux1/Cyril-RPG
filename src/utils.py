@@ -266,7 +266,6 @@ def conversion_format_imgs():
     for p in Image.POSITIONS:
         for etat in Image.FRAMES_MOB_RAT:
             Image.FRAMES_MOB_RAT[etat][p] = Image.FRAMES_MOB_RAT[etat][p].convert_alpha()
-            Image.FRAMES_MOB_BOSS_RAT[etat][p] = Image.FRAMES_MOB_BOSS_RAT[etat][p].convert_alpha()
 
         for i in range(len(Image.FRAMES_MOB_CERF[p])):
             Image.FRAMES_MOB_CERF[p][i] = Image.FRAMES_MOB_CERF[p][i].convert_alpha()
@@ -298,7 +297,37 @@ def conversion_format_imgs():
 
     ###
 
+def scale_frames(frames: dict[str, dict[str, pygame.Surface]], ratio: float) -> dict[str, dict[str, pygame.Surface]]:
+    """
+    Renvoie le dictionnaire de frames passé en paramètre avec les frames mise à l'échelle par le ratio spécifié.
+    """
+    nouvelles_frames = {"Lidle": {}, "Marcher": {}, "Mourir": {}}
 
+    for etat in frames:
+        for position in frames[etat]:
+            nouvelles_frames[etat][position] = pygame.transform.scale_by(frames[etat][position], ratio)
+
+    return nouvelles_frames
+
+def charger_frames(chemin: str, nom: str) -> dict[str, dict[str, pygame.Surface]]:
+    """
+    Charge des frames avec le nom spécifié en paramètre.
+
+    ATTENTION : le format est très important et doit respecter les règles suivantes :
+        - Chemin est le dossier contenant les frames (ex: "./assets/pnjs/rat")
+        - Ce dossier doit contenir 3 sous dossiers : "Lidle", "Marcher", "Mourir"
+        - Ces sous dossiers doivent contenir 4 images au format png ayant exactement ce nom
+          "{nom}_Dos.png", "{nom}_Droite.png", "{nom}_Dos.png", "{nom}_Gauche.png" (en remplaçant "{nom}" par un vrai
+          nom ex: "rat_Droite.png")
+    """
+    positions = ["Face", "Gauche", "Droite", "Dos"]
+    frames = {"Lidle": {}, "Marcher": {}, "Mourir": {}}
+
+    for etat in frames:
+        for p in positions:
+            frames[etat][p] = pygame.image.load(f"{chemin}/{etat}/{nom}_{p}.png")
+
+    return frames
 
 
 

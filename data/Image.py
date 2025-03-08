@@ -1,4 +1,4 @@
-import pygame.image
+import pygame.image, pprint
 from data import Color
 
 from src import utils
@@ -64,13 +64,10 @@ MARAIS_CORROMPU = pygame.image.load("./assets/map/marais corrompu.png")
 POSITIONS = ["Face", "Gauche", "Droite", "Dos"]
 POSITIONS_IN_ENGLISH = ["Down", "Left", "Right", "UP"]
 
-FRAMES_MOB_RAT = {"Lidle": {}, "Marcher": {}}
-FRAMES_MOB_BOSS_RAT = {"Lidle": {}, "Marcher": {}}
+FRAMES_MOB_RAT = utils.charger_frames("./assets/pnjs/rat", "rat")
+FRAMES_MOB_RAT = utils.scale_frames(FRAMES_MOB_RAT, 3)
 
-for etat in FRAMES_MOB_RAT:
-    for p in POSITIONS:
-        FRAMES_MOB_RAT[etat][p] = pygame.image.load(f"./assets/pnjs/rat/{etat}/rat_{p}.png")
-        FRAMES_MOB_BOSS_RAT[etat][p] = pygame.image.load(f"./assets/pnjs/boss_rat/{etat}/rat_{p}.png")
+FRAMES_RATCAILLE = utils.scale_frames(FRAMES_MOB_RAT, 1.5)
 
 FRAMES_MOB_CERF = {}
 FRAMES_MOB_BOSS_CERF = {}
@@ -85,7 +82,7 @@ FRAMES_MOB_DOTUM = utils.frame(pygame.image.load("./assets/pnjs/Dotum/Walk.png")
 FRAMES_MOB_FENRIR = utils.frame(pygame.image.load("./assets/pnjs/Fenrir/Walk.png"), 64, 70, 12, 9, Color.BLACK)
 
 # Charge les différentes frames pour les images quand le guerrier cours en fonction de la direction également
-TRADUCTIONS_ETATS = {"Lidle": {"EN": "Idle"}, "Courir": {"EN": "Walk"}}
+TRADUCTIONS_ETATS = {"Lidle": {"EN": "Idle"}, "Courir": {"EN": "Walk"}, "Mourir": {"EN": "Dying"}}
 GUERRIER_FRAMES = {}
 for etat in TRADUCTIONS_ETATS:
     GUERRIER_FRAMES[etat] = {}

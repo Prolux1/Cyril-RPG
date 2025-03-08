@@ -118,7 +118,7 @@ class Personnage:
 
         # pygame.draw.rect(surface, Color.BLACK, pygame.Rect((self.rect.topleft - self.offset), self.rect.size), 2)
         # pygame.draw.rect(surface, Color.BLACK, self.rect, 2)
-        # pygame.draw.rect(surface, Color.BLACK, pygame.Rect(self.x, self.y, 2, 2), 1)
+        # pygame.draw.rect(surface, Color.GREEN, pygame.Rect(self.x, self.y, 2, 2), 1)
 
         # circle reach of first spell of the character
         # pygame.draw.circle(surface, Color.BLACK, self.rect.center, self.spells[0].reach, 2)
@@ -435,7 +435,7 @@ class Personnage:
         :return:
         """
         if self.selected_mob is not None:
-            if self.selected_mob.est_attaquable():
+            if self.selected_mob.est_attaquable() and not self.selected_mob.est_mort():
                 if sort.check_reach(self.rect.center, self.selected_mob.rect.center):
                     self.selected_mob.prendre_cher(self, round(self.get_damage() * sort.perc_char_dmg / 100))
 

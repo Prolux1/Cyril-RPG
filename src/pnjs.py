@@ -61,7 +61,6 @@ class Pnj:
         self.items_lootables = []
 
     def draw(self, surface):
-        surface.blit(self.image, self.rect.topleft - self.offset)
         # pygame.draw.rect(surface, "black", self.rect, 2)
 
         if self.hovered_by_mouse:
@@ -72,6 +71,8 @@ class Pnj:
             image_copy = self.image.copy()
             image_copy.fill(Color.RED_HOVER if self.est_attaquable() else Color.GREEN_HOVER, None, pygame.BLEND_RGB_ADD)
             surface.blit(image_copy, self.rect.topleft - self.offset)
+        else:
+            surface.blit(self.image, self.rect.topleft - self.offset)
 
         if self.selected or self.hovered_by_mouse:
             # si le pnj est sélectionner, on affiche un cadre au dessus de sa tête qui indique :
@@ -267,6 +268,15 @@ class Pnj:
 
         if random.random() < weapon_drop_chance / 100:
             self.items_lootables.append(utils.generation_arme_alea(self.lvl, self.est_boss, self.est_world_boss))
+
+
+        # Tests génération de plein d'items pour les loots
+        for i in range(random.randint(4, 10)):
+            if random.random() < 0.25:
+                self.items_lootables.append(utils.generation_arme_alea(self.lvl, self.est_boss, self.est_world_boss))
+            else:
+                self.items_lootables.append(utils.generation_equipement_alea(self.lvl, self.est_boss, self.est_world_boss))
+
 
     def est_attaquable(self) -> bool:
         return isinstance(self, PnjHostile) or isinstance(self, PnjNeutre)

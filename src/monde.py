@@ -7,6 +7,8 @@ from src import personnage, zone, pnjs
 
 class Monde:
     def __init__(self, rpg: "CyrilRpg", perso: personnage.Personnage):
+        self.rpg = rpg
+
         self.zones: dict[str, zone.Zone] = {
             "Desert": zone.Desert(rpg, perso)
         }

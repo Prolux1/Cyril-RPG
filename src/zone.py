@@ -117,7 +117,7 @@ class Zone:
 
 class Desert(Zone):
     def __init__(self, rpg: "CyrilRpg", perso: personnage.Personnage):
-        super().__init__(rpg, perso, "Desert", 250)
+        super().__init__(rpg, perso, "Desert", 100)
 
         # Ajout des pnjs amicaux de la zone Desert
         self.pnjs.extend(

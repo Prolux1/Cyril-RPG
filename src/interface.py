@@ -482,8 +482,12 @@ class FenetreLoot(interfaceClasses.BasicInterfaceElement):
     def __init__(self, perso: personnage.Personnage, m: monde.Monde, x: int, y: int):
         self.personnage = perso
         self.monde = m
+        self.rpg = m.rpg
 
         self.origin_surface = pygame.Surface((200, 300))
+
+        self.origin_surface.fill(Color.DARK_GREY)
+        pygame.draw.rect(self.origin_surface, Color.BLACK, self.origin_surface.get_rect(), 2)
 
         super().__init__(x, y, self.origin_surface.copy(), center=True)
 
@@ -497,19 +501,55 @@ class FenetreLoot(interfaceClasses.BasicInterfaceElement):
     def draw(self, surface):
         new_surf = self.origin_surface.copy()
 
+        item_info_surf = None
+        item_info_surf_rect = None
+
         if self.pnj_a_looter is not None:
 
             x_courant = self.espacement_x
             y_courant = self.espacement_y
             for i in range(len(self.items_lootables)):
-                icone_item_courant = Image.ITEMS_ICONS[self.items_lootables[i].icon_name]
+                item_courant = self.items_lootables[i]
+                rect_item_courant = self.items_lootables_rects[i]
+
+                icone_item_courant = Image.ITEMS_ICONS[item_courant.icon_name]
+                rect_icone_item_courant = icone_item_courant.get_rect()
+                hauteur_icone_item_courant_sur_2 = rect_icone_item_courant.height / 2
+
                 new_surf.blit(icone_item_courant, (x_courant, y_courant))
-                y_courant += icone_item_courant.get_height() + self.espacement_y
 
+                couleur_rarete_item_courant = Color.RARITY_COLORS[item_courant.rarity]
 
+                # Affiche un rectangle autour de l'item pour indiqué la rareté
+                pygame.draw.rect(new_surf, couleur_rarete_item_courant, rect_icone_item_courant.move(x_courant, y_courant), 2)
+
+                # Affichage du nom de l'item
+                texte_nom_item_courant = Font.ARIAL_20.render(item_courant.nom, True, couleur_rarete_item_courant)
+                hauteur_texte_nom_item_courant_sur_2 = texte_nom_item_courant.get_height() / 2
+
+                x_courant += rect_icone_item_courant.width + self.espacement_x
+
+                y_courant += hauteur_icone_item_courant_sur_2 - hauteur_texte_nom_item_courant_sur_2
+                new_surf.blit(texte_nom_item_courant, (x_courant, y_courant))
+                y_courant -= hauteur_icone_item_courant_sur_2 - hauteur_texte_nom_item_courant_sur_2
+
+                x_courant -= rect_icone_item_courant.width + self.espacement_x
+                y_courant += rect_icone_item_courant.height + self.espacement_y
+
+                if rect_item_courant.collidepoint(self.rpg.mouse_pos):
+                    item_info_surf = utils.item_info_surf(item_courant, perso=self.personnage)
+
+                    item_info_surf_rect = item_info_surf.get_rect()
+                    item_info_surf_rect.topleft = (self.rpg.mouse_pos[0] + 12, self.rpg.mouse_pos[1] + 12)
+
+                    item_info_surf_rect.right = min(item_info_surf_rect.right, WINDOW_WIDTH)
+                    item_info_surf_rect.bottom = min(item_info_surf_rect.bottom, WINDOW_HEIGHT)
 
 
             self.maj_surf_et_draw(surface, new_surf)
+
+            if item_info_surf is not None:
+                surface.blit(item_info_surf, item_info_surf_rect)
 
     def update(self, game):
         if self.pnj_a_looter is not None:
@@ -564,8 +604,6 @@ class FenetreLoot(interfaceClasses.BasicInterfaceElement):
                     y_courant += hauteur_icone_item_courant + self.espacement_y
             else:  # S'il n'y a rien à looter, on s'embete meme pas a faire tout ça mdrrrr
                 self.fermer()
-
-
 
     def fermer(self) -> None:
         self.pnj_a_looter = None
@@ -803,94 +841,13 @@ class GUIInventoryMenu(interfaceClasses.StaticImage):
                         item_info = item_courant
 
         if item_info:
-            item_info_surf = Image.TABLEAU_DESCRIPTION_ITEM.copy()
-
-            # Traiter les autres types d'items
-
-
-
-            if isinstance(item_info, items.Equipment):
-                # Si c'est un équipement on affiche le type suivi du lvl et la couleur du texte en fonction de sa rareté
-                item_info_surf.blit(Font.ARIAL_23.render(f"{item_info.type} {item_info.rarity} lvl {item_info.lvl}", True, Color.RARITY_COLORS[item_info.rarity]), (5, 5))
-
-                # Si c'est une arme, on affiche les dégâts de celle-ci
-                if isinstance(item_info, items.Weapon):
-                    couleur_info_stat = self.get_couleur_stat_diff(item_info.damage, self.personnage.arme.damage if self.personnage.arme is not None else None)
-                    item_info_surf.blit(Font.ARIAL_23.render(f"{item_info.damage} dégât{'s' if item_info.damage > 1 else ''}", True, couleur_info_stat), (10, 50))
-
-                    couleur_info_stat_pv = self.get_couleur_stat_diff(item_info.bonus_hp, self.personnage.arme.bonus_hp if self.personnage.arme is not None else None)
-                    couleur_info_stat_force = self.get_couleur_stat_diff(item_info.bonus_strength, self.personnage.arme.bonus_strength if self.personnage.arme is not None else None)
-
-                elif isinstance(item_info, items.Armor):  # L'équipement est une Armure (Si on ajoute des types d'équipements différents il faudras rajouter des branches conditionnelles)
-                    couleur_info_stat = self.get_couleur_stat_diff(item_info.armor, self.personnage.equipment[item_info.type].armor if self.personnage.equipment[item_info.type] is not None else None)
-                    item_info_surf.blit(Font.ARIAL_23.render(f"{item_info.armor} armure", True, couleur_info_stat), (10, 50))
-
-                    couleur_info_stat_pv = self.get_couleur_stat_diff(item_info.bonus_hp, self.personnage.equipment[item_info.type].bonus_hp if self.personnage.equipment[item_info.type] is not None else None)
-                    couleur_info_stat_force = self.get_couleur_stat_diff(item_info.bonus_strength, self.personnage.equipment[item_info.type].bonus_strength if self.personnage.equipment[item_info.type] is not None else None)
-                else:
-                    couleur_info_stat_pv = Color.WHITE
-                    couleur_info_stat_force = Color.WHITE
-
-                item_info_surf.blit(Font.ARIAL_23.render(f"+ {item_info.bonus_hp} PV", True, couleur_info_stat_pv), (10, 80))
-                item_info_surf.blit(Font.ARIAL_23.render(f"+ {item_info.bonus_strength} force", True, couleur_info_stat_force), (10, 110))
+            item_info_surf = utils.item_info_surf(item_info, perso=self.personnage)
 
             item_info_surf_rect = item_info_surf.get_rect()
             item_info_surf_rect.topleft = (game.mouse_pos[0] + 12, game.mouse_pos[1] + 12)
 
             item_info_surf_rect.right = min(item_info_surf_rect.right, game.window.get_width())
             item_info_surf_rect.bottom = min(item_info_surf_rect.bottom, game.window.get_height())
-
-
-
-
-            # On affiche l'équipement équipée s'il existe pour pouvoir le comparé avec l'item survolé
-
-            # item_equipee_correspondance = False
-            # if personnage.inventaire[i_item][j_item].type_equipement == "Arme":
-            #     if personnage.arme:
-            #         item_equipee_correspondance = personnage.arme
-            # else:
-            #     if personnage.equipement[personnage.inventaire[i_item][j_item].type_equipement]:
-            #         item_equipee_correspondance = personnage.equipement[
-            #             personnage.inventaire[i_item][j_item].type_equipement]
-            #
-            # if item_equipee_correspondance:
-            #     pos_tab_obj_equipee = [pos_tab[0] - self.tableau_description_item.get_width(), pos_tab[1]]
-            #     self.fenetre.blit(self.tableau_description_item, pos_tab_obj_equipee)
-            #
-            #     affiche_type_rarete_lvl_equipement_equipee = self.police_3.render(
-            #         item_equipee_correspondance.type_equipement + " " + item_equipee_correspondance.rarete + " lvl " + str(
-            #             item_equipee_correspondance.lvl), True,
-            #         self.raretes_couleur[item_equipee_correspondance.rarete])
-            #
-            #     self.fenetre.blit(affiche_type_rarete_lvl_equipement_equipee,
-            #                       [pos_tab_obj_equipee[0] + 5, pos_tab_obj_equipee[1] + 5])
-            #     if item_equipee_correspondance.type_equipement == "Arme":
-            #         affiche_degat_arme_equipee = self.police_3.render(
-            #             conversion_nombre(item_equipee_correspondance.degat) + " Dégâts", True, self.Blanc)
-            #         self.fenetre.blit(affiche_degat_arme_equipee,
-            #                           [pos_tab_obj_equipee[0] + 10, pos_tab_obj_equipee[1] + 50])
-            #     else:
-            #         affiche_armure_equipement_equipee = self.police_3.render(
-            #             conversion_nombre(item_equipee_correspondance.armure) + " Armure", True, self.Blanc)
-            #         self.fenetre.blit(affiche_armure_equipement_equipee,
-            #                           [pos_tab_obj_equipee[0] + 10, pos_tab_obj_equipee[1] + 50])
-            #     affiche_bonus_PV_equipement_equipee = self.police_3.render(
-            #         "+ " + conversion_nombre(item_equipee_correspondance.bonus_PV) + " PV", True, self.Blanc)
-            #     affiche_bonus_force_equipement_equipee = self.police_3.render(
-            #         "+ " + conversion_nombre(item_equipee_correspondance.bonus_force) + " Force", True, self.Blanc)
-            #     self.fenetre.blit(affiche_bonus_PV_equipement_equipee,
-            #                       [pos_tab_obj_equipee[0] + 10, pos_tab_obj_equipee[1] + 80])
-            #     self.fenetre.blit(affiche_bonus_force_equipement_equipee,
-            #                       [pos_tab_obj_equipee[0] + 10, pos_tab_obj_equipee[1] + 110])
-            #
-            #     affiche_equipee_equipement = self.police_3.render("Équipée", True, self.Vert)
-            #     self.fenetre.blit(affiche_equipee_equipement,
-            #                       [pos_tab_obj_equipee[0] + 220, pos_tab_obj_equipee[1] + 125])
-
-
-
-
 
             self.item_info_surf = item_info_surf
             self.item_info_surf_rect = item_info_surf_rect
@@ -905,39 +862,31 @@ class GUIInventoryMenu(interfaceClasses.StaticImage):
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == pygame.BUTTON_RIGHT:
                     # équipe la pièce d'équipement sélectionner si le joueur fait un clique droit dessus depuis l'inventaire
-                    for index, item_courant in enumerate(self.personnage.inventory):
-                        if item_courant is not None:
-                            i = index // self.personnage.inventory.cols
-                            j = index % self.personnage.inventory.cols
+                    item_a_equiper, indice = self.chercher_item_a_equiper(game)
 
-                            current_item_real_rect = pygame.Rect(self.rect.x + 4 + 52 * j, self.rect.y + 3 + 52 * i, 48, 48)
+                    if item_a_equiper is not None:
+                        self.personnage.inventory[indice] = None
+                        self.personnage.equiper(item_a_equiper)
 
-                            if current_item_real_rect.collidepoint(game.mouse_pos):
-                                if isinstance(item_courant, items.Equipment):
-                                    self.personnage.equip(item_courant)
-                                    self.personnage.inventory[index] = None
 
-    def get_couleur_stat_diff(self, stat1: int, stat2: int | None) -> pygame.color.Color:
-        """
-        Cette fonction compare la stat1 et la stat2 passé en paramètre (généralement celle d'équipements), et renvoie
-        la couleur :
-            - Color.WHITE si la stat1 est égale à la stat2
-            - Color.GREEN si la stat1 est plus grande que la stat2
-            - Color.RED si la stat1 est inférieur à la stat2
+    def chercher_item_a_equiper(self, game) -> (items.Equipment | None, int):
+        item_a_equiper = None
+        indice = 0
+        while not item_a_equiper and indice < len(self.personnage.inventory):
+            item_courant = self.personnage.inventory[indice]
 
-        Cette fonction est utile pour afficher les stats d'un équipement survolé dans l'inventaire d'une certaine
-        couleur en fonction de si la stat est meilleur que celle de l'équipement équipé.
-        C'est pour cela que dans "stat2" on peut passé None s'il n'y a pas d'équipement équipé (on renvoie Color.WHITE dans ce cas).
-        """
-        couleur_res = Color.WHITE
-        if stat2 is not None:
-            if stat1 > stat2:
-                couleur_res = Color.GREEN
-            elif stat1 < stat2:
-                couleur_res = Color.RED
+            i = indice // self.personnage.inventory.cols
+            j = indice % self.personnage.inventory.cols
 
-        return couleur_res
+            rect_item_courant = pygame.Rect(self.rect.x + 4 + 52 * j, self.rect.y + 3 + 52 * i, 48, 48)
 
+            if rect_item_courant.collidepoint(game.mouse_pos) and isinstance(item_courant, items.Equipment):
+                item_a_equiper =  item_courant
+            else:
+                indice += 1
+
+
+        return item_a_equiper, indice
 
 
 
@@ -1012,10 +961,10 @@ class GUIEquipmentMenu(interfaceClasses.StaticImage):
 
     def update(self, game):
         # Updating the stats surfaces of the character to show in the menu
-        self.char_strength_surf.update_text("Strength : " + str(self.character.force))
-        self.char_armor_surf.update_text("Armor : " + str(self.character.armure))
-        self.char_max_hp_surf.update_text("Hp : " + str(self.character.PV_max))
-        self.char_name_and_level_surf.update_text(self.character.nom + " level " + str(self.character.lvl))
+        self.char_strength_surf.update_text(f"Strength : {self.character.force}")
+        self.char_armor_surf.update_text(f"Armor : {self.character.armure}")
+        self.char_max_hp_surf.update_text(f"Hp : {self.character.PV_max}")
+        self.char_name_and_level_surf.update_text(f"{self.character.nom} level {self.character.lvl}")
 
         updated_surf = self.origin_surface.copy()
 
@@ -1095,24 +1044,7 @@ class GUIEquipmentMenu(interfaceClasses.StaticImage):
                     item_info = e
 
         if item_info:
-            item_info_surf = Image.TABLEAU_DESCRIPTION_ITEM.copy()
-
-            item_info_surf.blit(Font.ARIAL_23.render(
-                item_info.type + " " + item_info.rarity + " lvl " + str(item_info.lvl),
-                True, Color.RARITY_COLORS[item_info.rarity]), (5, 5))
-
-            # If it's a weapon we display the damage of the weapon
-            if isinstance(item_info, items.Weapon):
-                item_info_surf.blit(Font.ARIAL_23.render(str(item_info.damage) + " Damage", True, Color.WHITE),
-                                    (10, 50))
-
-            elif isinstance(item_info, items.Armor):
-                item_info_surf.blit(Font.ARIAL_23.render(str(item_info.armor) + " Armor", True, Color.WHITE), (10, 50))
-
-            if isinstance(item_info, items.Equipment):
-                item_info_surf.blit(Font.ARIAL_23.render("+ " + str(item_info.bonus_hp) + " HP", True, Color.WHITE), (10, 80))
-
-                item_info_surf.blit(Font.ARIAL_23.render("+ " + str(item_info.bonus_strength) + " Strength", True, Color.WHITE), (10, 110))
+            item_info_surf = utils.item_info_surf(item_info)
 
             item_info_surf_rect = item_info_surf.get_rect()
             item_info_surf_rect.topleft = (game.mouse_pos[0] + 12, game.mouse_pos[1] + 12)
@@ -1129,9 +1061,9 @@ class GUIEquipmentMenu(interfaceClasses.StaticImage):
         self.update_surf(updated_surf)
 
     def handle_event(self, game, event):
-        if not self.character.est_mort():
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 3:  # right click
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == pygame.BUTTON_RIGHT:
+                if not self.character.est_mort():
                     if self.character.arme:
                         real_weapon_slot_rect = pygame.Rect(158 + self.rect.x, 404 + self.rect.y, 48, 48)
                         if real_weapon_slot_rect.collidepoint(game.mouse_pos):

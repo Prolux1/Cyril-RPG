@@ -54,6 +54,7 @@ le but de devenir le plus fort de tous les héros.
    dans l'inventaire...
 
 ## Trucs moins prioritaires :
+ - ❌ Ajouter une petite indication visuelle quand on monte de niveau.
  - ✅ Viré les animations pour "Boss Rat" parceque c'est les mêmes que pour les rats faut juste les scales.
 
 

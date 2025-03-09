@@ -126,6 +126,13 @@ class Personnage:
     def update(self, game: "CyrilRpg", zone):
         self.update_stats()
 
+        # Ajouter masse équipement à l'inventaire pour tests
+        # if int(str(game.time).split('.')[1]) % 2 == 0:
+        #     if random.random() < 0.2:
+        #         self.ajouter_item_inventaire(utils.generation_arme_alea(random.randint(1, 100)))
+        #     else:
+        #         self.ajouter_item_inventaire(utils.generation_equipement_alea(random.randint(1, 100)))
+
         self.movement_speed = self.vitesse_de_deplacement_de_base * 60 / self.rpg.fps
         if not self.est_mort():
             key_pressed = pygame.key.get_pressed()
@@ -279,34 +286,35 @@ class Personnage:
         # Si les PV ne peuvent pas dépassé les PV max
         self.PV = min(self.PV, self.PV_max)
 
-    def equip(self, equipment_piece):
-        if isinstance(equipment_piece, items.Weapon):
+    def equiper(self, piece_equipement: items.Equipment):
+        if isinstance(piece_equipement, items.Weapon):
             # si la case d'arme est vide, on équipe l'arme
             if not self.arme:
-                self.arme = equipment_piece
+                self.arme = piece_equipement
             # sinon, on ajoute d'abord la pièce équipée à l'inventaire puis
             # on rappelle la fonction vu que la case d'équipement est désormais libre
             else:
                 self.unequip(self.arme)
-                self.equip(equipment_piece)
-        elif isinstance(equipment_piece, items.Armor):
+                self.equiper(piece_equipement)
+        elif isinstance(piece_equipement, items.Armor):
             # same for armor
-            if not self.equipment[equipment_piece.type]:
-                self.equipment[equipment_piece.type] = equipment_piece
+            if not self.equipment[piece_equipement.type]:
+                self.equipment[piece_equipement.type] = piece_equipement
             else:
-                self.unequip(self.equipment[equipment_piece.type])
-                self.equip(equipment_piece)
+                self.unequip(self.equipment[piece_equipement.type])
+                self.equiper(piece_equipement)
             Sound.EQUIPER_ARMURE_LOURDE.play()
 
     def unequip(self, equipment_piece):
-        if isinstance(equipment_piece, items.Weapon):
-            if self.arme:
-                self.inventory.add(self.arme)
-                self.arme = None
-        elif isinstance(equipment_piece, items.Armor):
-            if equipment_piece in self.equipment.values():
-                self.inventory.add(self.equipment[equipment_piece.type])
-                self.equipment[equipment_piece.type] = None
+        if not self.inventory.is_full():
+            if isinstance(equipment_piece, items.Weapon):
+                if self.arme:
+                    self.inventory.add(self.arme)
+                    self.arme = None
+            elif isinstance(equipment_piece, items.Armor):
+                if equipment_piece in self.equipment.values():
+                    self.inventory.add(self.equipment[equipment_piece.type])
+                    self.equipment[equipment_piece.type] = None
 
     def ajouter_item_inventaire(self, item: items.Item) -> bool:
         """

@@ -1,7 +1,10 @@
 import pygame
 import random
 import math
-from src import items
+
+from data import Color, Image, Font
+
+from src import items, personnage
 
 
 def bonus_increment(nombre, lvl):
@@ -80,7 +83,7 @@ def generation_arme_alea(lvl, est_boss=False, est_world_boss=False):
     :param est_world_boss: booléen
     :return:
     """
-    weapon_types = ["sword"]
+    weapon_types_match_nom_icone = {"Épée": "sword"}
     bonus_rarete = {"common": 1, "uncommon": 2, "rare": 3, "epic": 5, "legendary": 7}
     if est_boss:
         raretes_possibles = ["uncommon", "rare", "epic"]
@@ -91,9 +94,9 @@ def generation_arme_alea(lvl, est_boss=False, est_world_boss=False):
     else:
         raretes_possibles = ["common", "uncommon"]
         rarete_choisi_alea = random.choices(raretes_possibles, weights=[50, 1])[0]
-    weapon_type = random.choice(weapon_types)
+    weapon_type = random.choice(list(weapon_types_match_nom_icone))
     weapon_name = weapon_type
-    weapon_icon_name = f"{rarete_choisi_alea}_{weapon_type}"
+    weapon_icon_name = f"{rarete_choisi_alea}_{weapon_types_match_nom_icone[weapon_type]}"
 
     # Défini les différents bonus de l'arme gagnés en fonction du lvl du mob tuée
     if lvl <= 3:
@@ -102,7 +105,7 @@ def generation_arme_alea(lvl, est_boss=False, est_world_boss=False):
             arme_drop_bonus_pv = 3
             arme_drop_bonus_force = 6
         else:
-            arme_drop_degat = 5 + 2*lvl
+            arme_drop_degat = 5 + 2 * lvl
             arme_drop_bonus_pv = lvl
             arme_drop_bonus_force = 3 + lvl
     else:
@@ -369,6 +372,92 @@ def images_to_sprite_sheet(dossier_contenant_les_images: str, nom_sprite_sheet: 
     # Save sprite sheet
     sprite_sheet.save(output_file)
     print(f"Sprite sheet saved as {output_file}")
+
+
+
+def couleur_stat_diff(stat1: int, stat2: int | None) -> pygame.color.Color:
+    """
+    Cette fonction compare la stat1 et la stat2 passé en paramètre (généralement celles d'équipements), et renvoie
+    la couleur :
+        - Color.WHITE si la stat1 est égale à la stat2
+        - Color.GREEN si la stat1 est plus grande que la stat2
+        - Color.RED si la stat1 est inférieur à la stat2
+
+    Cette fonction est utile pour afficher les stats d'un équipement survolé dans l'inventaire d'une certaine
+    couleur en fonction de si la stat est meilleur que celle de l'équipement équipé.
+    C'est pour cela que dans "stat2" on peut passé None s'il n'y a pas d'équipement équipé (on renvoie Color.WHITE dans ce cas).
+    """
+    couleur_res = Color.WHITE
+    if stat2 is not None:
+        if stat1 > stat2:
+            couleur_res = Color.GREEN
+        elif stat1 < stat2:
+            couleur_res = Color.RED
+
+    return couleur_res
+
+
+
+
+def item_info_surf(item: items.Item, perso: "personnage.Personnage" = None) -> pygame.Surface:
+    """
+    Renvoie une surface permettant d'afficher une multitude d'informations par rapport à l'item passé en paramètre.
+
+    Si un personnage est renseigné, les stats de l'équipement est comparé avec l'équipement de même type équipé par
+    le personnage, cela se traduit par la couleur du texte des stats de l'équipement changé par rapport à la fonction
+    "couleur_stat_diff".
+    """
+    surf_res = Image.TABLEAU_DESCRIPTION_ITEM.copy()
+
+    # Traiter les autres types d'items
+
+    if isinstance(item, items.Equipment):
+        # Si c'est un équipement on affiche le type suivi du lvl et la couleur du texte en fonction de sa rareté
+        surf_res.blit(Font.ARIAL_23.render(f"{item.type} {item.rarity} lvl {item.lvl}", True,
+                                                 Color.RARITY_COLORS[item.rarity]), (5, 5))
+
+        # Si c'est une arme, on affiche les dégâts de celle-ci
+        if isinstance(item, items.Weapon):
+            if perso is not None:
+                couleur_info_stat = couleur_stat_diff(item.damage, perso.arme.damage if perso.arme is not None else None)
+            else:
+                couleur_info_stat = Color.WHITE
+
+            surf_res.blit(Font.ARIAL_23.render(f"{item.damage} dégât{'s' if item.damage > 1 else ''}", True, couleur_info_stat), (10, 50))
+
+            if perso is not None:
+                couleur_info_stat_pv = couleur_stat_diff(item.bonus_hp, perso.arme.bonus_hp if perso.arme is not None else None)
+                couleur_info_stat_force = couleur_stat_diff(item.bonus_strength, perso.arme.bonus_strength if perso.arme is not None else None)
+            else:
+                couleur_info_stat_pv = Color.WHITE
+                couleur_info_stat_force = Color.WHITE
+
+        elif isinstance(item, items.Armor):  # L'équipement est une Armure (Si on ajoute des types d'équipements différents il faudras rajouter des branches conditionnelles)
+            if perso is not None:
+                couleur_info_stat = couleur_stat_diff(item.armor, perso.equipment[item.type].armor if perso.equipment[item.type] is not None else None)
+            else:
+                couleur_info_stat = Color.WHITE
+
+            surf_res.blit(Font.ARIAL_23.render(f"{item.armor} armure", True, couleur_info_stat), (10, 50))
+
+            if perso is not None:
+                couleur_info_stat_pv = couleur_stat_diff(item.bonus_hp, perso.equipment[item.type].bonus_hp if perso.equipment[item.type] is not None else None)
+                couleur_info_stat_force = couleur_stat_diff(item.bonus_strength, perso.equipment[item.type].bonus_strength if perso.equipment[item.type] is not None else None)
+            else:
+                couleur_info_stat_pv = Color.WHITE
+                couleur_info_stat_force = Color.WHITE
+        else:
+            couleur_info_stat_pv = Color.WHITE
+            couleur_info_stat_force = Color.WHITE
+
+        surf_res.blit(Font.ARIAL_23.render(f"+ {item.bonus_hp} PV", True, couleur_info_stat_pv), (10, 80))
+        surf_res.blit(Font.ARIAL_23.render(f"+ {item.bonus_strength} force", True, couleur_info_stat_force), (10, 110))
+
+
+
+
+
+    return surf_res
 
 
 

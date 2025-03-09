@@ -523,7 +523,7 @@ class CyrilRpg:
 
 
 if __name__ == "__main__":
-    # Pour voir les perfs et optimisé : $ py -m cProfile -s time main.py
+    # Pour voir les perfs et optimisé : $ py -m cProfile -s time main.py | more
 
     # Le jeu ce joue en plein écran 1920 x 1080, si l'écran du joueur n'est pas de ce format
     # On lui indique de modifié la résolution de son écran

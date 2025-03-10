@@ -35,22 +35,25 @@ class Monde:
         # ])
 
     def draw(self, surface):
-        self.zones[self.personnage_courant.zone].draw(surface)
+        self.get_zone_courante().draw(surface)
 
     def update(self, game):
-        self.zones[self.personnage_courant.zone].update(game)
+        self.get_zone_courante().update(game)
 
     def handle_event(self, game, event):
-        self.zones[self.personnage_courant.zone].handle_event(game, event)
+        self.get_zone_courante().handle_event(game, event)
 
     def get_zone_courante(self) -> zone.Zone:
-        return self.zones[self.personnage_courant.zone]
+        return self.zones[self.personnage_courant.nom_zone_courante]
 
     def get_pnjs_attaquables_zone_courante(self) -> list[pnjs.PnjHostile | pnjs.PnjNeutre]:
-        return self.zones[self.personnage_courant.zone].get_pnjs_attaquables()
+        return self.get_zone_courante().get_pnjs_attaquables()
 
     def get_pnjs_zone_courante(self) -> list[pnjs.Pnj]:
-        return self.zones[self.personnage_courant.zone].get_pnjs()
+        return self.get_zone_courante().get_pnjs()
 
     def get_pnjs_interactibles_zone_courante(self) -> list[pnjs.Pnj]:
-        return self.zones[self.personnage_courant.zone].get_pnjs_interactibles()
+        return self.get_zone_courante().get_pnjs_interactibles()
+
+    def get_obstacles_zone_courante(self) -> list:
+        return self.get_zone_courante().obstacles

@@ -553,13 +553,14 @@ class FenetreLoot(interfaceClasses.BasicInterfaceElement):
 
     def update(self, game):
         if self.pnj_a_looter is not None:
-            if self.pnj_a_looter.est_decompose():
+            if self.pnj_a_looter.est_decompose() or self.personnage.est_mort():
                 self.fermer()
 
     def handle_event(self, game, event: pygame.event.Event):
         if event.type == pygame.MOUSEBUTTONUP:
             if event.button == pygame.BUTTON_RIGHT:
-                self.charger_infos_pnj_a_looter(self.trouver_pnj_a_looter())
+                if not self.personnage.est_mort():
+                    self.charger_infos_pnj_a_looter(self.trouver_pnj_a_looter())
 
             if event.button == pygame.BUTTON_LEFT:
                 if self.pnj_a_looter is not None:

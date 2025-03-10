@@ -12,10 +12,11 @@ from config import WINDOW_WIDTH, WINDOW_HEIGHT
 
 class Pnj:
     def __init__(self, rpg: "CyrilRpg", lvl, pv, degat, nom, orientation, frames: dict[str, dict[str, pygame.Surface]],
-                 x, y, xp: int, offset, est_boss=False, est_world_boss=False, se_deplace_aleatoirement=True, interactions=None):
+                 x, y, xp: int, perso: "personnage.Personnage", est_boss=False, est_world_boss=False, se_deplace_aleatoirement=True, interactions=None):
         if interactions is None:
             interactions = []
         self.rpg = rpg
+        self.personnage = perso
         self.lvl = lvl
         self.PV = pv
         self.PV_max = pv
@@ -25,9 +26,7 @@ class Pnj:
         self.image = frames[etat][orientation]
         self.x = x
         self.y = y
-        self.rect = self.image.get_rect()
-        self.rect.midbottom = (self.x, self.y)
-        self.offset: pygame.Vector2 = offset
+        self.offset: pygame.Vector2 = perso.offset
 
         self.xp = xp
 
@@ -43,7 +42,9 @@ class Pnj:
         self.est_boss = est_boss  # Booléen indiquant si le mob est un boss ou pas (False de base)
         self.est_world_boss = est_world_boss
 
-        self.selected = False
+        self.rect = self.image.get_bounding_rect()
+        self.update_rect_pos()
+
         self.hovered_by_mouse = False
 
         self.dx_dy_directions = {"Gauche": (-1, 0), "Droite": (1, 0), "Dos": (0, -1), "Face": (0, 1)}
@@ -61,9 +62,9 @@ class Pnj:
         self.items_lootables = []
 
     def draw(self, surface):
-        # pygame.draw.rect(surface, "black", self.rect, 2)
+        # pygame.draw.rect(surface, Color.BLACK, pygame.Rect((self.rect.topleft - self.offset), self.rect.size), 2)
 
-        if self.hovered_by_mouse:
+        if self.personnage.hovered_pnj == self:
             # regarde si la souris passe sur un pnj, si c'est le cas, on le montre visuellement en le coloriant en :
             #   - rouge si c'est un pnj attaquable (Pnj hostile ou Pnj neutre)
             #   - vert si c'est un pnj amical
@@ -74,7 +75,7 @@ class Pnj:
         else:
             surface.blit(self.image, self.rect.topleft - self.offset)
 
-        if self.selected or self.hovered_by_mouse:
+        if self.personnage.selected_mob == self or self.personnage.hovered_pnj == self:
             # si le pnj est sélectionner, on affiche un cadre au dessus de sa tête qui indique :
             #   - son nom
             #   - son niveau
@@ -123,8 +124,7 @@ class Pnj:
                     self.deplacement_aleatoire(game)
 
             self.animation()
-            self.rect = self.image.get_rect()
-            self.rect.midbottom = (self.x, self.y)
+            self.update_rect_pos()
 
             self.hovered_by_mouse = pygame.Rect(self.rect.topleft - self.offset, self.rect.size).collidepoint(game.mouse_pos)
 
@@ -202,6 +202,7 @@ class Pnj:
                 )
 
                 self.image = self.frames[self.etat][self.orientation].subsurface(rect_frame_courante)
+                self.rect = self.image.get_rect()
 
                 self.temps_prochain_changement_frame = self.rpg.time + (self.temps_prochains_changements_frames[self.etat] / max(1, nb_frames_etat_courant))
 
@@ -210,6 +211,8 @@ class Pnj:
         self.temps_prochain_changement_frame = 0
         self.frame_courante = 0
 
+    def update_rect_pos(self):
+        self.rect.topleft = (self.x, self.y)
 
     def est_attaquer(self) -> bool:
         return self.PV != self.PV_max
@@ -302,10 +305,10 @@ class Pnj:
 
 class PnjHostile(Pnj):
     def __init__(self, rpg: "CyrilRpg", lvl: int, pv: int, degats: int, nom: str, orientation: str,
-                 frames: dict[str, dict[str, pygame.Surface]], x: int | float, y: int | float, xp, offset, est_boss=False,
+                 frames: dict[str, dict[str, pygame.Surface]], x: int | float, y: int | float, xp, perso: "personnage.Personnage", est_boss=False,
                  est_world_boss=False, se_deplace_aleatoirement=True):
 
-        super().__init__(rpg, lvl, pv, degats, nom, orientation, frames, x, y, xp, offset, est_boss, est_world_boss, se_deplace_aleatoirement)
+        super().__init__(rpg, lvl, pv, degats, nom, orientation, frames, x, y, xp, perso, est_boss, est_world_boss, se_deplace_aleatoirement)
 
 
 class PnjNeutre(Pnj):
@@ -314,10 +317,10 @@ class PnjNeutre(Pnj):
 
 class PnjAmical(Pnj):
     def __init__(self, rpg: "CyrilRpg", lvl: int, pv: int, degats: int, nom: str, orientation: str,
-                 frames: dict[str, dict[str, pygame.Surface]], x: int | float, y: int | float, xp, offset, est_boss=False,
+                 frames: dict[str, dict[str, pygame.Surface]], x: int | float, y: int | float, xp, perso: "personnage.Personnage", est_boss=False,
                  est_world_boss=False, se_deplace_aleatoirement=True, interactions=None):
 
-        super().__init__(rpg, lvl, pv, degats, nom, orientation, frames, x, y, xp, offset, est_boss, est_world_boss, se_deplace_aleatoirement, interactions)
+        super().__init__(rpg, lvl, pv, degats, nom, orientation, frames, x, y, xp, perso, est_boss, est_world_boss, se_deplace_aleatoirement, interactions)
 
 
 class PnjCompanion(PnjAmical):
@@ -348,7 +351,7 @@ class RatGeant(PnjHostile):
             mob_x,
             mob_y,
             random.randint(40, 60),
-            perso.offset
+            perso
         )
 
     @staticmethod
@@ -386,7 +389,7 @@ class Ratcaille(PnjHostile):
             mob_x,
             mob_y,
             random.randint(800, 900),
-            perso.offset,
+            perso,
             True
         )
 
@@ -421,7 +424,7 @@ class MarechalMcBride(PnjAmical):
             WINDOW_WIDTH / 1.5,
             WINDOW_HEIGHT / 1.5,
             0,
-            perso.offset,
+            perso,
             se_deplace_aleatoirement=False,
             interactions=[
                 quetes.QueteTuerPnjs(

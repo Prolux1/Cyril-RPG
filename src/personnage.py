@@ -8,14 +8,14 @@ import random
 import copy
 
 from data import Image, Color, Sound
-from src import sorts, inventory, items, utils, quetes
+from src import sorts, inventory, items, utils, quetes, pnjs
 from config import WINDOW_WIDTH, WINDOW_HEIGHT
 
 
 class Personnage:
     def __init__(self, rpg: "CyrilRpg", nom: str, classe: str):
         self.rpg = rpg
-        self.monde = None
+        self.monde = None  # est affecté dès que le Monde est instancié
         self.nom = nom
         self.id = random.randint(1, 10**100)
         self.classe = classe
@@ -25,20 +25,26 @@ class Personnage:
         self.xp_requis_lvl_precedent = 400  # xp requis au lvl d'avant
         self.xp_multiplier = 10
 
+        # TODO : implémenter d'autres classes (Chasseur, Mage, ...)
+        pvs_classes = {
+            "Guerrier": 150,  # 150
+            "Chasseur": 137,
+            "Mage": 124
+        }
 
-        if self.classe == "Guerrier":
-            self.PV_de_base = 150
-            self.PV = 150
-            self.spells = [
+        sorts_classes = {
+            "Guerrier": [
                 sorts.Spell("Cleave", 150, 0.5, "cleave", (150, 50))
-            ]
-            # Spell("Trancher", 4, Image.SPELL_TRANCHER_ICON, 0.3, (150, 50))
-        elif self.classe == "Chasseur":
-            self.PV_de_base = 137
-            self.PV = 137
-        elif self.classe == "Mage":
-            self.PV_de_base = 124
-            self.PV = 124
+                # Spell("Trancher", 4, Image.SPELL_TRANCHER_ICON, 0.3, (150, 50))
+            ],
+            "Chasseur": [],
+            "Mage": []
+        }
+
+        self.PV = pvs_classes[self.classe]
+        self.PV_de_base = self.PV
+
+        self.spells = sorts_classes[self.classe]
 
 
         self.armure = 0
@@ -51,7 +57,7 @@ class Personnage:
         self.orientation = "Face"
         self.etat = "Lidle"  # L'état dans lequel se trouve le personnage par exemple "Courir", s'il ne fait rien "Lidle"
         self.frame_courante = 0
-        self.nb_frames_etats = {"Lidle": 5, "Courir": 8}
+        self.nb_frames_etats = {"Lidle": 5, "Courir": 8, "Attaquer1": 6, "Attaquer2": 6, "Attaquer3": 5}
         self.vitesse_de_deplacement = 1
         self.temps_prochain_changement_frame = rpg.time + 1.7 / self.nb_frames_etats["Lidle"]
 
@@ -68,7 +74,7 @@ class Personnage:
         self.y = WINDOW_HEIGHT / 2 + self.rect.height / 2
         self.rect.midbottom = (self.x, self.y)
         self.offset = pygame.Vector2(self.x - WINDOW_WIDTH / 2, self.y - (WINDOW_HEIGHT / 2 + self.rect.height / 2))
-        self.zone = "Desert"  # nom de la zone dans laquelle le joueur se trouve, par défaut, il est dans le désert
+        self.nom_zone_courante = "Desert"  # nom de la zone dans laquelle le joueur se trouve, par défaut, il est dans le désert
 
         self.equipment = {
             "Casque": None,
@@ -92,6 +98,7 @@ class Personnage:
         self.movement_speed = 7
 
         self.selected_mob = None
+        self.hovered_pnj = None
 
         self.passive_regen_timer = None
 
@@ -116,7 +123,7 @@ class Personnage:
             self.rect.topleft - self.offset
         )
 
-        # pygame.draw.rect(surface, Color.BLACK, pygame.Rect((self.rect.topleft - self.offset), self.rect.size), 2)
+        # pygame.draw.rect(surface, Color.GREEN, pygame.Rect((self.rect.topleft - self.offset), self.rect.size), 2)
         # pygame.draw.rect(surface, Color.BLACK, self.rect, 2)
         # pygame.draw.rect(surface, Color.GREEN, pygame.Rect(self.x, self.y, 2, 2), 1)
 
@@ -135,49 +142,10 @@ class Personnage:
 
         self.movement_speed = self.vitesse_de_deplacement_de_base * 60 / self.rpg.fps
         if not self.est_mort():
-            key_pressed = pygame.key.get_pressed()
-            deplacements_possibles = self.verifier_personnage_obstacles(zone.obstacles)
-            self.etat = "Lidle"
-            if key_pressed[pygame.K_z]:
-                if key_pressed[pygame.K_d]:
-                    if "Haut" in deplacements_possibles and "Droite" in deplacements_possibles:
-                        self.deplacement_haut_droite()
-                elif key_pressed[pygame.K_q]:
-                    if "Haut" in deplacements_possibles and "Gauche" in deplacements_possibles:
-                        self.deplacement_haut_gauche()
-                else:
-                    if "Haut" in deplacements_possibles:
-                        self.deplacement_haut()
-                self.rect.midbottom = (self.x, self.y)
-                self.etat = "Courir"
-            elif key_pressed[pygame.K_s]:
-                if key_pressed[pygame.K_q]:
-                    if "Bas" in deplacements_possibles and "Gauche" in deplacements_possibles:
-                        self.deplacement_bas_gauche()
-                elif key_pressed[pygame.K_d]:
-                    if "Bas" in deplacements_possibles and "Droite" in deplacements_possibles:
-                        self.deplacement_bas_droite()
-                else:
-                    if "Bas" in deplacements_possibles:
-                        self.deplacement_bas()
-                self.rect.midbottom = (self.x, self.y)
-                self.etat = "Courir"
-            elif key_pressed[pygame.K_q]:
-                if "Gauche" in deplacements_possibles:
-                    self.deplacement_gauche()
-                self.rect.midbottom = (self.x, self.y)
-                self.etat = "Courir"
-            elif key_pressed[pygame.K_d]:
-                if "Droite" in deplacements_possibles:
-                    self.deplacement_droite()
-                self.rect.midbottom = (self.x, self.y)
-                self.etat = "Courir"
-            self.x, self.y = round(self.x), round(self.y)
-            self.offset.update(self.x - WINDOW_WIDTH / 2, self.y - (WINDOW_HEIGHT / 2 + self.rect.height / 2))
+            # On met à jours l'état, l'orientation, la position et l'offset du personnage s'il se déplace
+            self.maj_deplacements()
 
-            # if character is not dead we regen 1 % of its
-            # max hp every 2 seconds
-
+            # si le personnage n'est pas mort, on regen 1 % de ses PVs max toutes les 2 secondes
             if self.PV < self.PV_max:
                 if self.passive_regen_timer is None:
                     self.passive_regen_timer = self.rpg.time + 2
@@ -188,20 +156,16 @@ class Personnage:
             else:
                 self.passive_regen_timer = None
 
-        # On update la frame courante
-        if self.rpg.time >= self.temps_prochain_changement_frame:
-            self.frame_courante += 1
+            self.hovered_pnj = self.chercher_hovered_pnj()
 
-            temps_prochains_changements_frames = {
-                "Lidle": 1.7,
-                "Courir": 0.7 / self.vitesse_de_deplacement
-            }
-            self.temps_prochain_changement_frame = self.rpg.time + (temps_prochains_changements_frames[self.etat] / self.nb_frames_etats[self.etat])
+        # On anime le personnage
+        self.animation()
 
     def handle_event(self, game: "CyrilRpg", event: pygame.event.Event):
         if not self.est_mort():
             if event.type == pygame.MOUSEBUTTONUP:
-                self.select_pnj(self.monde.get_pnjs_zone_courante(), self.rpg.mouse_pos)
+                if self.hovered_pnj is not None:
+                    self.selected_mob = self.hovered_pnj
 
             # Character spells casting
             if event.type == pygame.KEYDOWN:
@@ -210,7 +174,12 @@ class Personnage:
                         Sound.SONS_ATTAQUE_PERSO[random.randint(0, len(Sound.SONS_ATTAQUE_PERSO) - 1)].play()
                         self.attaquer(self.monde.get_pnjs_attaquables_zone_courante(), self.spells[0])
                         self.spells[0].set_timer(self.rpg.time)
+
                         # affiche_zone_effet_s1 = True
+
+                # Pour heal le perso instant à des fins de tests (en appuyant sur 'H')
+                if event.key == pygame.K_h:
+                    self.PV = self.PV_max
         #
         # # Si le personnage lance le sort 2
         # if event.key == pygame.K_2:
@@ -222,13 +191,6 @@ class Personnage:
         #             # affiche_zone_effet_s2 = True
         #             sort_lancer = "Tourbillon"
         #
-        # # Si le joueur appuie sur 2, son perso est heal de 50 PV
-        # if event.key == pygame.K_3:
-        #     if self.PV <= self.PV_max - 50:
-        #         self.PV += 50
-        #     else:
-        #         self.PV = self.PV_max
-        #
         # # Si on appuie sur '←-' (Backspace), supprime l'objet à l'emplacement ciblé par la souris
         # if event.key == pygame.K_BACKSPACE:
         #     if dic_menu["Inventaire"]:
@@ -238,21 +200,17 @@ class Personnage:
         #                         self.mouse_pos[1] < 533 + 52 * i + 39:
         #                     self.inventaire[i][j] = None
 
-    def select_pnj(self, mobs_list, mouse_pos):
-        mob_found = False
-        for i in range(len(mobs_list)):
-            if not mob_found:
-                if pygame.Rect(mobs_list[i].rect.topleft - self.offset, mobs_list[i].rect.size).collidepoint(mouse_pos):
-                    self.selected_mob = mobs_list[i]
-                    self.selected_mob.selected = True
-                    mob_found = True
-                else:
-                    mobs_list[i].selected = False
-            else:
-                mobs_list[i].selected = False
+    def chercher_hovered_pnj(self) -> pnjs.Pnj | None:
+        hovered_pnj = None
 
-        if not mob_found:
-            self.selected_mob = None
+        pnjs_en_y = sorted(self.monde.get_pnjs_zone_courante(), key=lambda entite_i: entite_i.y, reverse=True)
+
+        i = 0
+        while not hovered_pnj and i < len(pnjs_en_y):
+            if pnjs_en_y[i].hovered_by_mouse:
+                hovered_pnj = pnjs_en_y[i]
+            i += 1
+        return hovered_pnj
 
     def get_damage(self):
         return self.arme.damage + self.force if self.arme is not None else self.force
@@ -331,9 +289,7 @@ class Personnage:
         Renvoie True si le perso est mort False sinon.
         :return:
         """
-        if self.PV <= 0:
-            return True
-        return False
+        return self.PV <= 0
 
     def lvl_up(self):
         self.lvl += 1
@@ -366,79 +322,113 @@ class Personnage:
         #     self.spells.append(sorts.Sort("Tourbillon", 3, pygame.image.load(
         #         "./assets/logos_sorts/sort2_guerrier.png").convert_alpha(), 10, (395, 300)))
 
-    def deplacement_haut(self):
-        self.orientation = "Dos"
-        self.y -= self.movement_speed
+    def maj_deplacements(self):
+        touches_pressees = pygame.key.get_pressed()
+        deplacements_possibles = self.get_deplacements_possibles(self.monde.get_obstacles_zone_courante())
 
-    def deplacement_gauche(self):
-        self.orientation = "Gauche"
-        self.x -= self.movement_speed
+        if touches_pressees[pygame.K_z] and touches_pressees[pygame.K_d]:
+            if "Haut" in deplacements_possibles and "Droite" in deplacements_possibles:
+                self.orientation = "Droite"
+                self.y -= math.sqrt(2 * (self.movement_speed ** 2)) / 2
+                self.x += math.sqrt(2 * (self.movement_speed ** 2)) / 2
+        elif touches_pressees[pygame.K_z] and touches_pressees[pygame.K_q]:
+            if "Haut" in deplacements_possibles and "Gauche" in deplacements_possibles:
+                self.orientation = "Gauche"
+                self.y -= math.sqrt(2 * (self.movement_speed ** 2)) / 2
+                self.x -= math.sqrt(2 * (self.movement_speed ** 2)) / 2
+        elif touches_pressees[pygame.K_s] and touches_pressees[pygame.K_q]:
+            if "Bas" in deplacements_possibles and "Gauche" in deplacements_possibles:
+                self.orientation = "Gauche"
+                self.y += math.sqrt(2 * (self.movement_speed ** 2)) / 2
+                self.x -= math.sqrt(2 * (self.movement_speed ** 2)) / 2
+        elif touches_pressees[pygame.K_s] and touches_pressees[pygame.K_d]:
+            if "Bas" in deplacements_possibles and "Droite" in deplacements_possibles:
+                self.orientation = "Droite"
+                self.y += math.sqrt(2 * (self.movement_speed ** 2)) / 2
+                self.x += math.sqrt(2 * (self.movement_speed ** 2)) / 2
+        elif touches_pressees[pygame.K_z]:
+            if "Haut" in deplacements_possibles:
+                self.orientation = "Dos"
+                self.y -= self.movement_speed
+        elif touches_pressees[pygame.K_s]:
+            if "Bas" in deplacements_possibles:
+                self.orientation = "Face"
+                self.y += self.movement_speed
+        elif touches_pressees[pygame.K_q]:
+            if "Gauche" in deplacements_possibles:
+                self.orientation = "Gauche"
+                self.x -= self.movement_speed
+        elif touches_pressees[pygame.K_d]:
+            if "Droite" in deplacements_possibles:
+                self.orientation = "Droite"
+                self.x += self.movement_speed
+        else:
+            # Si on ne se déplace pas on Lidle et on return, ça nous évite de mettre self.etat = "Courir" dans chaque if
+            if not self.etat.startswith("Attaquer") and not self.etat == "Lidle":
+                self.changer_etat("Lidle")
+            return
 
-    def deplacement_bas(self):
-        self.orientation = "Face"
-        self.y += self.movement_speed
+        self.rect.midbottom = (self.x, self.y)
+        if not self.etat.startswith("Attaquer") and not self.etat == "Courir":
+            self.changer_etat("Courir")
 
-    def deplacement_droite(self):
-        self.orientation = "Droite"
-        self.x += self.movement_speed
+        self.x, self.y = round(self.x), round(self.y)
+        self.offset.update(self.x - WINDOW_WIDTH / 2, self.y - (WINDOW_HEIGHT / 2 + self.rect.height / 2))
 
-    def deplacement_haut_gauche(self):
-        self.orientation = "Gauche"
-        self.y -= math.sqrt(2 * (self.movement_speed**2)) / 2
-        self.x -= math.sqrt(2 * (self.movement_speed**2)) / 2
-
-    def deplacement_haut_droite(self):
-        self.orientation = "Droite"
-        self.y -= math.sqrt(2 * (self.movement_speed**2)) / 2
-        self.x += math.sqrt(2 * (self.movement_speed**2)) / 2
-
-    def deplacement_bas_gauche(self):
-        self.orientation = "Gauche"
-        self.y += math.sqrt(2 * (self.movement_speed**2)) / 2
-        self.x -= math.sqrt(2 * (self.movement_speed**2)) / 2
-
-    def deplacement_bas_droite(self):
-        self.orientation = "Droite"
-        self.y += math.sqrt(2 * (self.movement_speed**2)) / 2
-        self.x += math.sqrt(2 * (self.movement_speed**2)) / 2
-
-    def verifier_personnage_obstacles(self, obstacles):
+    def get_deplacements_possibles(self, rects_obstacles: list[pygame.Rect]):
         """
-        Prends une liste d'obstacles en paramètre et renvoie les directions possibles du personnage
-        en prenants en compte ses obstacles.
+        Prends une liste de rects correspondants aux obstacles passé en paramètre et renvoie les directions possibles
+        du personnage en prenant en compte ces obstacles.
         """
         directions_possibles = ["Gauche", "Droite", "Haut", "Bas"]
 
-        hit_box_avec_deplacement_gauche = [self.x - self.movement_speed, self.y, self.rect.width + self.movement_speed, self.rect.height]
-        hit_box_avec_deplacement_droite = [self.x, self.y, self.rect.width + self.movement_speed, self.rect.height]
-        hit_box_avec_deplacement_haut = [self.x, self.y - self.movement_speed, self.rect.width, self.rect.height + self.movement_speed]
-        hit_box_avec_deplacement_bas = [self.x, self.y, self.rect.width, self.rect.height + self.movement_speed]
-        #hit_box_avec_deplacement = [self.x - self.vitesse_deplacement, self.y - self.vitesse_deplacement, self.hit_box[2] + self.vitesse_deplacement, self.hit_box[3] + self.vitesse_deplacement]
-        for rect in obstacles:
-            if rect.colliderect(hit_box_avec_deplacement_gauche):
-                directions_possibles.remove("Gauche")
-            if rect.colliderect(hit_box_avec_deplacement_droite):
-                directions_possibles.remove("Droite")
-            if rect.colliderect(hit_box_avec_deplacement_haut):
-                directions_possibles.remove("Haut")
-            if rect.colliderect(hit_box_avec_deplacement_bas):
-                directions_possibles.remove("Bas")
+        hits_boxs_avec_deplacement = {
+            "Gauche": pygame.Rect(self.x - self.movement_speed, self.y, self.rect.width + self.movement_speed, self.rect.height),
+            "Droite": pygame.Rect(self.x, self.y, self.rect.width + self.movement_speed, self.rect.height),
+            "Haut": pygame.Rect(self.x, self.y - self.movement_speed, self.rect.width, self.rect.height + self.movement_speed),
+            "Bas": pygame.Rect(self.x, self.y, self.rect.width, self.rect.height + self.movement_speed)
+        }
+
+        # hit_box_avec_deplacement = [self.x - self.vitesse_deplacement, self.y - self.vitesse_deplacement, self.hit_box[2] + self.vitesse_deplacement, self.hit_box[3] + self.vitesse_deplacement]
+        for rect in rects_obstacles:
+            for direction in hits_boxs_avec_deplacement:
+                if rect.colliderect(hits_boxs_avec_deplacement[direction]):
+                    directions_possibles.remove(direction)
 
         return directions_possibles
 
-    def receive_damage(self, amount: int):
-        if self.PV - amount < 0:
-            self.PV = 0
-        else:
-            self.PV -= round(amount * (1 - self.reduction_degats))
+    def changer_etat(self, nouvelle_etat: str) -> None:
+        self.etat = nouvelle_etat
+        self.temps_prochain_changement_frame = 0
+        self.frame_courante = 0
+
+    def animation(self):
+        if self.rpg.time >= self.temps_prochain_changement_frame:
+            nb_frames_etat_courant = self.nb_frames_etats[self.etat]
+
+            if not self.etat.startswith("Attaquer") or self.frame_courante != nb_frames_etat_courant - 1:
+
+                self.frame_courante += 1
+
+                temps_prochains_changements_frames = {
+                    "Lidle": 1.7,
+                    "Courir": 0.7 / self.vitesse_de_deplacement,
+                    "Attaquer1": 0.7,
+                    "Attaquer2": 0.7,
+                    "Attaquer3": 0.7,
+                }
+                self.temps_prochain_changement_frame = self.rpg.time + (temps_prochains_changements_frames[self.etat] / self.nb_frames_etats[self.etat])
+            else:
+                # On a afficher toutes les frames de l'attaque
+                self.changer_etat("Lidle")
+
+    def receive_damage(self, degats: int):
+        degats_reels = round(degats * (1 - self.reduction_degats))
+        self.PV = max(0, self.PV - degats_reels)
 
     def regen(self):
-        # Regen 1 % of the max hp of the character
-        if self.PV + self.PV_max / 100 < self.PV_max:
-            self.PV += self.PV_max / 100
-            self.PV = round(self.PV)
-        else:
-            self.PV = self.PV_max
+        # Regen 1 % des hps max du personnage
+        self.PV = min(self.PV_max, round(self.PV + self.PV_max / 100))
 
     def respawn(self):
         self.PV = 1
@@ -456,6 +446,7 @@ class Personnage:
             if self.selected_mob.est_attaquable() and not self.selected_mob.est_mort():
                 if sort.check_reach(self.rect.center, self.selected_mob.rect.center):
                     self.selected_mob.prendre_cher(self, round(self.get_damage() * sort.perc_char_dmg / 100))
+                    self.changer_etat("Attaquer1")
 
     def est_quete_terminee(self, quete: quetes.Quete) -> bool:
         return quete in self.quetes_terminees

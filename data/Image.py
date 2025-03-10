@@ -1,4 +1,4 @@
-import pygame.image, pprint
+import pygame.image
 from data import Color
 
 from src import utils
@@ -90,6 +90,16 @@ for etat in TRADUCTIONS_ETATS:
         GUERRIER_FRAMES[etat][POSITIONS[i]] = pygame.transform.scale_by(
             pygame.image.load(f"assets/personnage/guerrier/{p}/Png/Warrior{p}{TRADUCTIONS_ETATS[etat]["EN"]}.png"), 4
         )
+
+# Approche différente pour les frames d'attaques car il peut y en avoir de plusieurs types, donc on a une liste de frame
+# sheet pour les attaques au lieu d'une seule pour les autres
+for j in range(1, 4):
+    GUERRIER_FRAMES[f"Attaquer{j}"] = {}
+    for i, p in enumerate(POSITIONS_IN_ENGLISH):
+        GUERRIER_FRAMES[f"Attaquer{j}"][POSITIONS[i]] = pygame.transform.scale_by(
+            pygame.image.load(f"assets/personnage/guerrier/{p}/Png/Warrior{p}Attack0{j}.png"), 4
+        )
+
 
 # breakpoint()  # p GUERRIER_FRAMES
 

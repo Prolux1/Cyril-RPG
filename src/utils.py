@@ -286,6 +286,9 @@ def conversion_format_imgs():
         for etat in Image.TRADUCTIONS_ETATS:
             Image.GUERRIER_FRAMES[etat][p] = Image.GUERRIER_FRAMES[etat][p].convert_alpha()
 
+        for i in range(1, 4):
+            Image.GUERRIER_FRAMES[f"Attaquer{i}"][p] = Image.GUERRIER_FRAMES[f"Attaquer{i}"][p].convert_alpha()
+
     for s in Image.SPELL_ICONS:
         Image.SPELL_ICONS[s] = Image.SPELL_ICONS[s].convert_alpha()
 

@@ -494,6 +494,24 @@ class FenetreLoot(interfaceClasses.BasicInterfaceElement):
         self.espacement_x = 5
         self.espacement_y = 5
 
+        # attributs utilisées pour traquer les positions et l'alignements des items affichés
+        self.x_courant = 0
+        self.y_courant = 0
+
+        # Pour traquer la page courante affiché si on a beaucoup d'items (max 7 items par page), page_courante vaut 0
+        # pour la 1ère page
+        self.page_courante = 0
+
+        self.bouton_page_gauche = interfaceClasses.Button(0, self.rect.height, '<', Font.ARIAL_16, Color.WHITE, 2)
+        self.bouton_page_gauche.rect.move_ip(self.rect.width / 2 - self.bouton_page_gauche.rect.width - self.bouton_page_gauche.rect.width / 2, -self.bouton_page_gauche.rect.height)
+
+        self.bouton_page_droite = interfaceClasses.Button(0, self.rect.height, '>', Font.ARIAL_16, Color.WHITE, 2)
+        self.bouton_page_droite.rect.move_ip(self.rect.width / 2 + self.bouton_page_droite.rect.width / 2, -self.bouton_page_droite.rect.height)
+
+        self.label_page_courante = interfaceClasses.Label(f"{self.page_courante + 1}", Font.ARIAL_20, Color.WHITE, 0, self.rect.height)
+        self.label_page_courante.rect.move_ip(self.rect.width / 2 - self.label_page_courante.rect.width / 2, -self.label_page_courante.rect.height / 2 - self.bouton_page_gauche.rect.height / 2)
+
+
         self.pnj_a_looter = None
         self.items_lootables = []
         self.items_lootables_rects = []
@@ -501,59 +519,84 @@ class FenetreLoot(interfaceClasses.BasicInterfaceElement):
     def draw(self, surface):
         new_surf = self.origin_surface.copy()
 
+        if self.pnj_a_looter is not None:
+            self._afficher_page_courante(surface, new_surf)
+
+    def _afficher_page_courante(self, surface: pygame.Surface, new_surf: pygame.Surface):
+        """
+        On va afficher max 7 items à la fois donc l'item de l'indice self.page_courante * 7 à
+        self.page_courante * 7 + 7 exclus si on est sur la 1ère page, page_courante vaut 0
+        """
         item_info_surf = None
         item_info_surf_rect = None
 
-        if self.pnj_a_looter is not None:
+        self.x_courant = self.espacement_x
+        self.y_courant = self.espacement_y
 
-            x_courant = self.espacement_x
-            y_courant = self.espacement_y
-            for i in range(len(self.items_lootables)):
-                item_courant = self.items_lootables[i]
-                rect_item_courant = self.items_lootables_rects[i]
+        i = self.page_courante * 7
+        i_max = min(self.page_courante * 7 + 7, len(self.items_lootables))
+        while i < i_max:
+            self._afficher_item(new_surf, i)
+            item_courant = self.items_lootables[i]
+            rect_item_courant = self.items_lootables_rects[i]
 
-                icone_item_courant = Image.ITEMS_ICONS[item_courant.icon_name]
-                rect_icone_item_courant = icone_item_courant.get_rect()
-                hauteur_icone_item_courant_sur_2 = rect_icone_item_courant.height / 2
+            if rect_item_courant.collidepoint(self.rpg.mouse_pos):
+                item_info_surf = utils.item_info_surf(item_courant, perso=self.personnage)
 
-                new_surf.blit(icone_item_courant, (x_courant, y_courant))
+                item_info_surf_rect = item_info_surf.get_rect()
+                item_info_surf_rect.topleft = (self.rpg.mouse_pos[0] + 12, self.rpg.mouse_pos[1] + 12)
 
-                couleur_rarete_item_courant = Color.RARITY_COLORS[item_courant.rarity]
+                item_info_surf_rect.right = min(item_info_surf_rect.right, WINDOW_WIDTH)
+                item_info_surf_rect.bottom = min(item_info_surf_rect.bottom, WINDOW_HEIGHT)
 
-                # Affiche un rectangle autour de l'item pour indiqué la rareté
-                pygame.draw.rect(new_surf, couleur_rarete_item_courant, rect_icone_item_courant.move(x_courant, y_courant), 2)
+            i += 1
 
-                # Affichage du nom de l'item
-                texte_nom_item_courant = Font.ARIAL_20.render(item_courant.nom, True, couleur_rarete_item_courant)
-                hauteur_texte_nom_item_courant_sur_2 = texte_nom_item_courant.get_height() / 2
+        # Affichage des boutons pour naviguer entre les pages d'items lootables
+        self.bouton_page_gauche.draw(new_surf)
+        self.bouton_page_droite.draw(new_surf)
 
-                x_courant += rect_icone_item_courant.width + self.espacement_x
+        # Affichage de la page courantge entre les deux boutons
+        self.label_page_courante.draw(new_surf)
 
-                y_courant += hauteur_icone_item_courant_sur_2 - hauteur_texte_nom_item_courant_sur_2
-                new_surf.blit(texte_nom_item_courant, (x_courant, y_courant))
-                y_courant -= hauteur_icone_item_courant_sur_2 - hauteur_texte_nom_item_courant_sur_2
+        self.maj_surf_et_draw(surface, new_surf)
 
-                x_courant -= rect_icone_item_courant.width + self.espacement_x
-                y_courant += rect_icone_item_courant.height + self.espacement_y
+        if item_info_surf is not None:
+            surface.blit(item_info_surf, item_info_surf_rect)
 
-                if rect_item_courant.collidepoint(self.rpg.mouse_pos):
-                    item_info_surf = utils.item_info_surf(item_courant, perso=self.personnage)
+    def _afficher_item(self, new_surf: pygame.Surface, i: int) -> None:
+        """
+        Affiche l'item à l'indice i dans la liste d'items lootables
+        """
 
-                    item_info_surf_rect = item_info_surf.get_rect()
-                    item_info_surf_rect.topleft = (self.rpg.mouse_pos[0] + 12, self.rpg.mouse_pos[1] + 12)
+        item = self.items_lootables[i]
 
-                    item_info_surf_rect.right = min(item_info_surf_rect.right, WINDOW_WIDTH)
-                    item_info_surf_rect.bottom = min(item_info_surf_rect.bottom, WINDOW_HEIGHT)
+        icone_item_courant = Image.ITEMS_ICONS[item.icon_name]
+        rect_icone_item_courant = icone_item_courant.get_rect()
+        hauteur_icone_item_courant_sur_2 = rect_icone_item_courant.height / 2
 
+        new_surf.blit(icone_item_courant, (self.x_courant, self.y_courant))
 
-            self.maj_surf_et_draw(surface, new_surf)
+        couleur_rarete_item_courant = Color.RARITY_COLORS[item.rarity]
 
-            if item_info_surf is not None:
-                surface.blit(item_info_surf, item_info_surf_rect)
+        # Affiche un rectangle autour de l'item pour indiqué la rareté
+        pygame.draw.rect(new_surf, couleur_rarete_item_courant, rect_icone_item_courant.move(self.x_courant, self.y_courant), 2)
+
+        # Affichage du nom de l'item
+        texte_nom_item_courant = Font.ARIAL_20.render(item.nom, True, couleur_rarete_item_courant)
+        hauteur_texte_nom_item_courant_sur_2 = texte_nom_item_courant.get_height() / 2
+
+        self.x_courant += rect_icone_item_courant.width + self.espacement_x
+
+        self.y_courant += hauteur_icone_item_courant_sur_2 - hauteur_texte_nom_item_courant_sur_2
+        new_surf.blit(texte_nom_item_courant, (self.x_courant, self.y_courant))
+        self.y_courant -= hauteur_icone_item_courant_sur_2 - hauteur_texte_nom_item_courant_sur_2
+
+        self.x_courant -= rect_icone_item_courant.width + self.espacement_x
+        self.y_courant += rect_icone_item_courant.height + self.espacement_y
 
     def update(self, game):
         if self.pnj_a_looter is not None:
-            if self.pnj_a_looter.est_decompose() or self.personnage.est_mort():
+            if self.pnj_a_looter.est_decompose():
                 self.fermer()
 
     def handle_event(self, game, event: pygame.event.Event):
@@ -565,8 +608,9 @@ class FenetreLoot(interfaceClasses.BasicInterfaceElement):
             if event.button == pygame.BUTTON_LEFT:
                 if self.pnj_a_looter is not None:
                     item_trouvee = False
-                    i = 0
-                    while not item_trouvee and i < len(self.items_lootables):
+                    i = self.page_courante * 7
+                    i_max = min(self.page_courante * 7 + 7, len(self.items_lootables))
+                    while not item_trouvee and i < i_max:
                         if self.items_lootables_rects[i].collidepoint(game.mouse_pos):
                             item_trouvee = True
                             item = self.items_lootables[i]
@@ -1187,34 +1231,31 @@ class CharacterDead(interfaceClasses.BackgroundColor):
         super().__init__((WINDOW_WIDTH, WINDOW_HEIGHT), Color.BACKGROUND_SHADOW)
         self.origin_surf = self.surface.copy()
 
-        self.respawn_button = CharacterRespawnButton(character, Image.SILVER_WOOD_BUTTONS[3], self.rect.width / 2, self.rect.height / 2, "Respawn", Font.ARIAL_23, Color.GREY)
+        self.respawn_button = CharacterRespawnButton(character, Image.SILVER_WOOD_BUTTONS[3], self.rect.width / 2, self.rect.height / 4, "Respawn", Font.ARIAL_23, Color.GREY)
 
         self.character_is_dead_text = interfaceClasses.Label(
-            "You died",
+            "Vous êtes mort",
             Font.ARIAL_40,
             Color.RED,
             self.rect.width / 2,
-            self.rect.height / 2 - self.respawn_button.rect.height,
+            self.rect.height / 4 - self.respawn_button.rect.height,
             True
         )
 
 
     def draw(self, surface):
-        if self.character.est_mort():
-            surface.blit(self.surface, self.rect.topleft)
+        surface.blit(self.surface, self.rect.topleft)
 
     def update(self, game):
-        if self.character.est_mort():
-            self.respawn_button.update(game)
+        self.respawn_button.update(game)
 
-            updated_surf = self.origin_surf.copy()
-            self.respawn_button.draw(updated_surf)
-            self.character_is_dead_text.draw(updated_surf)
-            self.update_surf(updated_surf)
+        updated_surf = self.origin_surf.copy()
+        self.respawn_button.draw(updated_surf)
+        self.character_is_dead_text.draw(updated_surf)
+        self.update_surf(updated_surf)
 
     def handle_event(self, game, event):
-        if self.character.est_mort():
-            self.respawn_button.handle_event(game, event)
+        self.respawn_button.handle_event(game, event)
 
 
 

@@ -274,7 +274,7 @@ class Pnj:
 
 
         # Tests génération de plein d'items pour les loots
-        for i in range(random.randint(4, 10)):
+        for i in range(random.randint(10, 20)):
             if random.random() < 0.25:
                 self.items_lootables.append(utils.generation_arme_alea(self.lvl, self.est_boss, self.est_world_boss))
             else:

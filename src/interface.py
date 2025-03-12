@@ -477,6 +477,33 @@ class InteractionsPnj(interfaceClasses.BasicInterfaceElement):
 
 
 
+class BoutonPageGaucheFenetreLoot(interfaceClasses.Button):
+    def __init__(self, fenetre_loot: "FenetreLoot"):
+        self.fenetre_loot = fenetre_loot
+        super().__init__(self.fenetre_loot.rect.x + self.fenetre_loot.rect.width / 2, self.fenetre_loot.rect.y + self.fenetre_loot.rect.height, '<', Font.ARIAL_16, Color.WHITE, 2)
+
+        self.rect.move_ip(-self.rect.width * 1.5, -self.rect.height)
+
+    def get_clicked(self, game):
+        self.fenetre_loot.page_precedente()
+
+    def draw(self, surface, dx: int = 0, dy: int = 0):
+        super().draw(surface, -self.fenetre_loot.rect.x, - self.fenetre_loot.rect.y)
+
+
+class BoutonPageDroiteFenetreLoot(interfaceClasses.Button):
+    def __init__(self, fenetre_loot: "FenetreLoot"):
+        self.fenetre_loot = fenetre_loot
+        super().__init__(self.fenetre_loot.rect.x + self.fenetre_loot.rect.width / 2, self.fenetre_loot.rect.y + self.fenetre_loot.rect.height, '>', Font.ARIAL_16, Color.WHITE, 2)
+
+        self.rect.move_ip(self.rect.width / 2, -self.rect.height)
+
+    def get_clicked(self, game):
+        self.fenetre_loot.page_suivante()
+
+    def draw(self, surface, dx: int = 0, dy: int = 0):
+        super().draw(surface, -self.fenetre_loot.rect.x, - self.fenetre_loot.rect.y)
+
 
 class FenetreLoot(interfaceClasses.BasicInterfaceElement):
     def __init__(self, perso: personnage.Personnage, m: monde.Monde, x: int, y: int):
@@ -502,14 +529,15 @@ class FenetreLoot(interfaceClasses.BasicInterfaceElement):
         # pour la 1ère page
         self.page_courante = 0
 
-        self.bouton_page_gauche = interfaceClasses.Button(0, self.rect.height, '<', Font.ARIAL_16, Color.WHITE, 2)
-        self.bouton_page_gauche.rect.move_ip(self.rect.width / 2 - self.bouton_page_gauche.rect.width - self.bouton_page_gauche.rect.width / 2, -self.bouton_page_gauche.rect.height)
+        self.nb_pages = 0
 
-        self.bouton_page_droite = interfaceClasses.Button(0, self.rect.height, '>', Font.ARIAL_16, Color.WHITE, 2)
-        self.bouton_page_droite.rect.move_ip(self.rect.width / 2 + self.bouton_page_droite.rect.width / 2, -self.bouton_page_droite.rect.height)
+        self.bouton_page_gauche = BoutonPageGaucheFenetreLoot(self)
+        self.bouton_page_droite = BoutonPageDroiteFenetreLoot(self)
 
         self.label_page_courante = interfaceClasses.Label(f"{self.page_courante + 1}", Font.ARIAL_20, Color.WHITE, 0, self.rect.height)
-        self.label_page_courante.rect.move_ip(self.rect.width / 2 - self.label_page_courante.rect.width / 2, -self.label_page_courante.rect.height / 2 - self.bouton_page_gauche.rect.height / 2)
+        self.label_page_courante.x += self.rect.width / 2 - self.label_page_courante.rect.width / 2
+        self.label_page_courante.y += -self.label_page_courante.rect.height / 2 - self.bouton_page_gauche.rect.height / 2
+        self.label_page_courante.update_rect()
 
 
         self.pnj_a_looter = None
@@ -552,11 +580,14 @@ class FenetreLoot(interfaceClasses.BasicInterfaceElement):
             i += 1
 
         # Affichage des boutons pour naviguer entre les pages d'items lootables
-        self.bouton_page_gauche.draw(new_surf)
-        self.bouton_page_droite.draw(new_surf)
+        if self.page_courante > 0:
+            self.bouton_page_gauche.draw(new_surf)
+        if self.nb_pages > 1 and self.page_courante < self.nb_pages - 1:
+            self.bouton_page_droite.draw(new_surf)
 
         # Affichage de la page courantge entre les deux boutons
-        self.label_page_courante.draw(new_surf)
+        if self.nb_pages > 1:
+            self.label_page_courante.draw(new_surf)
 
         self.maj_surf_et_draw(surface, new_surf)
 
@@ -598,6 +629,11 @@ class FenetreLoot(interfaceClasses.BasicInterfaceElement):
         if self.pnj_a_looter is not None:
             if self.pnj_a_looter.est_decompose():
                 self.fermer()
+            else:
+                if self.page_courante > 0:
+                    self.bouton_page_gauche.update(game)
+                if self.nb_pages > 1 and self.page_courante < self.nb_pages - 1:
+                    self.bouton_page_droite.update(game)
 
     def handle_event(self, game, event: pygame.event.Event):
         if event.type == pygame.MOUSEBUTTONUP:
@@ -624,6 +660,11 @@ class FenetreLoot(interfaceClasses.BasicInterfaceElement):
 
                         i += 1
 
+        if self.page_courante > 0:
+            self.bouton_page_gauche.handle_event(game, event)
+        if self.nb_pages > 1 and self.page_courante < self.nb_pages - 1:
+            self.bouton_page_droite.handle_event(game, event)
+
     def trouver_pnj_a_looter(self) -> pnjs.Pnj | None:
         for pnj in self.monde.get_pnjs_attaquables_zone_courante():
             if pnj.est_mort() and not pnj.est_decompose() and pnj.hovered_by_mouse:
@@ -638,17 +679,33 @@ class FenetreLoot(interfaceClasses.BasicInterfaceElement):
             self.items_lootables = pnj_a_looter.items_lootables.copy()
 
             if len(self.items_lootables) > 0:
+                i = 0
                 x_courant = self.rect.x + self.espacement_x
                 y_courant = self.rect.y + self.espacement_y
-                for i in range(len(self.items_lootables)):
+                while i < len(self.items_lootables):
+                    if i % 7 == 0:
+                        y_courant = self.rect.y + self.espacement_y
+
                     hauteur_icone_item_courant = Image.ITEMS_ICONS[self.items_lootables[i].icon_name].get_height()
 
-
-                    self.items_lootables_rects.append(pygame.Rect(x_courant, y_courant, self.rect.width - self.espacement_x, hauteur_icone_item_courant))
+                    rect_courant = pygame.Rect(x_courant, y_courant, self.rect.width - self.espacement_x, hauteur_icone_item_courant)
+                    self.items_lootables_rects.append(rect_courant)
 
                     y_courant += hauteur_icone_item_courant + self.espacement_y
+
+                    i += 1
             else:  # S'il n'y a rien à looter, on s'embete meme pas a faire tout ça mdrrrr
                 self.fermer()
+
+        self.nb_pages = 1 + (len(self.items_lootables) - 1) // 7
+
+    def page_precedente(self):
+        self.page_courante = max(0, self.page_courante - 1)
+        self.label_page_courante.update_text(str(self.page_courante + 1))
+
+    def page_suivante(self):
+        self.page_courante = min(self.nb_pages - 1, self.page_courante + 1)
+        self.label_page_courante.update_text(str(self.page_courante + 1))
 
     def fermer(self) -> None:
         self.pnj_a_looter = None
@@ -657,14 +714,6 @@ class FenetreLoot(interfaceClasses.BasicInterfaceElement):
     def clear_items_lootables_et_rects(self) -> None:
         self.items_lootables.clear()
         self.items_lootables_rects.clear()
-
-
-
-
-
-
-
-
 
 
 class JournalDeQuetes(interfaceClasses.BasicInterfaceElement):

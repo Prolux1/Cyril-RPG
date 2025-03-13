@@ -32,7 +32,7 @@ class Zone:
 
         # On affiche les entitées présente dans la zone de manière
         # horizontale pour avoir une sensation de dimension
-        for entite in sorted(self.pnjs + [self.personnage], key=lambda entite_i: entite_i.y):
+        for entite in sorted(self.pnjs + [self.personnage], key=lambda entite_i: entite_i.rect.y):
             entite.draw(surface)
 
     def update(self, game):

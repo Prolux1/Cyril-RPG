@@ -5,8 +5,15 @@ le but de devenir le plus fort de tous les héros.
 
 
 ## Comment jouer :
- - Après avoir lancer le jeu, cliquer sur le bouton "Jouer" un personnage aléatoire vous sera attribué le temps que
-   la création de personnage arrive. Cliquer sur ce personnage et vous entrerez automatiquement dans le jeu.
+ - Après avoir lancer le jeu, cliquer sur le bouton "Jouer", un personnage aléatoire vous sera attribué (cela 
+   changera quand la création de personnage arrivera).
+ - Cliquer sur ce personnage (au milieu haut de l'écran) et vous entrerez automatiquement dans le jeu.
+ - Vous pouvez faire un clique droit pour intéragir avec un Pnj (pour faire des quêtes par exemple).
+ - Vous pouvez sélectionner un pnj à déglinguer en cliquant simplement dessus, ensuite vous devré utiliser
+   vos sorts en appuyant sur les touches 1, 2, 3, ... (les caractères spéciaux genre 1 -> &, pas du pavé numérique).
+ - Quand le pnj est mort vous pouvez le looter en faisant un clique droit sur son cadavre.
+
+## Objectifs :
  - Tuer des monstres pour gagner de l'expérience et monté en niveau et obtenir des items comme de l'équipement.
  - Les monstres se défendent donc faite attention à ne pas mourir (votre barre de PV est présente en haut à gauche 
    de l'écran).

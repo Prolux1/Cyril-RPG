@@ -187,14 +187,15 @@ class BoutonAccepterQuete(interfaceClasses.Button):
 
         self.rect.move_ip(self.menu_interactions_pnj.rect.x, -self.rect.h + self.menu_interactions_pnj.rect.y)
 
+    def draw(self, surface, dx: int = 0, dy: int = 0):
+        # Il faut bouger le rectangle du bouton en fonction de quand on l'affiche dans le menu d'interactions des pnjs
+        # et quand on veut gérer les évènements avec "handle_event" et les "update" car le rectangle n'est pas le même,
+        # il est plus par rapport au menu d'interactions mais par rapport à la fenêtre principale.
+        super().draw(surface, -self.menu_interactions_pnj.rect.x, -self.menu_interactions_pnj.rect.y)
+
     def get_clicked(self, game):
         self.menu_interactions_pnj.personnage.accepter_quete(self.menu_interactions_pnj.interaction_selectionnee)
         self.menu_interactions_pnj.retour_liste_interactions()
-
-    def draw(self, surface, dx: int = 0, dy: int = 0):
-        # Il faut bouger le rectangle du bouton en fonction de quand on l'affiche dans le menu d'interactions des pnjs
-        # et quand on veut gérer "handle_event" et les "update" par rapport à la surface de la fenêtre principale.
-        super().draw(surface, -self.menu_interactions_pnj.rect.x, -self.menu_interactions_pnj.rect.y)
 
 
 class BoutonAbandonnerQuete(interfaceClasses.Button):
@@ -204,14 +205,13 @@ class BoutonAbandonnerQuete(interfaceClasses.Button):
 
         self.rect.move_ip(self.menu_interactions_pnj.rect.x, -self.rect.h + self.menu_interactions_pnj.rect.y)
 
+    def draw(self, surface, dx: int = 0, dy: int = 0):
+        # Meme explication que pour "BoutonAccepterQuete"
+        super().draw(surface, -self.menu_interactions_pnj.rect.x, -self.menu_interactions_pnj.rect.y)
+
     def get_clicked(self, game):
         self.menu_interactions_pnj.personnage.abandonner_quete(self.menu_interactions_pnj.interaction_selectionnee)
         self.menu_interactions_pnj.retour_liste_interactions()
-
-    def draw(self, surface, dx: int = 0, dy: int = 0):
-        # Il faut bouger le rectangle du bouton en fonction de quand on l'affiche dans le menu d'interactions des pnjs
-        # et quand on veut gérer "handle_event" et les "update" par rapport à la surface de la fenêtre principale.
-        super().draw(surface, -self.menu_interactions_pnj.rect.x, -self.menu_interactions_pnj.rect.y)
 
 
 class BoutonTerminerQuete(interfaceClasses.Button):
@@ -221,15 +221,29 @@ class BoutonTerminerQuete(interfaceClasses.Button):
 
         self.rect.move_ip(self.menu_interactions_pnj.rect.x, -self.rect.h + self.menu_interactions_pnj.rect.y)
 
+    def draw(self, surface, dx: int = 0, dy: int = 0):
+        # Meme explication que pour "BoutonAccepterQuete"
+        super().draw(surface, -self.menu_interactions_pnj.rect.x, -self.menu_interactions_pnj.rect.y)
+
     def get_clicked(self, game):
         self.menu_interactions_pnj.personnage.terminer_quete(self.menu_interactions_pnj.interaction_selectionnee)
         self.menu_interactions_pnj.retour_liste_interactions()
 
+
+class BoutonFermerInteractionsPnj(interfaceClasses.Button):
+    def __init__(self, menu_interactions_pnj: "InteractionsPnj"):
+        self.menu_interactions_pnj = menu_interactions_pnj
+
+        super().__init__(self.menu_interactions_pnj.rect.x, self.menu_interactions_pnj.rect.y, "X", Font.ARIAL_14, Color.RED, 2)
+
+        self.rect.move_ip(self.menu_interactions_pnj.rect.width - self.rect.width - 5, 5)
+
     def draw(self, surface, dx: int = 0, dy: int = 0):
-        # Il faut bouger le rectangle du bouton en fonction de quand on l'affiche dans le menu d'interactions des pnjs
-        # et quand on veut gérer "handle_event" et les "update" par rapport à la surface de la fenêtre principale.
+        # Meme explication que pour "BoutonAccepterQuete"
         super().draw(surface, -self.menu_interactions_pnj.rect.x, -self.menu_interactions_pnj.rect.y)
 
+    def get_clicked(self, game):
+        self.menu_interactions_pnj.fermer()
 
 class InteractionsPnj(interfaceClasses.BasicInterfaceElement):
     def __init__(self, perso: personnage.Personnage, m: monde.Monde, x, y):
@@ -256,11 +270,8 @@ class InteractionsPnj(interfaceClasses.BasicInterfaceElement):
         super().__init__(x, y, self.origin_surface.copy(), center=True)
 
 
-        # Un rectangle qui défini la zone (en haut à droite du menu d'intéractions) qui permet de fermer le menu d'intéractions
-        # Le rectangle avec "dans_surf" à la fin est utilisé pour le dessiner plus facilement dans la surface tandis
-        # que l'autre est utilisé pour les collisions.
-        self.rect_fermeture_menu_dans_surf = pygame.Rect(largeur_origin_surface - 30, 0, 30, 30)
-        self.rect_fermeture_menu = self.rect_fermeture_menu_dans_surf.copy().move(self.rect.x, self.rect.y)
+        # Bouton pour fermer le menu d'intéractions
+        self.bouton_fermer = BoutonFermerInteractionsPnj(self)
 
         # Un rectangle qui défini la zone (en bas à gauche du menu d'intéractions) qui permet d'accepter une quete
         self.rect_accepter_quete_dans_surf = pygame.Rect(0, hauteur_origin_surface - 30, 100, 30)
@@ -276,14 +287,7 @@ class InteractionsPnj(interfaceClasses.BasicInterfaceElement):
         # Les trucs communs à afficher si on est entrain de consulter les intéractions d'un pnj ou si on est sur
         # une d'entre elle (typiquement le bouton pour tout fermer)
         if self.pnj_selectionnee is not None:
-            # Dessine le fond du bouton pour tout fermer
-            pygame.draw.rect(new_surf, Color.RED, self.rect_fermeture_menu_dans_surf)
-
-            # TODO : Dessiner une croix en plus
-
-            # Dessine le contour du bouton pour tout fermer
-            pygame.draw.rect(new_surf, Color.BLACK, self.rect_fermeture_menu_dans_surf, 2)
-
+            self.bouton_fermer.draw(new_surf)
 
         if self.interaction_selectionnee is not None:
 
@@ -387,6 +391,9 @@ class InteractionsPnj(interfaceClasses.BasicInterfaceElement):
             self.maj_surf_et_draw(surface, new_surf)
 
     def update(self, game):
+        if self.pnj_selectionnee is not None:
+            self.bouton_fermer.update(game)
+
         if self.interaction_selectionnee is not None:
             if isinstance(self.interaction_selectionnee, quetes.Quete):
                 if self.personnage.est_quete_active(self.interaction_selectionnee):
@@ -400,17 +407,17 @@ class InteractionsPnj(interfaceClasses.BasicInterfaceElement):
     def handle_event(self, game: "CyrilRpg", event):
         if event.type == pygame.MOUSEBUTTONUP:
             if event.button == pygame.BUTTON_RIGHT:
-                self.charger_infos_pnj(self.trouver_pnj_avec_qui_interagir())
+                if self.pnj_selectionnee is None or not self.rect.collidepoint(game.mouse_pos):
+                    self.charger_infos_pnj(self.trouver_pnj_avec_qui_interagir())
 
             if event.button == pygame.BUTTON_LEFT:
                 if self.pnj_selectionnee is not None:
-                    if self.rect_fermeture_menu.collidepoint(game.mouse_pos):
-                        self.fermer()
-
-
                     for interaction, rect_interaction in self.pnj_selectionnee_tuple_interactions_rects:
                         if rect_interaction.collidepoint(game.mouse_pos):
                             self.interaction_selectionnee = interaction
+
+        if self.pnj_selectionnee is not None:
+            self.bouton_fermer.handle_event(game, event)
 
         if self.interaction_selectionnee is not None:
             if isinstance(self.interaction_selectionnee, quetes.Quete):
@@ -424,6 +431,7 @@ class InteractionsPnj(interfaceClasses.BasicInterfaceElement):
 
     def charger_infos_pnj(self, pnj_interactible: pnjs.Pnj | None) -> None:
         self.pnj_selectionnee = pnj_interactible
+        self.interaction_selectionnee = None
         self.pnj_selectionnee_tuple_interactions_rects = []
 
         if pnj_interactible is not None:
@@ -505,13 +513,27 @@ class BoutonPageDroiteFenetreLoot(interfaceClasses.Button):
         super().draw(surface, -self.fenetre_loot.rect.x, - self.fenetre_loot.rect.y)
 
 
+class BoutonFermerFenetreLoot(interfaceClasses.Button):
+    def __init__(self, fenetre_loot: "FenetreLoot"):
+        self.fenetre_loot = fenetre_loot
+        super().__init__(self.fenetre_loot.rect.x + self.fenetre_loot.rect.width, self.fenetre_loot.rect.y, 'X', Font.ARIAL_14, Color.RED, 2)
+
+        self.rect.move_ip(-self.rect.width - 5, 5)
+
+    def get_clicked(self, game):
+        self.fenetre_loot.fermer()
+
+    def draw(self, surface, dx: int = 0, dy: int = 0):
+        super().draw(surface, -self.fenetre_loot.rect.x, - self.fenetre_loot.rect.y)
+
+
 class FenetreLoot(interfaceClasses.BasicInterfaceElement):
     def __init__(self, perso: personnage.Personnage, m: monde.Monde, x: int, y: int):
         self.personnage = perso
         self.monde = m
         self.rpg = m.rpg
 
-        self.origin_surface = pygame.Surface((200, 300))
+        self.origin_surface = pygame.Surface((200, 315))
 
         self.origin_surface.fill(Color.DARK_GREY)
         pygame.draw.rect(self.origin_surface, Color.BLACK, self.origin_surface.get_rect(), 2)
@@ -520,6 +542,8 @@ class FenetreLoot(interfaceClasses.BasicInterfaceElement):
 
         self.espacement_x = 5
         self.espacement_y = 5
+
+        self.padding_y = 25
 
         # attributs utilisées pour traquer les positions et l'alignements des items affichés
         self.x_courant = 0
@@ -534,10 +558,18 @@ class FenetreLoot(interfaceClasses.BasicInterfaceElement):
         self.bouton_page_gauche = BoutonPageGaucheFenetreLoot(self)
         self.bouton_page_droite = BoutonPageDroiteFenetreLoot(self)
 
+        self.bouton_fermer = BoutonFermerFenetreLoot(self)
+
         self.label_page_courante = interfaceClasses.Label(f"{self.page_courante + 1}", Font.ARIAL_20, Color.WHITE, 0, self.rect.height)
         self.label_page_courante.x += self.rect.width / 2 - self.label_page_courante.rect.width / 2
         self.label_page_courante.y += -self.label_page_courante.rect.height / 2 - self.bouton_page_gauche.rect.height / 2
         self.label_page_courante.update_rect()
+
+        self.label_titre = interfaceClasses.Label(f"Loot", Font.ARIAL_20, Color.WHITE, 0, 5)
+        self.label_titre.x += self.rect.width / 2 - self.label_titre.rect.width / 2
+        self.label_titre.update_rect()
+
+
 
 
         self.pnj_a_looter = None
@@ -559,7 +591,7 @@ class FenetreLoot(interfaceClasses.BasicInterfaceElement):
         item_info_surf_rect = None
 
         self.x_courant = self.espacement_x
-        self.y_courant = self.espacement_y
+        self.y_courant = self.espacement_y + self.padding_y
 
         i = self.page_courante * 7
         i_max = min(self.page_courante * 7 + 7, len(self.items_lootables))
@@ -588,6 +620,12 @@ class FenetreLoot(interfaceClasses.BasicInterfaceElement):
         # Affichage de la page courantge entre les deux boutons
         if self.nb_pages > 1:
             self.label_page_courante.draw(new_surf)
+
+        # Affichage d'un bouton pour fermer le menu de loot
+        self.bouton_fermer.draw(new_surf)
+
+        # Affichage d'un titre ("Loot") pour la fenetre
+        self.label_titre.draw(new_surf)
 
         self.maj_surf_et_draw(surface, new_surf)
 
@@ -635,11 +673,15 @@ class FenetreLoot(interfaceClasses.BasicInterfaceElement):
                 if self.nb_pages > 1 and self.page_courante < self.nb_pages - 1:
                     self.bouton_page_droite.update(game)
 
+                self.bouton_fermer.update(game)
+
     def handle_event(self, game, event: pygame.event.Event):
         if event.type == pygame.MOUSEBUTTONUP:
             if event.button == pygame.BUTTON_RIGHT:
                 if not self.personnage.est_mort():
-                    self.charger_infos_pnj_a_looter(self.trouver_pnj_a_looter())
+                    if self.pnj_a_looter is None or not self.rect.collidepoint(game.mouse_pos):
+                        self.charger_infos_pnj_a_looter(self.trouver_pnj_a_looter())
+                        self.reset_page()
 
             if event.button == pygame.BUTTON_LEFT:
                 if self.pnj_a_looter is not None:
@@ -654,6 +696,11 @@ class FenetreLoot(interfaceClasses.BasicInterfaceElement):
                             item_ajouter_avec_succes = self.personnage.ajouter_item_inventaire(item)
 
                             if item_ajouter_avec_succes:
+                                # Si l'item que l'on vient de loot est le dernier de la page, on passe à la page
+                                # précédente
+                                if i % 7 == 0 and i == len(self.items_lootables) - 1:
+                                    self.page_precedente()
+
                                 self.pnj_a_looter.items_lootables.remove(item)
 
                                 self.charger_infos_pnj_a_looter(self.pnj_a_looter)
@@ -664,6 +711,8 @@ class FenetreLoot(interfaceClasses.BasicInterfaceElement):
             self.bouton_page_gauche.handle_event(game, event)
         if self.nb_pages > 1 and self.page_courante < self.nb_pages - 1:
             self.bouton_page_droite.handle_event(game, event)
+
+        self.bouton_fermer.handle_event(game, event)
 
     def trouver_pnj_a_looter(self) -> pnjs.Pnj | None:
         for pnj in self.monde.get_pnjs_attaquables_zone_courante():
@@ -681,14 +730,14 @@ class FenetreLoot(interfaceClasses.BasicInterfaceElement):
             if len(self.items_lootables) > 0:
                 i = 0
                 x_courant = self.rect.x + self.espacement_x
-                y_courant = self.rect.y + self.espacement_y
+                y_courant = self.rect.y + self.espacement_y + self.padding_y
                 while i < len(self.items_lootables):
                     if i % 7 == 0:
-                        y_courant = self.rect.y + self.espacement_y
+                        y_courant = self.rect.y + self.espacement_y + self.padding_y
 
                     hauteur_icone_item_courant = Image.ITEMS_ICONS[self.items_lootables[i].icon_name].get_height()
 
-                    rect_courant = pygame.Rect(x_courant, y_courant, self.rect.width - self.espacement_x, hauteur_icone_item_courant)
+                    rect_courant = pygame.Rect(x_courant, y_courant, self.rect.width - self.espacement_x * 2, hauteur_icone_item_courant)
                     self.items_lootables_rects.append(rect_courant)
 
                     y_courant += hauteur_icone_item_courant + self.espacement_y
@@ -707,9 +756,14 @@ class FenetreLoot(interfaceClasses.BasicInterfaceElement):
         self.page_courante = min(self.nb_pages - 1, self.page_courante + 1)
         self.label_page_courante.update_text(str(self.page_courante + 1))
 
+    def reset_page(self):
+        self.page_courante = 0
+        self.label_page_courante.update_text(str(self.page_courante + 1))
+
     def fermer(self) -> None:
         self.pnj_a_looter = None
         self.clear_items_lootables_et_rects()
+        self.reset_page()
 
     def clear_items_lootables_et_rects(self) -> None:
         self.items_lootables.clear()

@@ -125,7 +125,7 @@ class Personnage:
 
         # pygame.draw.rect(surface, Color.GREEN, pygame.Rect((self.rect.topleft - self.offset), self.rect.size), 2)
         # pygame.draw.rect(surface, Color.BLACK, self.rect, 2)
-        # pygame.draw.rect(surface, Color.GREEN, pygame.Rect(self.x, self.y, 2, 2), 1)
+        # pygame.draw.rect(surface, Color.BLACK, pygame.Rect(self.x, self.y, 2, 2), 1)
 
         # circle reach of first spell of the character
         # pygame.draw.circle(surface, Color.BLACK, self.rect.center, self.spells[0].reach, 2)

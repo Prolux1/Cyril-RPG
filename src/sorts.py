@@ -1,4 +1,4 @@
-from src import CircleClass
+from src import cercle
 
 
 class Spell:
@@ -28,5 +28,5 @@ class Spell:
         This returns True if the center of the rect is inside the circle of
         ray reach.
         """
-        c = CircleClass.Cercle(caster_center, self.reach)
-        return c.collide_point(dest)
+        c = cercle.Cercle(caster_center, self.reach)
+        return c.collidepoint(dest)

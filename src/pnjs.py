@@ -2,11 +2,11 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from main import CyrilRpg
 
-import pygame, random
+import pygame, random, math
 
 from data import Image, Color, Font
 
-from src import utils, personnage, quetes
+from src import utils, personnage, quetes, cercle
 from config import WINDOW_WIDTH, WINDOW_HEIGHT
 
 
@@ -35,22 +35,29 @@ class Pnj:
         self.frames = frames  # Frames d'un mob sous forme de dico
         self.direction = None
         self.vitesse_de_base = 2  # 2 par défaut
-        self.vitesse = self.vitesse_de_base
+        self.vitesse_marche = self.vitesse_de_base
+        self.vitesse_course = self.vitesse_marche * 2
         self.dist_parcouru = 0
         self.temps_attendre_depla = 2
         self.frame_courante = 0
         self.est_boss = est_boss  # Booléen indiquant si le mob est un boss ou pas (False de base)
         self.est_world_boss = est_world_boss
 
-        self.rect = self.image.get_bounding_rect()
+        self.rect = self.image.get_rect()
         self.update_rect_pos()
 
         self.hovered_by_mouse = False
 
-        self.dx_dy_directions = {"Gauche": (-1, 0), "Droite": (1, 0), "Dos": (0, -1), "Face": (0, 1)}
-        self.temps_prochains_changements_frames = {"Lidle": 1.7, "Marcher": 0.7 / self.vitesse, "Mourir": 1}
+        self.enervee = False
+        self.cercle_aggro = cercle.Cercle(self.rect.center, 400)
 
-        # TODO : Faut refacto ça c'est dégueulasse
+        self.temps_prochaine_attaque = self.rpg.time
+        self.vitesse_attaque = 2.5  # Temps entre les attaques, plus cette valeure est faible, plus le pnj attaquera vite.
+
+        self.dx_dy_directions = {"Gauche": (-1, 0), "Droite": (1, 0), "Dos": (0, -1), "Face": (0, 1)}
+        self.temps_prochains_changements_frames = {"Lidle": 1.7, "Marcher": 0.7 / self.vitesse_marche, "Mourir": 1}
+
+
         self.temps_prochain_changement_frame = self.rpg.time
         self.se_deplace_aleatoirement = se_deplace_aleatoirement
 
@@ -63,6 +70,11 @@ class Pnj:
 
     def draw(self, surface):
         # pygame.draw.rect(surface, Color.BLACK, pygame.Rect((self.rect.topleft - self.offset), self.rect.size), 2)
+
+        # pygame.draw.rect(surface, Color.BLACK, pygame.Rect((self.x, self.y) - self.offset, (2, 2)), 1)
+
+        # Afficher le cerlce d'aggression du pnj
+        # pygame.draw.circle(surface, Color.BLACK, self.cercle_aggro.centre - self.offset, self.cercle_aggro.rayon, 2)
 
         if self.personnage.hovered_pnj == self:
             # regarde si la souris passe sur un pnj, si c'est le cas, on le montre visuellement en le coloriant en :
@@ -119,8 +131,12 @@ class Pnj:
             zone.pnjs.remove(self)
         else:
             if not self.est_mort():
-                self.vitesse = self.vitesse_de_base * 60 / max(game.fps, 1)
-                if self.se_deplace_aleatoirement:
+                self.cercle_aggro.update_centre(self.rect.center)
+
+                self.vitesse_marche = self.vitesse_de_base * 60 / max(game.fps, 1)
+                if self.est_enervee_contre(self.personnage) and not self.personnage.est_mort():
+                    self.fumer_perso()
+                elif self.se_deplace_aleatoirement:
                     self.deplacement_aleatoire(game)
 
             self.animation()
@@ -137,10 +153,10 @@ class Pnj:
     def handle_event(self, game, event: pygame.event.Event):
         pass
 
-    def est_mort(self):
+    def est_mort(self) -> bool:
         return self.PV <= 0
 
-    def est_decompose(self):
+    def est_decompose(self) -> bool:
         """
         Après que le pnj meurt, il y a un temps où son cadavre reste visible sur le sol, si ce temps atteinte sa limite,
         cette fonction renvoie True.
@@ -149,7 +165,39 @@ class Pnj:
             return self.est_mort() and self.rpg.time >= self.temps_decomposition
         return False
 
-    def deplacement_aleatoire(self, game: "CyrilRpg"):
+    def est_enervee_contre(self, perso: "personnage.Personnage") -> bool:
+        return False
+
+    def fumer_perso(self) -> None:
+        # Le Pnj peut attaquer le personnage s'il est assez proche de celui-ci et s'il n'a pas attaqué recemment, c'est à
+        # dire si le timer avant qu'il puisse lancer sa prochaine attaque a été atteint.
+        if self.est_a_proximite_de(self.personnage):
+            if self.rpg.time >= self.temps_prochaine_attaque:
+                self.attaquer(self.personnage)
+        else:  # Sinon le pnj se déplace vers le perso
+            self.deplacement_vers_perso()
+
+    def deplacement_vers_perso(self) -> None:
+        dx = 0
+        dy = 0
+
+        if self.y > self.personnage.y + self.personnage.rect.height / 2:
+            dy = -1
+        elif self.y < self.personnage.y - self.personnage.rect.height / 2:
+            dy = 1
+
+        if self.x > self.personnage.x + self.personnage.rect.width / 2:
+            self.orientation = "Gauche"
+            dx = -1
+        elif self.x < self.personnage.x - self.personnage.rect.width / 2:
+            self.orientation = "Droite"
+            dx = 1
+
+        # Fait avancer le monstre en fonction de sa direction
+        self.x = self.x + round(dx * math.sqrt(2 * (self.vitesse_course ** 2)) / 2)
+        self.y = self.y + round(dy * math.sqrt(2 * (self.vitesse_course ** 2)) / 2)
+
+    def deplacement_aleatoire(self, game: "CyrilRpg") -> None:
         """
         Déplace un pnj d'une position vers sa direction petit à petit par son facteur vitesse.
         """
@@ -165,9 +213,9 @@ class Pnj:
 
             # Fait avancer le monstre en fonction de sa direction
             dx, dy = self.dx_dy_directions[self.direction]
-            self.x, self.y = self.x + (dx * self.vitesse), self.y + (dy * self.vitesse)
+            self.x, self.y = self.x + (dx * self.vitesse_marche), self.y + (dy * self.vitesse_marche)
 
-            self.dist_parcouru += self.vitesse
+            self.dist_parcouru += self.vitesse_marche
         elif self.direction is not None:
             self.changer_etat("Lidle")
             self.direction = None
@@ -175,13 +223,17 @@ class Pnj:
             if self.est_world_boss:
                 self.image = self.frames[self.orientation][0]  # TODO : C'est quoi cette merde
 
-    def animation(self):
+    def est_a_proximite_de(self, perso: "personnage.Personnage") -> bool:
+        assez_proche_du_personnage = (perso.x - perso.rect.width / 1.5 < self.x < perso.x + perso.rect.width / 1.5
+                                      and perso.y - perso.rect.height / 1.5 < self.y < perso.y + perso.rect.height / 1.5 )
+        return assez_proche_du_personnage
+
+    def animation(self) -> None:
         """
-        Anime le mob à l'aide en fonction de :
+        Anime le pnj en fonction de :
             - sa vitesse
             - son orientation
             - sa frame courante
-        :return:
         """
         if self.rpg.time >= self.temps_prochain_changement_frame:
             nb_frames_etat_courant = self.get_nb_frames_etat(self.etat, self.orientation)
@@ -212,20 +264,21 @@ class Pnj:
         self.frame_courante = 0
 
     def update_rect_pos(self):
-        self.rect.topleft = (self.x, self.y)
+        self.rect.midbottom = (self.x, self.y)
 
     def est_attaquer(self) -> bool:
         return self.PV != self.PV_max
 
-    def attaquer(self, pers: "personnage.Personnage") -> None:
+    def attaquer(self, perso: "personnage.Personnage") -> None:
         """
         Prends en paramètre un personnage à attaquer et lui inflige des dégâts.
         """
-        pers.receive_damage(self.degat)
+        perso.receive_damage(self.degat)
+        self.temps_prochaine_attaque = self.rpg.time + self.vitesse_attaque
 
     def prendre_cher(self, perso: "personnage.Personnage", degats: int):
         """
-        Cette fonction ne doit pas être appelé si le mob est déjà mort.
+        Cette fonction ne doit être appelé qu'une seule fois quand le pnj meurt.
         """
         self.PV = max(0, self.PV - degats)
 
@@ -247,7 +300,8 @@ class Pnj:
             # Génère du loot
             self.generer_loot()
 
-        self.attaquer(perso)
+        # Ancienne version d'attaque qui auto répliquait à chaque attaque du joueur
+        # self.attaquer(perso)
 
     def generer_loot(self) -> None:
         self.items_lootables.clear()
@@ -310,8 +364,13 @@ class PnjHostile(Pnj):
 
         super().__init__(rpg, lvl, pv, degats, nom, orientation, frames, x, y, xp, perso, est_boss, est_world_boss, se_deplace_aleatoirement)
 
+    def est_enervee_contre(self, perso: "personnage.Personnage") -> bool:
+        return self.cercle_aggro.collidepoint((perso.x, perso.y))
+
+
 
 class PnjNeutre(Pnj):
+    # Pour la fonction "est_enervee_contre", on pourra dire qu'elle renvoie True si le personnage a attaquer le Pnj
     pass
 
 

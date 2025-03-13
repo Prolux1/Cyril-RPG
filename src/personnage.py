@@ -27,7 +27,7 @@ class Personnage:
 
         # TODO : implémenter d'autres classes (Chasseur, Mage, ...)
         pvs_classes = {
-            "Guerrier": 150,  # 150
+            "Guerrier": 10,  # 150
             "Chasseur": 137,
             "Mage": 124
         }
@@ -57,15 +57,14 @@ class Personnage:
         self.orientation = "Face"
         self.etat = "Lidle"  # L'état dans lequel se trouve le personnage par exemple "Courir", s'il ne fait rien "Lidle"
         self.frame_courante = 0
-        self.nb_frames_etats = {"Lidle": 5, "Courir": 8, "Attaquer1": 6, "Attaquer2": 6, "Attaquer3": 5}
         self.vitesse_de_deplacement = 1
-        self.temps_prochain_changement_frame = rpg.time + 1.7 / self.nb_frames_etats["Lidle"]
+        self.temps_prochain_changement_frame = rpg.time + 1.7 / self.get_nb_frames_etat(self.etat, self.orientation)
 
         self.rect: pygame.Rect = Image.GUERRIER_FRAMES["Lidle"][self.orientation].subsurface(
             (
                 0,
                 0,
-                Image.GUERRIER_FRAMES["Lidle"][self.orientation].get_width() / self.nb_frames_etats["Lidle"],
+                Image.GUERRIER_FRAMES["Lidle"][self.orientation].get_width() / self.get_nb_frames_etat(self.etat, self.orientation),
                 Image.GUERRIER_FRAMES["Lidle"][self.orientation].get_height()
             )
         ).get_rect()
@@ -108,11 +107,13 @@ class Personnage:
     def draw(self, surface):
         # surface.blit(Image.CHARACTER_POSTURES[self.orientation], self.rect.topleft - self.offset)
 
-        indice_frame = (self.frame_courante % self.nb_frames_etats[self.etat]) / self.nb_frames_etats[self.etat]
+        nb_frames_etat_courant = self.get_nb_frames_etat(self.etat, self.orientation)
+
+        indice_frame = (self.frame_courante % nb_frames_etat_courant) / nb_frames_etat_courant
         rect_frame_courante = pygame.Rect(
             Image.GUERRIER_FRAMES[self.etat][self.orientation].get_width() * indice_frame,
             0,
-            Image.GUERRIER_FRAMES[self.etat][self.orientation].get_width() / self.nb_frames_etats[self.etat],
+            Image.GUERRIER_FRAMES[self.etat][self.orientation].get_width() / nb_frames_etat_courant,
             Image.GUERRIER_FRAMES[self.etat][self.orientation].get_height()
         )
         img_courante = Image.GUERRIER_FRAMES[self.etat][self.orientation].subsurface(rect_frame_courante)
@@ -405,29 +406,51 @@ class Personnage:
         self.temps_prochain_changement_frame = 0
         self.frame_courante = 0
 
+    @staticmethod
+    def get_dict_nb_frames_etats() -> dict[str, int | dict[str, int]]:
+        return {
+            "Lidle": 5,
+            "Courir": 8,
+            "Mourir": {"Face": 5, "Gauche": 5, "Droite": 5, "Dos": 6},
+            "Attaquer1": 6,
+            "Attaquer2": 6,
+            "Attaquer3": 5}
+
+    def get_nb_frames_etat(self, etat: str, orientation: str) -> int:
+        dict_ou_int_nb_frames_etats = self.get_dict_nb_frames_etats()[etat]
+        if isinstance(dict_ou_int_nb_frames_etats, dict):
+            return dict_ou_int_nb_frames_etats[orientation]
+        else:
+            return dict_ou_int_nb_frames_etats
+
     def animation(self):
         if self.rpg.time >= self.temps_prochain_changement_frame:
-            nb_frames_etat_courant = self.nb_frames_etats[self.etat]
+            nb_frames_etat_courant = self.get_nb_frames_etat(self.etat, self.orientation)
 
-            if not self.etat.startswith("Attaquer") or self.frame_courante != nb_frames_etat_courant - 1:
+            # On ne continue plus à animer si le personnage est mort et que sa dernière frame a été affiché
+            if self.etat != "Mourir" and not self.etat.startswith("Attaquer") or self.frame_courante != nb_frames_etat_courant - 1:
 
                 self.frame_courante += 1
 
                 temps_prochains_changements_frames = {
                     "Lidle": 1.7,
                     "Courir": 0.7 / self.vitesse_de_deplacement,
+                    "Mourir": 0.7,
                     "Attaquer1": 0.7,
                     "Attaquer2": 0.7,
                     "Attaquer3": 0.7,
                 }
-                self.temps_prochain_changement_frame = self.rpg.time + (temps_prochains_changements_frames[self.etat] / self.nb_frames_etats[self.etat])
-            else:
-                # On a afficher toutes les frames de l'attaque
+                self.temps_prochain_changement_frame = self.rpg.time + (temps_prochains_changements_frames[self.etat] / max(1, nb_frames_etat_courant))
+            elif self.etat != "Mourir":
+                # On a afficher toutes les frames de l'attaque ou de Mourir
                 self.changer_etat("Lidle")
 
     def receive_damage(self, degats: int):
         degats_reels = round(degats * (1 - self.reduction_degats))
         self.PV = max(0, self.PV - degats_reels)
+
+        if self.PV == 0:
+            self.changer_etat("Mourir")
 
     def regen(self):
         # Regen 1 % des hps max du personnage

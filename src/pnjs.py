@@ -55,7 +55,7 @@ class Pnj:
         self.vitesse_attaque = 2.5  # Temps entre les attaques, plus cette valeure est faible, plus le pnj attaquera vite.
 
         self.dx_dy_directions = {"Gauche": (-1, 0), "Droite": (1, 0), "Dos": (0, -1), "Face": (0, 1)}
-        self.temps_prochains_changements_frames = {"Lidle": 1.7, "Marcher": 0.7 / self.vitesse_marche, "Mourir": 1}
+        self.temps_prochains_changements_frames = {"Lidle": 1.7, "Marcher": 0.7 / self.vitesse_marche, "Mourir": 0.7}
 
 
         self.temps_prochain_changement_frame = self.rpg.time
